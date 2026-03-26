@@ -1,0 +1,300 @@
+:root {
+    --primary-color: #5B5FDE;
+    --primary-hover: #4B4FCC;
+    --text-dark: #1F2937;
+    --text-muted: #6B7280;
+    --border-color: #D1D5DB;
+    --bg-body: #F9FAFB;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+.signup-page {
+    background-color: var(--bg-body);
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+}
+
+/* Main Container */
+.container {
+    background-color: #FFFFFF;
+    border-radius: 24px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    display: flex;
+    width: 100%;
+    max-width: 1200px;
+    min-height: 750px;
+    overflow: hidden;
+}
+
+/* Left Side: Signup Form */
+.login-section {
+    flex: 1;
+    padding: 3rem 4rem;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #D1D5DB #F9FAFB;
+    max-height: 750px;
+}
+
+.login-section::-webkit-scrollbar {
+    width: 6px;
+}
+
+.login-section::-webkit-scrollbar-track {
+    background: #F9FAFB;
+}
+
+.login-section::-webkit-scrollbar-thumb {
+    background: #D1D5DB;
+    border-radius: 3px;
+}
+
+.login-section::-webkit-scrollbar-thumb:hover {
+    background: #9CA3AF;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 2.5rem;
+}
+
+.logo-icon {
+    background-color: var(--primary-color);
+    border-radius: 8px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.logo-text {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--text-dark);
+    line-height: 1.2;
+}
+
+.login-header h1 {
+    font-size: 1.75rem;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.login-header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-bottom: 2.5rem;
+}
+
+/* Form Grid to handle multiple inputs neatly */
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.75rem;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-group.full-width {
+    grid-column: span 2;
+}
+
+.form-group label {
+    margin-bottom: 0.6rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.95rem 1.25rem;
+    border: 1.5px solid var(--border-color);
+    border-radius: 8px;
+    font-size: 1rem;
+    color: var(--text-dark);
+    outline: none;
+    transition: border-color 0.2s;
+    background-color: #FFFFFF;
+    appearance: none;
+}
+
+select.form-control {
+    cursor: pointer;
+    background-image: url('data:image/svg+xml;utf8,<svg fill="none" stroke="%236B7280" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M6 9l6 6 6-6"></path></svg>');
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 16px;
+    padding-right: 2.5rem;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+}
+
+.form-control::placeholder {
+    color: #9CA3AF;
+}
+
+/* Eye Icon styling */
+.eye-icon {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #9CA3AF;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.eye-icon:hover {
+    color: var(--primary-color);
+}
+
+/* OTP Specific Styling */
+.otp-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.otp-group input {
+    flex: 1;
+}
+
+.otp-group button {
+    padding: 0 1rem;
+    background-color: #F3F4F6;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    color: var(--text-dark);
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.otp-group button:hover {
+    background-color: #E5E7EB;
+    border-color: #D1D5DB;
+}
+
+/* Hidden class for dynamic fields */
+.hidden {
+    display: none !important;
+}
+
+.btn-primary {
+    width: 100%;
+    padding: 1.05rem;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 1.25rem;
+    margin-bottom: 1.75rem;
+}
+
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+}
+
+/* Sign Up Prompt Styles */
+.signup-prompt {
+    text-align: center;
+    font-size: 0.9rem;
+    color: var(--text-muted);
+}
+
+.signup-prompt a {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    margin-left: 5px;
+}
+
+.signup-prompt a:hover {
+    text-decoration: underline;
+}
+
+/* ========================================================= */
+/* Right Side: Enhanced Premium Illustration Panel           */
+/* ========================================================= */
+.preview-section {
+    flex: 1.2;
+    background: linear-gradient(145deg, #EEF2FF 0%, #E0E7FF 40%, #C7D2FE 100%);
+    margin: 1.2rem;
+    border-radius: 20px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Smooth Floating Animations */
+@keyframes float-slow {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-12px); }
+}
+@keyframes float-medium {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-8px); }
+}
+@keyframes float-fast {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-6px); }
+}
+
+.anim-float-1 { animation: float-slow 4.5s ease-in-out infinite; }
+.anim-float-2 { animation: float-medium 3.5s ease-in-out infinite; animation-delay: 1s; }
+.anim-float-3 { animation: float-fast 5s ease-in-out infinite; animation-delay: 0.5s; }
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .container {
+        flex-direction: column;
+        min-height: auto;
+    }
+    .preview-section {
+        display: none;
+    }
+    .login-section {
+        padding: 2rem;
+    }
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+    .form-group.full-width {
+        grid-column: span 1;
+    }
+}
