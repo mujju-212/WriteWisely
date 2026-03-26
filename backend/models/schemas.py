@@ -53,6 +53,7 @@ class SubmitPracticeRequest(BaseModel):
     task_id: str
     text: str = Field(..., min_length=10)
     mode: str = Field(..., pattern="^(live|after_analysis)$")
+    attempt_number: int = Field(default=1, ge=1)  # 1=full credits, 2=50%, 3+=0
 
 
 class PracticeError(BaseModel):
