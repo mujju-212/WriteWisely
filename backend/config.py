@@ -19,11 +19,11 @@ JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret-key")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRY_HOURS = int(os.getenv("JWT_EXPIRY_HOURS", "24"))
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
-LLM_MODEL = os.getenv("LLM_MODEL", "openai/gpt-3.5-turbo")
-SMTP_EMAIL = os.getenv("SMTP_EMAIL", "")
-SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
-SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
-SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+LLM_MODEL = os.getenv("LLM_MODEL", "qwen/qwen3-4b:free")
+MAILERSEND_API_KEY = os.getenv("MAILERSEND_API_KEY", "")
+MAILERSEND_DOMAIN = os.getenv("MAILERSEND_DOMAIN", "")
+SENDER_EMAIL = os.getenv("SENDER_EMAIL", "")
+SENDER_NAME = os.getenv("SENDER_NAME", "WriteWisely")
 
 # ─── MongoDB Connection ───────────────────────────────────────
 client: AsyncIOMotorClient = None

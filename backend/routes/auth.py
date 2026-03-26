@@ -51,7 +51,7 @@ async def signup(data: SignupRequest):
     # Generate and send OTP
     otp = generate_otp()
     await save_otp(data.email, otp, "signup")
-    send_otp_email(data.email, otp, "signup")
+    await send_otp_email(data.email, otp, "signup")
     
     return {"message": "Signup successful! OTP sent to your email."}
 
@@ -94,7 +94,7 @@ async def resend_otp(data: ResendOtpRequest):
     
     otp = generate_otp()
     await save_otp(data.email, otp, "signup")
-    send_otp_email(data.email, otp, "signup")
+    await send_otp_email(data.email, otp, "signup")
     
     return {"message": "OTP resent successfully!"}
 
@@ -143,7 +143,7 @@ async def forgot_password(data: ForgotPasswordRequest):
     
     otp = generate_otp()
     await save_otp(data.email, otp, "forgot_password")
-    send_otp_email(data.email, otp, "forgot_password")
+    await send_otp_email(data.email, otp, "forgot_password")
     
     return {"message": "If this email is registered, a reset code has been sent."}
 

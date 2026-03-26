@@ -1,13 +1,13 @@
 """
-services/email_service.py — Send OTP emails via SMTP
+services/email_service.py — Send OTP emails via MailerSend API
 """
 
 import random
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+import httpx
 from datetime import datetime, timedelta
-from config import SMTP_EMAIL, SMTP_PASSWORD, SMTP_HOST, SMTP_PORT, get_db
+from config import MAILERSEND_API_KEY, SENDER_EMAIL, SENDER_NAME, get_db
+
+MAILERSEND_URL = "https://api.mailersend.com/v1/email"
 
 
 def generate_otp() -> str:
@@ -50,8 +50,8 @@ async def verify_otp(email: str, otp: str) -> bool:
     return False
 
 
-def send_otp_email(email: str, otp: str, purpose: str = "signup"):
-    """Send OTP email via SMTP."""
+async def send_otp_email(email: str, otp: str, purpose: str = "signup") -> bool:
+    """Send OTP email via MailerSend API."""
     
     if purpose == "signup":
         subject = "WriteWisely - Verify Your Email"
@@ -81,21 +81,38 @@ def send_otp_email(email: str, otp: str, purpose: str = "signup"):
     </html>
     """
     
-    # Build email
-    msg = MIMEMultipart("alternative")
-    msg["Subject"] = subject
-    msg["From"] = SMTP_EMAIL
-    msg["To"] = email
-    msg.attach(MIMEText(body_text, "plain"))
-    msg.attach(MIMEText(html, "html"))
+    # MailerSend API request
+    payload = {
+        "from": {
+            "email": SENDER_EMAIL,
+            "name": SENDER_NAME
+        },
+        "to": [
+            {
+                "email": email,
+                "name": email.split("@")[0]
+            }
+        ],
+        "subject": subject,
+        "text": body_text,
+        "html": html
+    }
     
-    # Send
+    headers = {
+        "Authorization": f"Bearer {MAILERSEND_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
     try:
-        with smtplib.SMTP(SMTP_HOST, SMTP_PORT) as server:
-            server.starttls()
-            server.login(SMTP_EMAIL, SMTP_PASSWORD)
-            server.sendmail(SMTP_EMAIL, email, msg.as_string())
-        return True
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.post(MAILERSEND_URL, json=payload, headers=headers)
+            
+            if response.status_code in [200, 202]:
+                print(f"✅ OTP email sent to {email}")
+                return True
+            else:
+                print(f"❌ MailerSend error {response.status_code}: {response.text}")
+                return False
     except Exception as e:
         print(f"❌ Email send failed: {e}")
         return False
