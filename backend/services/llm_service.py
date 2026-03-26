@@ -162,10 +162,9 @@ async def _call_openrouter(system_prompt: str, user_message: str, json_mode: boo
         ],
         "temperature": 0.3,
         "max_tokens": 2000
+        # Note: response_format is NOT sent — not supported by all models (e.g., Gemma via Google AI Studio)
+        # JSON output is enforced via system prompt instructions
     }
-    
-    if json_mode:
-        body["response_format"] = {"type": "json_object"}
     
     async with httpx.AsyncClient(timeout=20.0) as client:
         response = await client.post(OPENROUTER_URL, headers=headers, json=body)
@@ -175,8 +174,14 @@ async def _call_openrouter(system_prompt: str, user_message: str, json_mode: boo
         content = data["choices"][0]["message"]["content"]
         
         if json_mode:
-            return json.loads(content)
+            # Strip markdown code fences if model wraps JSON in ```json ... ```
+            clean = content.strip()
+            if clean.startswith("```"):
+                lines = clean.split("\n")
+                clean = "\n".join(lines[1:-1]) if len(lines) > 2 else clean
+            return json.loads(clean)
         return {"text": content}
+
 
 
 async def _call_openrouter_chat(messages: list) -> str:
