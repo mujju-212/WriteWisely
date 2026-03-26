@@ -67,6 +67,14 @@ CRITICAL RULES:
 Task given: {task_prompt}
 Student wrote: "{submitted_text}"
 
+Spell-check pre-scan found these possible issues (verify before including):
+{tier1_hint}
+
+SCORING WEIGHTS for {user_level} level:
+- beginner:     spelling 40%, grammar 30%, sentence_structure 15%, tone 10%, completeness 5%
+- intermediate: spelling 25%, grammar 25%, sentence_structure 25%, tone 15%, completeness 10%
+- advanced:     spelling 15%, grammar 20%, sentence_structure 30%, tone 20%, completeness 15%
+
 Provide a detailed analysis in this EXACT JSON format:
 {{
   "overall_score": 7.5,
@@ -80,25 +88,28 @@ Provide a detailed analysis in this EXACT JSON format:
   "errors": [
     {{
       "type": "spelling" or "grammar" or "punctuation" or "word_choice" or "style",
-      "subtype": "letter_swap" or "homophone" or "double_letter" or "tense" or "subject_verb" etc,
-      "original": "wrong word/phrase",
+      "subtype": "letter_swap" or "homophone" or "double_letter" or "tense" or "subject_verb" or "punctuation_missing" etc,
+      "original": "exact wrong word/phrase from the text",
       "correction": "correct version",
-      "explanation": "detailed friendly explanation teaching WHY",
+      "explanation": "friendly explanation teaching WHY this rule exists",
       "position": {{"start": 0, "end": 5}},
-      "severity": "minor" or "moderate" or "major"
+      "severity": "minor" or "moderate" or "major",
+      "color": "red" for spelling, "yellow" for grammar/punctuation/style
     }}
   ],
-  "improved_version": "the complete corrected text",
-  "strengths": ["what the student did well"],
-  "areas_to_improve": ["specific areas to work on"]
+  "improved_version": "the complete corrected text (keep student's voice and style)",
+  "strengths": ["2-4 specific things the student did well"],
+  "areas_to_improve": ["2-4 specific actionable areas"]
 }}
 
 Rules:
-- Score each category from 1 to 10
-- Overall score is the weighted average
-- Be encouraging even when pointing out errors
-- Explain errors at {user_level} complexity
-- The improved version should keep the student's style but fix all errors""",
+- Apply the CORRECT weights for {user_level} to calculate overall_score
+- Score 1-10 per category (10 = perfect, 1 = needs major work)
+- Be encouraging even when identifying many errors
+- Explain grammar rules at {user_level} vocabulary level
+- Beginner: simple language. Intermediate: clear explanations. Advanced: technical grammar terms.
+- Position values are 0-indexed character offsets in the submitted_text
+- If no errors found, return empty errors array and score 10 with praise""",
 
     # ─── AI Chat Coach ────────────────────────────────────────
     "chat_coach": """You are a friendly and encouraging grammar coach named "Coach" for WriteWisely.
