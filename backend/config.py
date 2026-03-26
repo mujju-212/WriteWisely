@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 
 # Load .env
 load_dotenv()
@@ -19,7 +18,7 @@ JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret-key")
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_EXPIRY_HOURS = int(os.getenv("JWT_EXPIRY_HOURS", "24"))
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
-LLM_MODEL = os.getenv("LLM_MODEL", "qwen/qwen3-next-80b-a3b-instruct:free")
+LLM_MODEL = os.getenv("LLM_MODEL", "google/gemma-3-12b-it:free")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
 MAILERSEND_API_KEY = os.getenv("MAILERSEND_API_KEY", "")
@@ -97,14 +96,18 @@ def verify_jwt_token(token: str) -> str:
 
 
 # ─── Password Hashing ─────────────────────────────────────────
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+import bcrypt
 
 
 def hash_password(password: str) -> str:
     """Hash a password using bcrypt."""
-    return pwd_context.hash(password)
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(password.encode("utf-8"), salt).decode("utf-8")
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a password against its hash."""
-    return pwd_context.verify(plain_password, hashed_password)
+    return bcrypt.checkpw(
+        plain_password.encode("utf-8"),
+        hashed_password.encode("utf-8")
+    )
