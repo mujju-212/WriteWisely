@@ -1,0 +1,144 @@
+{
+  "questions": [
+    {
+      "id": "q1",
+      "type": "multiple_choice",
+      "category": "homophones",
+      "difficulty": "beginner",
+      "question": "Choose the correct sentence:",
+      "options": [
+        "Their going to the store.",
+        "They're going to the store.",
+        "There going to the store."
+      ],
+      "correct": 1,
+      "explanation": "'They're' is the contraction of 'they are'. 'Their' shows possession, and 'there' refers to a place."
+    },
+    {
+      "id": "q2",
+      "type": "multiple_choice",
+      "category": "spelling",
+      "difficulty": "beginner",
+      "question": "Which word is spelled correctly?",
+      "options": [
+        "Definately",
+        "Definatly",
+        "Definitely"
+      ],
+      "correct": 2,
+      "explanation": "'Definitely' is the correct spelling. A common trick: it contains the word 'finite'."
+    },
+    {
+      "id": "q3",
+      "type": "multiple_choice",
+      "category": "grammar",
+      "difficulty": "beginner",
+      "question": "Select the grammatically correct sentence:",
+      "options": [
+        "Me and him went to the park.",
+        "He and I went to the park.",
+        "Him and me went to the park."
+      ],
+      "correct": 1,
+      "explanation": "When the pronoun is the subject of the sentence, use 'I' and 'he'. Tip: remove the other person — you'd say 'I went', not 'me went'."
+    },
+    {
+      "id": "q4",
+      "type": "multiple_choice",
+      "category": "punctuation",
+      "difficulty": "intermediate",
+      "question": "Which sentence uses the comma correctly?",
+      "options": [
+        "Let's eat grandma!",
+        "Let's eat, grandma!",
+        "Lets eat, grandma!"
+      ],
+      "correct": 1,
+      "explanation": "The comma is needed to address someone directly (vocative comma). Without it, the meaning changes entirely!"
+    },
+    {
+      "id": "q5",
+      "type": "multiple_choice",
+      "category": "homophones",
+      "difficulty": "intermediate",
+      "question": "Fill in the blank: 'The medicine had a positive ___ on the patient.'",
+      "options": [
+        "affect",
+        "effect",
+        "efect"
+      ],
+      "correct": 1,
+      "explanation": "'Effect' (noun) means a result or outcome. 'Affect' (verb) means to influence. Here, we need the noun."
+    },
+    {
+      "id": "q6",
+      "type": "multiple_choice",
+      "category": "grammar",
+      "difficulty": "intermediate",
+      "question": "Choose the correct form:",
+      "options": [
+        "Each of the students have their own book.",
+        "Each of the students has their own book.",
+        "Each of the students has his own book."
+      ],
+      "correct": 1,
+      "explanation": "'Each' is singular, so it takes 'has'. Using 'their' as a singular pronoun is now widely accepted."
+    },
+    {
+      "id": "q7",
+      "type": "multiple_choice",
+      "category": "spelling",
+      "difficulty": "intermediate",
+      "question": "Which is the correct spelling?",
+      "options": [
+        "Accomodate",
+        "Acommodate",
+        "Accommodate"
+      ],
+      "correct": 2,
+      "explanation": "'Accommodate' has two c's and two m's. Think: it's big enough to 'accommodate' double letters!"
+    },
+    {
+      "id": "q8",
+      "type": "multiple_choice",
+      "category": "grammar",
+      "difficulty": "advanced",
+      "question": "Which sentence is correct?",
+      "options": [
+        "If I was you, I would study harder.",
+        "If I were you, I would study harder.",
+        "If I am you, I would study harder."
+      ],
+      "correct": 1,
+      "explanation": "This is the subjunctive mood — used for hypothetical situations. 'If I were' is correct because it's not a real condition."
+    },
+    {
+      "id": "q9",
+      "type": "multiple_choice",
+      "category": "punctuation",
+      "difficulty": "advanced",
+      "question": "Which use of the semicolon is correct?",
+      "options": [
+        "I went to the store; and bought some milk.",
+        "I went to the store; I bought some milk.",
+        "I went to the store; because I needed milk."
+      ],
+      "correct": 1,
+      "explanation": "A semicolon connects two independent clauses (each could be a sentence on its own). Don't use it before conjunctions like 'and' or 'because'."
+    },
+    {
+      "id": "q10",
+      "type": "multiple_choice",
+      "category": "word_choice",
+      "difficulty": "advanced",
+      "question": "Choose the correct word: 'The committee will ___ the new policy next week.'",
+      "options": [
+        "apprise",
+        "appraise",
+        "approve"
+      ],
+      "correct": 1,
+      "explanation": "'Appraise' means to evaluate or assess. 'Apprise' means to inform. 'Approve' means to accept — context here suggests evaluation."
+    }
+  ]
+}

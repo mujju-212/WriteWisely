@@ -1,0 +1,56 @@
+{
+  "level": 4,
+  "title": "Punctuation Essentials",
+  "topic": "punctuation",
+  "category": "beginner",
+  "content": {
+    "sections": [
+      {
+        "heading": "Commas: When to Use Them",
+        "explanation": "Commas have several important uses: separating items in a list, joining clauses with a conjunction, after introductory phrases, and for direct address.",
+        "examples": [
+          {"correct": "I bought apples, oranges, and bananas.", "wrong": "I bought apples oranges and bananas.", "rule": "Commas between list items"},
+          {"correct": "It was raining, so I took an umbrella.", "wrong": "It was raining so I took an umbrella.", "rule": "Comma before conjunction joining two clauses"},
+          {"correct": "After the meeting, we went for lunch.", "wrong": "After the meeting we went for lunch.", "rule": "Comma after introductory phrase"},
+          {"correct": "John, can you help me?", "wrong": "John can you help me?", "rule": "Comma for direct address"}
+        ],
+        "memory_tip": "When in doubt, read the sentence aloud. If you naturally pause, you probably need a comma."
+      },
+      {
+        "heading": "Apostrophes: Possession vs. Contraction",
+        "explanation": "Apostrophes serve two main purposes: showing possession (the dog's bone) and forming contractions (don't = do not). Don't use them to make plurals!",
+        "examples": [
+          {"correct": "The teacher's book", "wrong": "The teachers book", "rule": "Apostrophe for possession"},
+          {"correct": "The teachers' lounge", "wrong": "The teacher's lounge (for multiple teachers)", "rule": "Apostrophe after 's' for plural possession"},
+          {"correct": "Don't worry.", "wrong": "Dont worry.", "rule": "Apostrophe in contraction"},
+          {"correct": "I bought three apples.", "wrong": "I bought three apple's.", "rule": "NO apostrophe for plurals!"}
+        ],
+        "memory_tip": "Apostrophes show something is MISSING (contraction: do not → don't) or something BELONGS (Sarah's car)."
+      },
+      {
+        "heading": "Semicolons and Colons",
+        "explanation": "Semicolons connect two related independent clauses. Colons introduce lists, explanations, or elaborations after a complete sentence.",
+        "examples": [
+          {"correct": "I love coffee; my brother prefers tea.", "wrong": "I love coffee, my brother prefers tea.", "rule": "Semicolon between related independent clauses"},
+          {"correct": "You need three things: patience, practice, and persistence.", "wrong": "You need three things; patience, practice, and persistence.", "rule": "Colon before a list"}
+        ],
+        "memory_tip": "Semicolon = soft period (connects equal clauses). Colon = drumroll (here comes the list/explanation!)."
+      }
+    ]
+  },
+  "quiz": {
+    "questions": [
+      {"id": "l4q1", "question": "Which is correct?", "options": ["I bought apple's and orange's.", "I bought apples and oranges.", "I bought apple's and oranges."], "correct": 1, "explanation": "No apostrophe for plurals! Just add 's'."},
+      {"id": "l4q2", "question": "Where does the comma go?", "options": ["After the game we went home.", "After the game, we went home.", "After, the game we went home."], "correct": 1, "explanation": "Comma after introductory phrase: 'After the game, ...'"},
+      {"id": "l4q3", "question": "Which is correct?", "options": ["The dogs bone is here.", "The dog's bone is here.", "The dogs' bone is here (one dog)."], "correct": 1, "explanation": "One dog owns the bone: dog's (singular possession)."},
+      {"id": "l4q4", "question": "Choose the correct punctuation:", "options": ["I love reading, she loves writing.", "I love reading; she loves writing.", "I love reading: she loves writing."], "correct": 1, "explanation": "Use a semicolon to connect two related independent clauses."},
+      {"id": "l4q5", "question": "Which is correct?", "options": ["Dont forget your keys.", "Don't forget your keys.", "Do'nt forget your keys."], "correct": 1, "explanation": "Don't = do + not. The apostrophe replaces the 'o' in 'not'."}
+    ]
+  },
+  "assignment": {
+    "prompt": "Write 3 sentences demonstrating proper punctuation. Use at least one comma, one apostrophe (for possession or contraction), and one semicolon or colon.",
+    "hints": ["Example: My sister's favorite hobby is painting; she's been doing it for years."],
+    "min_sentences": 3
+  },
+  "credits": {"lesson": 10, "quiz_pass": 15, "quiz_perfect": 25, "assignment": 15, "assignment_perfect": 30}
+}

@@ -1,0 +1,94 @@
+{
+  "level": 1,
+  "title": "Basic Spelling Rules",
+  "topic": "spelling_fundamentals",
+  "category": "beginner",
+  "content": {
+    "sections": [
+      {
+        "heading": "The Silent-E Rule",
+        "explanation": "When a word ends in a silent 'e', you usually drop the 'e' before adding a suffix that starts with a vowel (-ing, -able, -ous). But you keep the 'e' before suffixes starting with a consonant (-ment, -ful, -ly).",
+        "examples": [
+          {"correct": "writing", "wrong": "writeing", "rule": "Drop the 'e' before -ing"},
+          {"correct": "making", "wrong": "makeing", "rule": "Drop the 'e' before -ing"},
+          {"correct": "lovable", "wrong": "loveable", "rule": "Drop the 'e' before -able"},
+          {"correct": "excitement", "wrong": "excitment", "rule": "Keep the 'e' before -ment"}
+        ],
+        "memory_tip": "The 'e' is silent because it already did its job (making the vowel long). When a vowel suffix comes along, the 'e' steps aside!"
+      },
+      {
+        "heading": "The I Before E Rule",
+        "explanation": "'I before E, except after C, or when sounding like A as in neighbor and weigh.' This classic rule helps with many common words, though there are exceptions.",
+        "examples": [
+          {"correct": "believe", "wrong": "beleive", "rule": "I before E"},
+          {"correct": "receive", "wrong": "recieve", "rule": "Except after C"},
+          {"correct": "weight", "wrong": "wieght", "rule": "Sounds like A"},
+          {"correct": "friend", "wrong": "freind", "rule": "I before E"}
+        ],
+        "memory_tip": "Think: I before E, except after C. Most words follow this pattern!"
+      },
+      {
+        "heading": "Double Letter Rules",
+        "explanation": "When adding a suffix to a short word ending in consonant-vowel-consonant (CVC), double the last consonant. This keeps the vowel sound short.",
+        "examples": [
+          {"correct": "running", "wrong": "runing", "rule": "run → running (CVC pattern)"},
+          {"correct": "beginning", "wrong": "begining", "rule": "begin → beginning (stress on last syllable)"},
+          {"correct": "stopped", "wrong": "stoped", "rule": "stop → stopped (CVC pattern)"},
+          {"correct": "happening", "wrong": "happenning", "rule": "happen → happening (stress NOT on last syllable, don't double)"}
+        ],
+        "memory_tip": "If the word is short (one syllable) and ends CVC, double it! For longer words, only double if the stress is on the LAST syllable."
+      }
+    ]
+  },
+  "quiz": {
+    "questions": [
+      {
+        "id": "l1q1",
+        "question": "Which is correct?",
+        "options": ["writeing", "writing", "writting"],
+        "correct": 1,
+        "explanation": "Drop the silent 'e' before adding '-ing': write → writing."
+      },
+      {
+        "id": "l1q2",
+        "question": "Which is spelled correctly?",
+        "options": ["beleive", "believe", "beleve"],
+        "correct": 1,
+        "explanation": "I before E (when not after C): believe."
+      },
+      {
+        "id": "l1q3",
+        "question": "Fill in: The runner kept ___",
+        "options": ["runing", "running", "runeing"],
+        "correct": 1,
+        "explanation": "Run ends in CVC (r-u-n), so double the 'n': running."
+      },
+      {
+        "id": "l1q4",
+        "question": "Which is correct?",
+        "options": ["excitement", "excitment", "exciteing"],
+        "correct": 0,
+        "explanation": "Keep the 'e' before -ment (consonant suffix): excitement."
+      },
+      {
+        "id": "l1q5",
+        "question": "Which is spelled correctly?",
+        "options": ["recieve", "receive", "receeve"],
+        "correct": 1,
+        "explanation": "After C, it's E before I: receive."
+      }
+    ]
+  },
+  "assignment": {
+    "prompt": "Write 3 sentences using words that follow the spelling rules you just learned. Try to use at least one silent-e word, one i-before-e word, and one double-letter word.",
+    "hints": ["Try words like: making, believing, running, writing, receiving, stopped"],
+    "min_sentences": 3
+  },
+  "credits": {
+    "lesson": 10,
+    "quiz_pass": 15,
+    "quiz_perfect": 25,
+    "assignment": 15,
+    "assignment_perfect": 30
+  }
+}

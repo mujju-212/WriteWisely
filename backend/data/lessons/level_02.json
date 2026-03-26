@@ -1,0 +1,55 @@
+{
+  "level": 2,
+  "title": "Common Homophones",
+  "topic": "homophones",
+  "category": "beginner",
+  "content": {
+    "sections": [
+      {
+        "heading": "Their / They're / There",
+        "explanation": "These three words sound the same but have completely different meanings. 'Their' shows possession (belonging to them). 'They're' is a contraction of 'they are'. 'There' refers to a place or introduces a sentence.",
+        "examples": [
+          {"correct": "They're going to their house over there.", "wrong": "There going to they're house over their.", "rule": "Each word has a specific purpose"},
+          {"correct": "Their dog is friendly.", "wrong": "There dog is friendly.", "rule": "'Their' = possession"},
+          {"correct": "They're happy today.", "wrong": "Their happy today.", "rule": "'They're' = they are"}
+        ],
+        "memory_tip": "They're = They ARE (has an apostrophe like a contraction). Their = possessION (has 'heir' in it — an heir inherits possessions). There = a place (has 'here' in it)."
+      },
+      {
+        "heading": "Your / You're",
+        "explanation": "'Your' shows possession (something belongs to you). 'You're' is a contraction of 'you are'.",
+        "examples": [
+          {"correct": "You're doing your best.", "wrong": "Your doing you're best.", "rule": "You're = you are, Your = possession"},
+          {"correct": "Is this your book?", "wrong": "Is this you're book?", "rule": "'Your' before a noun = possession"},
+          {"correct": "You're welcome.", "wrong": "Your welcome.", "rule": "'You're' = you are welcome"}
+        ],
+        "memory_tip": "If you can replace the word with 'you are' and it still makes sense → use you're. Otherwise → your."
+      },
+      {
+        "heading": "Its / It's",
+        "explanation": "'Its' shows possession (belonging to it). 'It's' is a contraction of 'it is' or 'it has'. This one is tricky because we usually add 's for possession!",
+        "examples": [
+          {"correct": "It's raining outside.", "wrong": "Its raining outside.", "rule": "It's = it is"},
+          {"correct": "The dog wagged its tail.", "wrong": "The dog wagged it's tail.", "rule": "'its' = possession"},
+          {"correct": "It's been a long day.", "wrong": "Its been a long day.", "rule": "It's = it has"}
+        ],
+        "memory_tip": "Try replacing with 'it is' — if it works, use it's (with apostrophe). If not, use its (no apostrophe)."
+      }
+    ]
+  },
+  "quiz": {
+    "questions": [
+      {"id": "l2q1", "question": "___ going to the park.", "options": ["There", "Their", "They're"], "correct": 2, "explanation": "'They're' = 'They are' going to the park."},
+      {"id": "l2q2", "question": "Is this ___ car?", "options": ["your", "you're", "yore"], "correct": 0, "explanation": "'Your' shows possession — the car belongs to you."},
+      {"id": "l2q3", "question": "The cat licked ___ paw.", "options": ["it's", "its", "its'"], "correct": 1, "explanation": "'Its' (no apostrophe) shows possession."},
+      {"id": "l2q4", "question": "___ a beautiful day!", "options": ["Its", "It's", "Its'"], "correct": 1, "explanation": "'It's' = 'It is' a beautiful day."},
+      {"id": "l2q5", "question": "The students left ___ bags in the classroom.", "options": ["there", "they're", "their"], "correct": 2, "explanation": "'Their' = belonging to them."}
+    ]
+  },
+  "assignment": {
+    "prompt": "Write 3 sentences correctly using at least one of each: their/they're/there, your/you're, and its/it's.",
+    "hints": ["Example: They're parking their car over there."],
+    "min_sentences": 3
+  },
+  "credits": {"lesson": 10, "quiz_pass": 15, "quiz_perfect": 25, "assignment": 15, "assignment_perfect": 30}
+}

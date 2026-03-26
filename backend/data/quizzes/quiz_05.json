@@ -1,0 +1,62 @@
+﻿{
+    "questions":  [
+                      {
+                          "id":  "l5q1",
+                          "question":  "The rain will ___ the match.",
+                          "options":  [
+                                          "affect",
+                                          "effect",
+                                          "afect"
+                                      ],
+                          "correct":  0,
+                          "explanation":  "\u0027Affect\u0027 is the verb (to influence). The rain will affect (influence) the match."
+                      },
+                      {
+                          "id":  "l5q2",
+                          "question":  "She runs faster ___ me.",
+                          "options":  [
+                                          "then",
+                                          "than",
+                                          "then"
+                                      ],
+                          "correct":  1,
+                          "explanation":  "\u0027Than\u0027 is used for comparisons: faster than me."
+                      },
+                      {
+                          "id":  "l5q3",
+                          "question":  "This bag is ___ heavy ___ carry.",
+                          "options":  [
+                                          "to, to",
+                                          "too, to",
+                                          "two, too"
+                                      ],
+                          "correct":  1,
+                          "explanation":  "\u0027Too\u0027 = excessively heavy. \u0027To\u0027 = infinitive (to carry)."
+                      },
+                      {
+                          "id":  "l5q4",
+                          "question":  "Everyone passed ___ John.",
+                          "options":  [
+                                          "accept",
+                                          "except",
+                                          "exept"
+                                      ],
+                          "correct":  1,
+                          "explanation":  "\u0027Except\u0027 = excluding. Everyone passed excluding John."
+                      },
+                      {
+                          "id":  "l5q5",
+                          "question":  "The change had a large ___.",
+                          "options":  [
+                                          "affect",
+                                          "effect",
+                                          "efect"
+                                      ],
+                          "correct":  1,
+                          "explanation":  "\u0027Effect\u0027 is the noun (a result). The change had a large effect."
+                      }
+                  ],
+    "title":  "Common Confusing Words",
+    "quiz_id":  "quiz_05",
+    "level":  5
+}

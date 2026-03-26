@@ -1,0 +1,58 @@
+{
+  "templates": [
+    {
+      "task_id": "email_01",
+      "type": "email",
+      "title": "Professional Email - Day Off Request",
+      "prompt": "Write a professional email to your manager requesting a day off next Friday for a medical appointment. Include a subject line, greeting, reason, and sign-off.",
+      "level": "beginner",
+      "credits": 25,
+      "word_limit": 150
+    },
+    {
+      "task_id": "letter_01",
+      "type": "letter",
+      "title": "Formal Letter - Complaint",
+      "prompt": "Write a formal complaint letter to a company about a defective product you purchased. Include the product name, issue, and what resolution you expect.",
+      "level": "intermediate",
+      "credits": 35,
+      "word_limit": 200
+    },
+    {
+      "task_id": "report_01",
+      "type": "report",
+      "title": "Short Report - Weekly Summary",
+      "prompt": "Write a short weekly report summarizing 3 tasks you completed this week, 1 challenge you faced, and your plan for next week.",
+      "level": "intermediate",
+      "credits": 40,
+      "word_limit": 250
+    },
+    {
+      "task_id": "conversation_01",
+      "type": "conversation",
+      "title": "Dialogue - Job Interview",
+      "prompt": "Write a short dialogue between a job interviewer and a candidate. The interviewer asks about the candidate's strengths and experience. Include at least 6 exchanges.",
+      "level": "beginner",
+      "credits": 30,
+      "word_limit": 200
+    },
+    {
+      "task_id": "article_01",
+      "type": "article",
+      "title": "Short Article - Benefits of Reading",
+      "prompt": "Write a short article about the benefits of reading books. Include an engaging introduction, at least 3 benefits with explanations, and a conclusion.",
+      "level": "intermediate",
+      "credits": 45,
+      "word_limit": 300
+    },
+    {
+      "task_id": "essay_01",
+      "type": "essay",
+      "title": "Opinion Essay - Technology in Education",
+      "prompt": "Write an opinion essay on whether technology improves or hinders education. Take a clear stance, provide at least 2 supporting arguments, address a counterargument, and conclude with your final thoughts.",
+      "level": "advanced",
+      "credits": 60,
+      "word_limit": 400
+    }
+  ]
+}

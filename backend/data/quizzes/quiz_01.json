@@ -1,0 +1,62 @@
+﻿{
+    "questions":  [
+                      {
+                          "id":  "l1q1",
+                          "question":  "Which is correct?",
+                          "options":  [
+                                          "writeing",
+                                          "writing",
+                                          "writting"
+                                      ],
+                          "correct":  1,
+                          "explanation":  "Drop the silent \u0027e\u0027 before adding \u0027-ing\u0027: write â†’ writing."
+                      },
+                      {
+                          "id":  "l1q2",
+                          "question":  "Which is spelled correctly?",
+                          "options":  [
+                                          "beleive",
+                                          "believe",
+                                          "beleve"
+                                      ],
+                          "correct":  1,
+                          "explanation":  "I before E (when not after C): believe."
+                      },
+                      {
+                          "id":  "l1q3",
+                          "question":  "Fill in: The runner kept ___",
+                          "options":  [
+                                          "runing",
+                                          "running",
+                                          "runeing"
+                                      ],
+                          "correct":  1,
+                          "explanation":  "Run ends in CVC (r-u-n), so double the \u0027n\u0027: running."
+                      },
+                      {
+                          "id":  "l1q4",
+                          "question":  "Which is correct?",
+                          "options":  [
+                                          "excitement",
+                                          "excitment",
+                                          "exciteing"
+                                      ],
+                          "correct":  0,
+                          "explanation":  "Keep the \u0027e\u0027 before -ment (consonant suffix): excitement."
+                      },
+                      {
+                          "id":  "l1q5",
+                          "question":  "Which is spelled correctly?",
+                          "options":  [
+                                          "recieve",
+                                          "receive",
+                                          "receeve"
+                                      ],
+                          "correct":  1,
+                          "explanation":  "After C, it\u0027s E before I: receive."
+                      }
+                  ],
+    "title":  "Basic Spelling Rules",
+    "quiz_id":  "quiz_01",
+    "level":  1
+}

@@ -1,0 +1,65 @@
+{
+  "level": 5,
+  "title": "Common Confusing Words",
+  "topic": "word_choice",
+  "category": "beginner",
+  "content": {
+    "sections": [
+      {
+        "heading": "Affect vs. Effect",
+        "explanation": "'Affect' is usually a VERB (to influence). 'Effect' is usually a NOUN (a result). Think: Affect = Action (both start with A), Effect = End result (both start with E).",
+        "examples": [
+          {"correct": "The weather affects my mood.", "wrong": "The weather effects my mood.", "rule": "Affect = verb (to influence)"},
+          {"correct": "The medicine had a positive effect.", "wrong": "The medicine had a positive affect.", "rule": "Effect = noun (a result)"},
+          {"correct": "How will this affect the outcome?", "wrong": "How will this effect the outcome?", "rule": "Affect = verb (action word)"}
+        ],
+        "memory_tip": "RAVEN: Remember, Affect is a Verb, Effect is a Noun."
+      },
+      {
+        "heading": "Then vs. Than",
+        "explanation": "'Then' relates to TIME (what happens next). 'Than' is used for COMPARISONS.",
+        "examples": [
+          {"correct": "I ate dinner, then I went to bed.", "wrong": "I ate dinner, than I went to bed.", "rule": "'Then' = time/sequence"},
+          {"correct": "She is taller than her brother.", "wrong": "She is taller then her brother.", "rule": "'Than' = comparison"},
+          {"correct": "First study, then play.", "wrong": "First study, than play.", "rule": "'Then' = next step"}
+        ],
+        "memory_tip": "thEN = whEN (both about time). thAN = compArisoN (both have 'an')."
+      },
+      {
+        "heading": "To / Too / Two",
+        "explanation": "'To' is a preposition or infinitive marker. 'Too' means 'also' or 'excessively'. 'Two' is the number 2.",
+        "examples": [
+          {"correct": "I went to the store.", "wrong": "I went too the store.", "rule": "'To' = direction/preposition"},
+          {"correct": "She is too tired to study.", "wrong": "She is to tired to study.", "rule": "'Too' = excessively"},
+          {"correct": "I want to come too!", "wrong": "I want to come to!", "rule": "'Too' = also"},
+          {"correct": "I have two cats.", "wrong": "I have to cats.", "rule": "'Two' = the number 2"}
+        ],
+        "memory_tip": "'Too' has too many o's — it means 'too much' or 'also'!"
+      },
+      {
+        "heading": "Accept vs. Except",
+        "explanation": "'Accept' means to receive or agree (verb). 'Except' means excluding or but (preposition/conjunction).",
+        "examples": [
+          {"correct": "I accept your invitation.", "wrong": "I except your invitation.", "rule": "Accept = receive/agree"},
+          {"correct": "Everyone came except Tom.", "wrong": "Everyone came accept Tom.", "rule": "Except = excluding"}
+        ],
+        "memory_tip": "Accept starts with 'ac' = ACquire. Except starts with 'ex' = EXclude."
+      }
+    ]
+  },
+  "quiz": {
+    "questions": [
+      {"id": "l5q1", "question": "The rain will ___ the match.", "options": ["affect", "effect", "afect"], "correct": 0, "explanation": "'Affect' is the verb (to influence). The rain will affect (influence) the match."},
+      {"id": "l5q2", "question": "She runs faster ___ me.", "options": ["then", "than", "then"], "correct": 1, "explanation": "'Than' is used for comparisons: faster than me."},
+      {"id": "l5q3", "question": "This bag is ___ heavy ___ carry.", "options": ["to, to", "too, to", "two, too"], "correct": 1, "explanation": "'Too' = excessively heavy. 'To' = infinitive (to carry)."},
+      {"id": "l5q4", "question": "Everyone passed ___ John.", "options": ["accept", "except", "exept"], "correct": 1, "explanation": "'Except' = excluding. Everyone passed excluding John."},
+      {"id": "l5q5", "question": "The change had a large ___.", "options": ["affect", "effect", "efect"], "correct": 1, "explanation": "'Effect' is the noun (a result). The change had a large effect."}
+    ]
+  },
+  "assignment": {
+    "prompt": "Write 4 sentences using these commonly confused words correctly: affect/effect, then/than, to/too/two, and accept/except. Use at least one pair in each sentence.",
+    "hints": ["Example: The new policy had a positive effect on productivity, which affected everyone except the interns."],
+    "min_sentences": 4
+  },
+  "credits": {"lesson": 10, "quiz_pass": 15, "quiz_perfect": 25, "assignment": 15, "assignment_perfect": 30}
+}

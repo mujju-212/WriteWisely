@@ -1,0 +1,54 @@
+{
+  "level": 3,
+  "title": "Subject-Verb Agreement",
+  "topic": "grammar_fundamentals",
+  "category": "beginner",
+  "content": {
+    "sections": [
+      {
+        "heading": "Basic Rule: Singular Subject = Singular Verb",
+        "explanation": "A singular subject takes a singular verb (adds 's'), and a plural subject takes a plural verb (no 's'). This is the foundation of subject-verb agreement.",
+        "examples": [
+          {"correct": "The dog runs fast.", "wrong": "The dog run fast.", "rule": "Singular subject 'dog' → 'runs'"},
+          {"correct": "The dogs run fast.", "wrong": "The dogs runs fast.", "rule": "Plural subject 'dogs' → 'run'"},
+          {"correct": "She writes every day.", "wrong": "She write every day.", "rule": "Singular 'she' → 'writes'"}
+        ],
+        "memory_tip": "It seems backwards: singular verbs end in 's' but singular nouns don't!"
+      },
+      {
+        "heading": "Tricky Cases: Words Between Subject and Verb",
+        "explanation": "Don't be fooled when words come between the subject and verb. The verb must agree with the subject, not the nearest noun.",
+        "examples": [
+          {"correct": "The box of chocolates is on the table.", "wrong": "The box of chocolates are on the table.", "rule": "Subject is 'box' (singular), not 'chocolates'"},
+          {"correct": "The students in the class are happy.", "wrong": "The students in the class is happy.", "rule": "Subject is 'students' (plural)"}
+        ],
+        "memory_tip": "Cross out the prepositional phrase ('of chocolates', 'in the class') to find the real subject!"
+      },
+      {
+        "heading": "Compound Subjects",
+        "explanation": "Two subjects joined by 'and' take a plural verb. But subjects joined by 'or' or 'nor' match the verb to the nearest subject.",
+        "examples": [
+          {"correct": "Tom and Jerry are friends.", "wrong": "Tom and Jerry is friends.", "rule": "'And' = plural verb"},
+          {"correct": "Neither the cat nor the dogs are outside.", "wrong": "Neither the cat nor the dogs is outside.", "rule": "'Nor' → match verb to nearest subject ('dogs' = plural)"},
+          {"correct": "Either the students or the teacher is responsible.", "wrong": "Either the students or the teacher are responsible.", "rule": "'Or' → match to nearest ('teacher' = singular)"}
+        ],
+        "memory_tip": "AND = always plural. OR/NOR = look at the closest subject to the verb."
+      }
+    ]
+  },
+  "quiz": {
+    "questions": [
+      {"id": "l3q1", "question": "The list of items ___ on the desk.", "options": ["are", "is", "were"], "correct": 1, "explanation": "Subject is 'list' (singular), not 'items'. Use 'is'."},
+      {"id": "l3q2", "question": "My brother and sister ___ coming.", "options": ["is", "are", "was"], "correct": 1, "explanation": "Two subjects joined by 'and' = plural. Use 'are'."},
+      {"id": "l3q3", "question": "She ___ to school every day.", "options": ["walk", "walks", "walking"], "correct": 1, "explanation": "Singular subject 'she' takes singular verb 'walks'."},
+      {"id": "l3q4", "question": "Neither the teacher nor the students ___ ready.", "options": ["is", "are", "was"], "correct": 1, "explanation": "With 'nor', match verb to nearest subject: 'students' (plural) → 'are'."},
+      {"id": "l3q5", "question": "Everyone ___ welcome here.", "options": ["are", "is", "were"], "correct": 1, "explanation": "'Everyone' is a singular indefinite pronoun → 'is'."}
+    ]
+  },
+  "assignment": {
+    "prompt": "Write 3 sentences demonstrating subject-verb agreement. Include one with a compound subject (using 'and'), one with words between the subject and verb, and one with 'each' or 'everyone'.",
+    "hints": ["Example: The group of students works hard every semester."],
+    "min_sentences": 3
+  },
+  "credits": {"lesson": 10, "quiz_pass": 15, "quiz_perfect": 25, "assignment": 15, "assignment_perfect": 30}
+}
