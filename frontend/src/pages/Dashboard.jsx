@@ -1,67 +1,500 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import './Dashboard.css';
+import { useDashboard } from '../hooks/useDashboard';
 
-// ─── All view components defined OUTSIDE Dashboard to prevent remount/focus loss ───
+// ──────────────────────────────────────────────────────────────────────────────
+// DASHBOARD VIEW — wired to real backend data via useDashboard()
+// All other view components (Learning, Practice, etc.) are below, unchanged.
+// ──────────────────────────────────────────────────────────────────────────────
+
+/* Tiny skeleton pulse block */
+function Skel({ w = '100%', h = 18, r = 8 }) {
+  return (
+    <div style={{
+      width: w, height: h, borderRadius: r,
+      background: 'linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%)',
+      backgroundSize: '200% 100%',
+      animation: 'ww-pulse 1.4s ease-in-out infinite',
+    }} />
+  );
+}
+
+/* Badge colour map */
+const BADGE_COLORS = {
+  first_steps:   { bg: '#FEF9C3', color: '#CA8A04', icon: '🏅' },
+  bookworm:      { bg: '#DBEAFE', color: '#2563EB', icon: '📖' },
+  writer:        { bg: '#F3E8FF', color: '#9333EA', icon: '✍️' },
+  on_fire:       { bg: '#FFEDD5', color: '#EA580C', icon: '🔥' },
+  sharpshooter:  { bg: '#DCFCE7', color: '#16A34A', icon: '🎯' },
+  scholar:       { bg: '#DBEAFE', color: '#1D4ED8', icon: '📚' },
+  perfectionist: { bg: '#FEF9C3', color: '#B45309', icon: '✨' },
+  champion:      { bg: '#FFEDD5', color: '#C2410C', icon: '🏆' },
+  master:        { bg: '#EDE9FE', color: '#7C3AED', icon: '🎓' },
+  legend:        { bg: '#FEF9C3', color: '#92400E', icon: '👑' },
+};
+
+/* Activity type colour + icon map */
+const ACTIVITY_MAP = {
+  success:  { bg: '#DCFCE7', icon: '✅', color: '#16A34A' },
+  practice: { bg: '#DBEAFE', icon: '✍️', color: '#2563EB' },
+  project:  { bg: '#F3E8FF', icon: '📄', color: '#9333EA' },
+  badge:    { bg: '#FEF9C3', icon: '🏅', color: '#CA8A04' },
+  info:     { bg: '#F1F5F9', icon: 'ℹ️', color: '#64748B' },
+};
 
 function DashboardViewComp({ setCurrentTab }) {
-  return (
-    <div className="db-animate" style={{maxWidth:900,margin:'0 auto',display:'flex',flexDirection:'column',gap:'1.5rem'}}>
-      <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'1.5rem'}}>
-        <div className="db-card db-card-p">
-          <p className="db-section-title">⚡ Recent Activity</p>
-          <div style={{display:'flex',flexDirection:'column',gap:'0.75rem'}}>
-            {[{text:'Practice Exercise - Day 3',badge:'COMPLETED'},{text:'Completed Quiz 2',badge:'YESTERDAY'},{text:'Edited Document 5',badge:'MAR 24'}].map((item,i)=>(
-              <div key={i} className="db-activity-row" style={{opacity:i===2?0.6:1}}>
-                <div style={{display:'flex',alignItems:'center',gap:'0.5rem'}}>
-                  <i className="fa-solid fa-circle-check" style={{color:'var(--primary)'}}></i>
-                  <span style={{fontSize:'0.875rem',fontWeight:600,color:'var(--text-dark)'}}>{item.text}</span>
-                </div>
-                <span className="db-badge db-badge-muted">{item.badge}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="db-card db-card-p">
-          <p className="db-section-title"><i className="fa-solid fa-chart-line" style={{color:'var(--primary)'}}></i> Weekly Performance</p>
-          <div style={{height:120,position:'relative',borderLeft:'1px solid var(--border)',borderBottom:'1px solid var(--border)',marginBottom:'0.5rem'}}>
-            <svg style={{position:'absolute',inset:0,width:'100%',height:'100%',padding:8}} viewBox="0 0 100 100" preserveAspectRatio="none">
-              <polyline fill="none" stroke="var(--primary)" strokeWidth="3" strokeLinecap="round" points="0,90 33,60 66,30 100,50"/>
-              <circle cx="33" cy="60" r="3" fill="var(--primary)"/>
-              <circle cx="66" cy="30" r="3" fill="var(--primary)"/>
-            </svg>
-          </div>
-          <div style={{display:'flex',justifyContent:'space-between',fontSize:'0.7rem',fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.08em'}}>
-            <span>Day 1</span><span>Day 2</span><span>Day 3</span><span>Day 4</span>
-          </div>
-        </div>
-      </div>
+  const { data, loading } = useDashboard();
+
+  /* ── Fallback dummy so the card grid still renders on error/no-token ── */
+  const g  = data?.greeting      || { name: '—', streak: 0, best_streak: 0 };
+  const st = data?.stats         || {};
+  const cl = data?.continue_learning;
+  const activity = data?.todays_activity || [];
+  const week    = data?.this_week   || {};
+  const weak    = data?.weak_areas  || [];
+  const chart   = data?.accuracy_chart || [];
+  const badges  = data?.badges      || { recent: [], next: null };
+
+  const level   = st.level    || { current: '—', total: 30, change: '' };
+  const credits = st.credits  || { total: '—', rank: '', change: '' };
+  const acc     = st.accuracy || { percentage: 0 };
+  const streak  = st.streak   || { current: 0, best: 0 };
+  const words   = st.words    || { total: 0 };
+  const time    = st.time_today || { total: 0, learning: 0, practice: 0, project: 0 };
+
+  /* ── Keyframe injection (once) ── */
+  useEffect(() => {
+    if (document.getElementById('ww-dash-styles')) return;
+    const s = document.createElement('style');
+    s.id = 'ww-dash-styles';
+    s.textContent = `
+      @keyframes ww-pulse {
+        0%,100% { background-position: 200% 0 }
+        50%      { background-position: -200% 0 }
+      }
+      .ww-card {
+        background:#fff; border-radius:16px;
+        border:1px solid #E2E8F0; box-shadow:0 1px 4px rgba(0,0,0,0.05);
+        transition: box-shadow 0.2s;
+      }
+      .ww-card:hover { box-shadow:0 4px 16px rgba(0,0,0,0.08); }
+      .ww-btn-primary {
+        background:var(--primary); color:#fff; border:none;
+        border-radius:10px; padding:9px 18px; font-weight:600;
+        font-size:0.875rem; cursor:pointer; display:inline-flex;
+        align-items:center; gap:6px; transition:background 0.2s;
+        font-family:inherit;
+      }
+      .ww-btn-primary:hover { background:#1D4ED8; }
+      .ww-btn-secondary {
+        background:#F1F5F9; color:var(--text-dark); border:1px solid #E2E8F0;
+        border-radius:10px; padding:9px 18px; font-weight:600;
+        font-size:0.875rem; cursor:pointer; display:inline-flex;
+        align-items:center; gap:6px; transition:background 0.2s;
+        font-family:inherit;
+      }
+      .ww-btn-secondary:hover { background:#E2E8F0; }
+      .ww-pill-green { background:#F0FDF4; color:#16A34A; border-radius:8px;
+        font-size:0.7rem; font-weight:700; padding:3px 8px; display:inline-flex; align-items:center; gap:3px; }
+      .ww-pill-orange { background:#FFF7ED; color:#EA580C; border-radius:8px;
+        font-size:0.7rem; font-weight:700; padding:3px 8px; display:inline-flex; align-items:center; gap:3px; }
+      .ww-pill-muted  { background:#F1F5F9; color:#64748B; border-radius:8px;
+        font-size:0.7rem; font-weight:700; padding:3px 8px; }
+    `;
+    document.head.appendChild(s);
+  }, []);
+
+  /* ══════════ SECTION 1 — GREETING ══════════ */
+  const renderGreeting = () => (
+    <div className="ww-card" style={{ padding: '1.25rem 1.5rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem' }}>
       <div>
-        <p className="db-section-title">Learning Modules</p>
-        <div style={{display:'flex',flexDirection:'column',gap:'0.75rem'}}>
-          {['Reduce Redundant Words','Learn Business Writing'].map((name,i)=>(
-            <div key={i} className="db-card db-card-p" style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:'1rem'}}>
-              <div style={{display:'flex',alignItems:'center',gap:'1rem',flex:1}}>
-                <div style={{width:48,height:48,background:'#EEF2FF',borderRadius:12,display:'flex',alignItems:'center',justifyContent:'center',color:'var(--primary)',flexShrink:0}}>
-                  <i className="fa-solid fa-book-open"></i>
-                </div>
-                <div style={{flex:1}}>
-                  <p style={{fontWeight:700,color:'var(--text-dark)',marginBottom:'0.4rem'}}>{name}</p>
-                  <div style={{display:'flex',alignItems:'center',gap:'0.75rem'}}>
-                    <div className="db-progress-track" style={{flex:1,height:8}}>
-                      <div className="db-progress-fill" style={{width:i===0?'40%':'60%',height:'100%'}}></div>
-                    </div>
-                    <span style={{fontSize:'0.75rem',fontWeight:700,color:'var(--text-muted)'}}>{i===0?'40%':'60%'}</span>
-                  </div>
-                </div>
-              </div>
-              <button className="db-btn-primary" onClick={()=>setCurrentTab('learning')}>Continue</button>
-            </div>
-          ))}
+        <p style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 4 }}>
+          Welcome Back
+        </p>
+        {loading ? <Skel w={220} h={28} /> : (
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-dark)', margin: 0 }}>
+            Good {getTimeOfDay()}, {g.name}! 👋
+          </h1>
+        )}
+        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 6 }}>
+          {loading ? <Skel w={280} h={14} /> : (
+            g.streak > 0
+              ? <>You're on a <strong style={{ color: '#F97316' }}>{g.streak}-day streak</strong> · {
+                  g.streak < 7 ? `${7 - g.streak} more days for Week Warrior!` : 'Amazing consistency!'
+                }</>
+              : 'Start your streak — complete a lesson today!'
+          )}
+        </p>
+      </div>
+      <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 14, padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+        <span style={{ fontSize: '1.75rem' }}>🔥</span>
+        <div>
+          <p style={{ fontSize: '1.75rem', fontWeight: 800, color: '#F97316', lineHeight: 1, margin: 0 }}>
+            {loading ? '—' : g.streak}
+          </p>
+          <p style={{ fontSize: '0.7rem', color: '#FB923C', fontWeight: 600, margin: 0 }}>Day Streak</p>
         </div>
       </div>
     </div>
   );
+
+  /* ══════════ SECTION 2 — STAT CARDS ══════════ */
+  const statCards = [
+    {
+      iconBg: '#DBEAFE', icon: '📊', label: 'Current Level',
+      value: loading ? null : `${level.current} / 30`,
+      pill: 'green', pillLabel: level.change || 'Learning',
+      sub: loading ? null : `Level ${level.current} · Keep going!`
+    },
+    {
+      iconBg: '#FEF9C3', icon: '⭐', label: 'Total Credits',
+      value: loading ? null : (typeof credits.total === 'number' ? credits.total.toLocaleString() : credits.total),
+      pill: 'green', pillLabel: credits.change || '+0 this week',
+      sub: loading ? null : (credits.rank || 'Beginner Writer')
+    },
+    {
+      iconBg: '#DCFCE7', icon: '🎯', label: 'Overall Accuracy',
+      value: loading ? null : `${acc.percentage}%`,
+      pill: 'green', pillLabel: acc.percentage >= 70 ? 'Great!' : 'Improving',
+      sub: loading ? null : (acc.percentage >= 80 ? 'Excellent work!' : 'Keep practicing!')
+    },
+    {
+      iconBg: '#FFEDD5', icon: '🔥', label: 'Current Streak',
+      value: loading ? null : `${streak.current} days`,
+      pill: 'orange', pillLabel: '🔥 Active',
+      sub: loading ? null : `Best: ${streak.best} days`
+    },
+    {
+      iconBg: '#F3E8FF', icon: '📝', label: 'Words Written',
+      value: loading ? null : words.total.toLocaleString(),
+      pill: 'muted', pillLabel: 'Total',
+      sub: loading ? null : 'Across all activities'
+    },
+    {
+      iconBg: '#CCFBF1', icon: '⏱️', label: 'Time Today',
+      value: loading ? null : `${time.total} min`,
+      pill: 'muted', pillLabel: 'Today',
+      sub: loading ? null : `📚 ${time.learning}m · ✍️ ${time.practice}m · 📄 ${time.project}m`
+    },
+  ];
+
+  const renderStatCards = () => (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: '1rem' }}>
+      {statCards.map((c, i) => (
+        <div key={i} className="ww-card" style={{ padding: '1.1rem 1.25rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+            <div style={{ width: 38, height: 38, borderRadius: 10, background: c.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
+              {c.icon}
+            </div>
+            <span className={`ww-pill-${c.pill}`}>↑ {c.pillLabel}</span>
+          </div>
+          {loading ? <Skel w={80} h={24} r={6} /> : (
+            <p style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-dark)', margin: 0 }}>{c.value}</p>
+          )}
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 10px' }}>{c.label}</p>
+          <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: 8 }}>
+            {loading ? <Skel w="70%" h={12} r={4} /> : (
+              <p style={{ fontSize: '0.75rem', color: '#94A3B8', margin: 0 }}>{c.sub}</p>
+            )}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+
+  /* ══════════ SECTION 3 — CONTINUE LEARNING ══════════ */
+  const renderContinueLearning = () => (
+    <div className="ww-card" style={{ padding: '1.5rem', display: 'flex', alignItems: 'center', gap: '2rem' }}>
+      <div style={{ flex: 1 }}>
+        <p style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: 8 }}>
+          Continue Where You Left Off
+        </p>
+        {loading ? (
+          <><Skel w={260} h={20} /><div style={{ height: 6 }} /><Skel w={180} h={14} /></>
+        ) : cl ? (
+          <>
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-dark)', margin: '0 0 4px' }}>
+              Level {cl.level}: {cl.topic}
+            </h2>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0 0 18px' }}>
+              Next up · {cl.next_up || 'Continue this lesson'}
+            </p>
+          </>
+        ) : (
+          <>
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-dark)', margin: '0 0 4px' }}>
+              Start Your First Lesson
+            </h2>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0 0 18px' }}>
+              Head to the Learning Hub to begin your journey!
+            </p>
+          </>
+        )}
+        {!loading && (
+          <>
+            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: 6 }}>
+              <span style={{ color: 'var(--text-muted)' }}>Progress</span>
+              <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{cl?.progress ?? 0}%</span>
+            </div>
+            <div style={{ width: '100%', height: 7, background: '#F1F5F9', borderRadius: 999, marginBottom: 18 }}>
+              <div style={{ height: 7, borderRadius: 999, background: 'var(--primary)', width: `${cl?.progress ?? 0}%`, transition: 'width 0.6s ease' }} />
+            </div>
+          </>
+        )}
+        <button className="ww-btn-primary" onClick={() => setCurrentTab('learning')}>
+          {cl ? 'Continue Learning →' : 'Start Learning →'}
+        </button>
+      </div>
+      <div style={{ background: '#EFF6FF', borderRadius: 14, padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, minWidth: 140 }}>
+        <span style={{ fontSize: '3rem' }}>📖</span>
+        <p style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: 8, textAlign: 'center' }}>
+          {cl ? `Level ${cl.level} of 30` : 'Start your path'}
+        </p>
+      </div>
+    </div>
+  );
+
+  /* ══════════ SECTION 4 — ACTIVITY FEED ══════════ */
+  const renderActivity = () => (
+    <div className="ww-card" style={{ padding: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+        <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-dark)', margin: 0 }}>Today's Activity</h2>
+        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+      </div>
+      {loading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {[1, 2, 3].map(i => <Skel key={i} h={44} r={10} />)}
+        </div>
+      ) : activity.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: '1.5rem' }}>🌅</p>
+          <p style={{ fontSize: '0.9rem', fontWeight: 600 }}>No activity yet today</p>
+          <p style={{ fontSize: '0.8rem' }}>Start a lesson or practice task!</p>
+        </div>
+      ) : activity.map((item, i) => {
+        const map = ACTIVITY_MAP[item.type] || ACTIVITY_MAP.info;
+        return (
+          <div key={i} style={{
+            display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0',
+            borderBottom: i < activity.length - 1 ? '1px solid #F8FAFC' : 'none'
+          }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: map.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>
+              {map.icon}
+            </div>
+            <p style={{ flex: 1, fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-dark)', margin: 0 }}>{item.text}</p>
+            {item.time && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', flexShrink: 0 }}>{item.time}</span>}
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  /* ══════════ SECTION 5a — THIS WEEK ══════════ */
+  const weekRows = [
+    { icon: '📖', label: 'Lessons', val: week.lessons ?? '—' },
+    { icon: '🎯', label: 'Quizzes Passed', val: week.quizzes ?? '—' },
+    { icon: '✍️', label: 'Practice Tasks', val: week.practice ?? '—' },
+    { icon: '🔧', label: 'Errors Tracked', val: week.errors_fixed ?? '—' },
+    { icon: '📝', label: 'Words Written', val: typeof week.words === 'number' ? week.words.toLocaleString() : '—' },
+    { icon: '⭐', label: 'Credits Earned', val: week.credits ?? '—' },
+  ];
+
+  const renderThisWeek = () => (
+    <div className="ww-card" style={{ padding: '1.5rem' }}>
+      <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-dark)', margin: '0 0 16px' }}>This Week</h2>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {weekRows.map(({ icon, label, val }) => (
+          <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: '0.9rem' }}>{icon}</span>
+              <span style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>{label}</span>
+            </div>
+            {loading ? <Skel w={40} h={16} r={4} /> : (
+              <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-dark)' }}>{val}</span>
+            )}
+          </div>
+        ))}
+      </div>
+      <div style={{ borderTop: '1px solid #F1F5F9', marginTop: 14, paddingTop: 12 }}>
+        <button className="ww-btn-secondary" style={{ fontSize: '0.78rem', padding: '6px 12px' }} onClick={() => setCurrentTab('analytics')}>
+          View Full Analytics →
+        </button>
+      </div>
+    </div>
+  );
+
+  /* ══════════ SECTION 5b — WEAK AREAS ══════════ */
+  const renderWeakAreas = () => (
+    <div className="ww-card" style={{ padding: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+        <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-dark)', margin: 0 }}>Weak Areas</h2>
+        <span style={{ fontSize: '1.1rem' }}>⚠️</span>
+      </div>
+      {loading ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <Skel h={80} r={10} /><Skel h={80} r={10} />
+        </div>
+      ) : weak.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '1.5rem', background: '#F0FDF4', borderRadius: 12 }}>
+          <p style={{ fontSize: '1.5rem' }}>🎉</p>
+          <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#16A34A' }}>No weak areas!</p>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Keep up the great work</p>
+        </div>
+      ) : weak.map((area, i) => (
+        <div key={i} style={{ background: '#F8FAFC', borderRadius: 12, padding: '0.875rem', marginBottom: 10 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+            <div>
+              <p style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-dark)', margin: '0 0 2px' }}>{area.type}</p>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>{area.example}</p>
+            </div>
+            <span style={{
+              background: area.severity === 'high' ? '#FEE2E2' : '#FFEDD5',
+              color: area.severity === 'high' ? '#DC2626' : '#EA580C',
+              borderRadius: 8, fontSize: '0.72rem', fontWeight: 700, padding: '3px 8px', flexShrink: 0, marginLeft: 8
+            }}>{area.count} errors</span>
+          </div>
+          <p style={{ fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 500, margin: '0 0 8px' }}>
+            💡 {area.suggestion}
+          </p>
+          <button className="ww-btn-primary" style={{ fontSize: '0.75rem', padding: '5px 12px' }} onClick={() => setCurrentTab('practice')}>
+            Practice Now →
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+
+  /* ══════════ SECTION 6 — ACCURACY CHART ══════════ */
+  const chartMax = 100;
+  const renderChart = () => (
+    <div className="ww-card" style={{ padding: '1.5rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+        <div>
+          <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-dark)', margin: '0 0 2px' }}>Accuracy Trend</h2>
+          <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>Last 7 days</p>
+        </div>
+        {!loading && acc.percentage > 0 && (
+          <span className="ww-pill-green">📈 Improving</span>
+        )}
+      </div>
+      {loading ? <Skel h={140} r={10} /> : (
+        <div style={{ display: 'flex', alignItems: 'flex-end', gap: 10, height: 140, paddingBottom: 4 }}>
+          {chart.map(({ day, accuracy }, i) => (
+            <div key={i} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, height: '100%', justifyContent: 'flex-end' }}>
+              <span style={{ fontSize: '0.7rem', fontWeight: 700, color: accuracy > 0 ? '#2563EB' : 'var(--text-muted)' }}>
+                {accuracy > 0 ? `${accuracy}%` : '—'}
+              </span>
+              <div
+                style={{
+                  width: '100%', borderRadius: '6px 6px 0 0',
+                  height: accuracy > 0 ? `${Math.max((accuracy / chartMax) * 100, 6)}%` : '6%',
+                  background: accuracy > 0
+                    ? `linear-gradient(to top, #1D4ED8, #60A5FA)`
+                    : '#E2E8F0',
+                  transition: 'height 0.5s ease'
+                }}
+              />
+              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>{day}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+
+  /* ══════════ SECTION 7 — BADGES ══════════ */
+  const renderBadges = () => (
+    <div className="ww-card" style={{ padding: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+        {/* Recently earned */}
+        <div>
+          <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-dark)', marginBottom: 14 }}>Recently Earned</h3>
+          {loading ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <Skel h={48} r={10} /><Skel h={48} r={10} /><Skel h={48} r={10} />
+            </div>
+          ) : badges.recent.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)', background: '#F8FAFC', borderRadius: 10 }}>
+              <p style={{ fontSize: '1.2rem' }}>🏁</p>
+              <p style={{ fontSize: '0.82rem', fontWeight: 600 }}>No badges yet</p>
+              <p style={{ fontSize: '0.75rem' }}>Complete lessons to earn them!</p>
+            </div>
+          ) : badges.recent.map((b, i) => {
+            const bc = BADGE_COLORS[b.badge_id] || { bg: '#F1F5F9', color: '#64748B', icon: '🏅' };
+            return (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                <div style={{ width: 38, height: 38, borderRadius: 10, background: bc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
+                  {bc.icon}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-dark)', margin: '0 0 1px' }}>{b.name}</p>
+                  <p style={{ fontSize: '0.72rem', color: 'var(--text-muted)', margin: 0 }}>
+                    {b.earned ? `Earned ${new Date(b.earned).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : 'Earned'}
+                  </p>
+                </div>
+                <span style={{ color: '#22C55E', fontSize: '1rem' }}>✅</span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Next badge */}
+        <div style={{ borderLeft: '1px solid #F1F5F9', paddingLeft: '2rem' }}>
+          <h3 style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-dark)', marginBottom: 14 }}>Next Badge</h3>
+          {loading ? <Skel h={160} r={12} /> : badges.next ? (
+            <div style={{ background: 'linear-gradient(135deg,#FFF7ED,#FEFCE8)', border: '1px solid #FED7AA', borderRadius: 14, padding: '1.25rem', textAlign: 'center' }}>
+              <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', boxShadow: '0 1px 6px rgba(0,0,0,0.1)', fontSize: '1.5rem' }}>
+                {BADGE_COLORS[badges.next.badge_id || 'on_fire']?.icon || '🔥'}
+              </div>
+              <p style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-dark)', margin: '0 0 4px' }}>{badges.next.name}</p>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0 0 14px' }}>{badges.next.description}</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: 6 }}>
+                <span style={{ color: 'var(--text-muted)' }}>{badges.next.current} of {badges.next.required}</span>
+                <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{badges.next.percentage}%</span>
+              </div>
+              <div style={{ height: 7, background: '#fff', borderRadius: 999, boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.1)', marginBottom: 10 }}>
+                <div style={{ height: 7, borderRadius: 999, background: '#FB923C', width: `${badges.next.percentage}%` }} />
+              </div>
+              <p style={{ fontSize: '0.78rem', fontWeight: 700, color: '#EA580C', margin: 0 }}>
+                {badges.next.required - badges.next.current} more to unlock! 🔥
+              </p>
+            </div>
+          ) : (
+            <div style={{ textAlign: 'center', padding: '1.5rem', background: '#F0FDF4', borderRadius: 12 }}>
+              <p style={{ fontSize: '1.5rem' }}>🎓</p>
+              <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#16A34A' }}>All badges earned!</p>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>You're a legend 👑</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="db-animate" style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      {renderGreeting()}
+      {renderStatCards()}
+      {renderContinueLearning()}
+      {renderActivity()}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+        {renderThisWeek()}
+        {renderWeakAreas()}
+      </div>
+      {renderChart()}
+      {renderBadges()}
+    </div>
+  );
 }
+
+function getTimeOfDay() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Morning';
+  if (h < 17) return 'Afternoon';
+  return 'Evening';
+}
+
+// ─── All other view components defined OUTSIDE Dashboard to prevent remount/focus loss ───
 
 function LearningViewComp({ setCurrentTab, completedModules, handleOpenModule, handleStartQuiz, setShowLearningPath,
   practiceText, handlePracticeTextChange, handlePracticeKeyDown, textAlignment, setTextAlignment,
