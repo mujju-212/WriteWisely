@@ -1,20 +1,27 @@
 """
 routes/practice.py — Practice Mode Routes
-Templates, Submissions, Analysis
+Templates, Live Check, Submissions, History
 """
 
 from fastapi import APIRouter, HTTPException, Depends
 from datetime import datetime
+from pydantic import BaseModel
+from typing import Optional
 import json
 
 from config import get_db
 from middleware.auth_middleware import get_current_user
 from services.checker_service import check_text
-from services.pattern_service import add_credits, save_errors, get_badges, update_streak, CREDIT_VALUES
+from services.pattern_service import (
+    add_credits, save_errors, get_badges, update_streak,
+    CREDIT_VALUES, calculate_practice_credits, check_practice_badges
+)
 from models.schemas import SubmitPracticeRequest
 
 router = APIRouter()
 
+
+# ─── Helper ────────────────────────────────────────────────────
 
 def _level_name(level_num: int) -> str:
     if level_num <= 10:
@@ -24,77 +31,179 @@ def _level_name(level_num: int) -> str:
     return "advanced"
 
 
-def _calc_credits(base_credits: int, score: float, attempt: int) -> int:
-    """
-    Calculate credits earned based on score and attempt number.
-    Attempt 1 → full scale.  Attempt 2 → 50%.  Attempt 3+ → 0.
-    Score brackets (applied to adjusted base):
-      1–4  → 0%
-      5–6  → 50%
-      7–8  → full
-      9–10 → full + bonus (20 extra)
-    """
-    if attempt >= 3:
-        return 0
-
-    # Score-based fraction
-    if score < 5:
-        fraction = 0.0
-    elif score < 7:
-        fraction = 0.5
-    else:
-        fraction = 1.0
-
-    credits = int(base_credits * fraction)
-
-    # Attempt penalty
-    if attempt == 2:
-        credits = credits // 2
-
-    # Bonus for near-perfect
-    if score >= 9 and attempt == 1:
-        credits += CREDIT_VALUES.get("practice_bonus_9_10", 20)
-
-    return credits
-
-
-# ─── Get Practice Templates ──────────────────────────────────
-@router.get("/templates")
-async def get_templates(user=Depends(get_current_user)):
-    user_level = user.get("profile", {}).get("current_level", 1)
-    level_cat = _level_name(user_level)
-
+def _get_templates() -> list:
+    """Load practice templates from JSON file."""
     try:
         with open("data/practice_templates.json", "r") as f:
             data = json.load(f)
+        return data.get("templates", [])
     except FileNotFoundError:
-        return {"templates": []}
-
-    templates = data.get("templates", [])
-    # Return all templates (frontend filters visually by level)
-    return {"templates": templates, "user_level": level_cat}
+        return []
 
 
-# ─── Submit Practice ─────────────────────────────────────────
+def _type_icon(task_type: str) -> str:
+    icons = {
+        "email": "📧",
+        "letter": "📄",
+        "report": "📊",
+        "conversation": "💬",
+        "article": "📰",
+        "essay": "📝",
+    }
+    return icons.get(task_type, "📝")
+
+
+# ─── GET /api/practice/templates ──────────────────────────────
+@router.get("/templates")
+async def get_templates(user=Depends(get_current_user)):
+    """Return task templates filtered/tagged by user level."""
+    db = get_db()
+    user_level_num = user.get("profile", {}).get("current_level", 1)
+    level_cat = _level_name(user_level_num)
+
+    # Level visibility rules
+    level_order = {"beginner": 0, "intermediate": 1, "advanced": 2}
+    user_level_order = level_order.get(level_cat, 0)
+
+    templates = _get_templates()
+
+    # Enrich templates with per-user data
+    enriched = []
+    for t in templates:
+        t_level = t.get("level", "beginner")
+        t_level_order = level_order.get(t_level, 0)
+
+        # Only show current level + one above (locked)
+        if t_level_order > user_level_order + 1:
+            continue
+
+        locked = t_level_order > user_level_order
+
+        # Fetch user's practice records for this task
+        records = await db.practice_records.find(
+            {"user_id": user["id"], "task_id": t["task_id"]}
+        ).sort("submitted_at", -1).to_list(length=5)
+
+        times_done = len(records)
+        last_score = records[0].get("overall_score") if records else None
+
+        enriched.append({
+            **t,
+            "locked": locked,
+            "times_done": times_done,
+            "last_score": last_score,
+            "icon": _type_icon(t.get("type", "")),
+        })
+
+    # Sort: unlocked first, then locked; within each group by difficulty
+    enriched.sort(key=lambda x: (x["locked"], x.get("difficulty", 1)))
+
+    return {"templates": enriched, "user_level": level_cat}
+
+
+# ─── GET /api/practice/templates/:taskId ──────────────────────
+@router.get("/templates/{task_id}")
+async def get_template(task_id: str, user=Depends(get_current_user)):
+    """Get single template details with user history."""
+    db = get_db()
+    templates = _get_templates()
+    task = next((t for t in templates if t["task_id"] == task_id), None)
+
+    if not task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    # Fetch user records for this task
+    records = await db.practice_records.find(
+        {"user_id": user["id"], "task_id": task_id}
+    ).sort("submitted_at", -1).to_list(length=10)
+
+    return {
+        **task,
+        "icon": _type_icon(task.get("type", "")),
+        "times_done": len(records),
+        "last_score": records[0].get("overall_score") if records else None,
+        "history": [
+            {
+                "practice_id": str(r["_id"]),
+                "overall_score": r.get("overall_score"),
+                "credits_earned": r.get("credits_earned", 0),
+                "submitted_at": r.get("submitted_at"),
+                "mode": r.get("mode"),
+            }
+            for r in records[:5]
+        ],
+    }
+
+
+# ─── POST /api/practice/check (live mode) ─────────────────────
+
+class CheckLiveRequest(BaseModel):
+    text: str
+    task_type: str = "general"
+
+
+@router.post("/check")
+async def check_live(data: CheckLiveRequest, user=Depends(get_current_user)):
+    """Live mode check — returns hints only (no corrections shown)."""
+    if len(data.text.strip()) < 20:
+        return {"errors": [], "error_count": {"spelling": 0, "grammar": 0}}
+
+    user_level_num = user.get("profile", {}).get("current_level", 1)
+    level_cat = _level_name(user_level_num)
+
+    try:
+        result = await check_text(
+            text=data.text,
+            mode="practice_live",
+            context=data.task_type,
+            user_level=level_cat,
+            user_id=user["id"],
+        )
+    except Exception as e:
+        print(f"⚠️ Live check failed: {e}")
+        return {"errors": [], "error_count": {"spelling": 0, "grammar": 0}}
+
+    errors = result.get("errors", [])
+
+    # Strip corrections — live mode shows hints only
+    cleaned_errors = []
+    for err in errors:
+        cleaned_errors.append({
+            "type": err.get("type", "spelling"),
+            "word": err.get("word") or err.get("original", ""),
+            "hint": err.get("hint", "Check this word"),
+            "position": err.get("position", {}),
+            "color": err.get("color", "red"),
+        })
+
+    # Count by type
+    error_count = {"spelling": 0, "grammar": 0}
+    for err in cleaned_errors:
+        t = err["type"]
+        if t == "spelling":
+            error_count["spelling"] += 1
+        else:
+            error_count["grammar"] += 1
+
+    return {"errors": cleaned_errors, "error_count": error_count}
+
+
+# ─── POST /api/practice/submit ───────────────────────────────
 @router.post("/submit")
 async def submit_practice(data: SubmitPracticeRequest, user=Depends(get_current_user)):
+    """Full submission — LLM analysis — save record — award credits."""
     db = get_db()
     user_id = user["id"]
-    user_level = user.get("profile", {}).get("current_level", 1)
-    level_name = _level_name(user_level)
+    user_level_num = user.get("profile", {}).get("current_level", 1)
+    level_name = _level_name(user_level_num)
 
     # ── Load task template ──────────────────────────────────
-    try:
-        with open("data/practice_templates.json", "r") as f:
-            templates_data = json.load(f)
-        templates = {t["task_id"]: t for t in templates_data.get("templates", [])}
-        task = templates.get(data.task_id, {})
-    except Exception:
-        task = {}
+    templates = {t["task_id"]: t for t in _get_templates()}
+    task = templates.get(data.task_id, {})
 
     task_prompt = task.get("prompt", "Free writing practice")
     task_type = task.get("type", "general")
-    task_credits = task.get("credits", 30)      # base credits from template
+    task_credits = task.get("credits", 30)
     context_type = task.get("context", task_type)
 
     # ── Minimum word check ─────────────────────────────────
@@ -106,8 +215,7 @@ async def submit_practice(data: SubmitPracticeRequest, user=Depends(get_current_
             detail=f"Please write at least {min_words} words (you wrote {word_count})."
         )
 
-    # ── Run 2-tier analysis ────────────────────────────────
-    # check_text uses Tier1 (edit distance) + Tier2 (AI) + merge
+    # ── Full analysis via LLM ─────────────────────────────
     try:
         analysis = await check_text(
             text=data.text,
@@ -118,7 +226,6 @@ async def submit_practice(data: SubmitPracticeRequest, user=Depends(get_current_
             task_prompt=task_prompt
         )
     except Exception as e:
-        # Hard fallback — basic structure
         print(f"⚠️ Analysis failed: {e}")
         analysis = {
             "overall_score": 5.0,
@@ -133,13 +240,24 @@ async def submit_practice(data: SubmitPracticeRequest, user=Depends(get_current_
             "fallback_used": True
         }
 
-    # ── check_text / practice_analysis needs task_prompt injected ──
-    # If analysis came back without improved_version (AI structured response),
-    # that's fine — it's already been merged by checker_service.
     score = float(analysis.get("overall_score", 5.0))
+    total_errors = len(analysis.get("errors", []))
 
-    # ── Calculate credits with retry penalty ───────────────
-    credits = _calc_credits(task_credits, score, data.attempt_number)
+    # ── Check if first time this task type ─────────────────
+    existing_type_count = await db.practice_records.count_documents({
+        "user_id": user_id,
+        "task_type": task_type
+    })
+    is_first_time_type = existing_type_count == 0
+
+    # ── Calculate credits ──────────────────────────────────
+    credits_breakdown = calculate_practice_credits(
+        base_credits=task_credits,
+        score=score,
+        is_first_time_type=is_first_time_type,
+        total_errors=total_errors
+    )
+    credits = credits_breakdown["total"]
 
     # ── Save practice record ───────────────────────────────
     record = {
@@ -154,32 +272,116 @@ async def submit_practice(data: SubmitPracticeRequest, user=Depends(get_current_
         "submitted_at": datetime.utcnow(),
         "analysis": analysis,
         "overall_score": score,
-        "errors_found": len(analysis.get("errors", [])),
+        "errors_found": total_errors,
         "credits_earned": credits,
         "fallback_used": analysis.get("fallback_used", False)
     }
 
-    await db.practice_records.insert_one(record)
+    insert_result = await db.practice_records.insert_one(record)
+    practice_id = str(insert_result.inserted_id)
 
-    # ── Award credits + update streak ─────────────────────
+    # ── Award credits + update streak ──────────────────────
     new_credit_total = 0
     if credits > 0:
-        new_credit_total = await add_credits(user_id, credits, f"Practice: {task_type} (attempt {data.attempt_number})")
+        new_credit_total = await add_credits(
+            user_id, credits,
+            f"Practice: {task_type} (score {score})"
+        )
 
     await update_streak(user_id)
 
-    # ── Fetch updated badges ───────────────────────────────
+    # ── Update total words written ─────────────────────────
+    await db.users.update_one(
+        {"_id": __import__("bson").ObjectId(user_id)},
+        {"$inc": {"profile.total_words_written": word_count}}
+    )
+
+    # ── Save error patterns ────────────────────────────────
+    if analysis.get("errors"):
+        try:
+            await save_errors(user_id, analysis["errors"], "practice")
+        except Exception:
+            pass
+
+    # ── Check badges ───────────────────────────────────────
     try:
-        badges = await get_badges(user_id)
-        newly_earned = [b for b in badges if b["earned"]]
+        newly_earned_badges = await check_practice_badges(user_id, db)
     except Exception:
-        badges = []
-        newly_earned = []
+        newly_earned_badges = []
 
-    # ── Build response ────────────────────────────────────
-    analysis["credits_earned"] = credits
-    analysis["new_credit_total"] = new_credit_total
-    analysis["attempt_number"] = data.attempt_number
-    analysis["badges_earned"] = newly_earned
+    # Get current user for streak info
+    updated_user = await db.users.find_one(
+        {"_id": __import__("bson").ObjectId(user_id)}
+    )
+    current_streak = updated_user.get("profile", {}).get("current_streak", 0) if updated_user else 0
 
-    return analysis
+    # ── Build response ─────────────────────────────────────
+    return {
+        "practice_id": practice_id,
+        "overall_score": score,
+        "category_scores": analysis.get("category_scores", {}),
+        "errors": analysis.get("errors", []),
+        "total_errors": total_errors,
+        "improved_version": analysis.get("improved_version", data.text),
+        "strengths": analysis.get("strengths", []),
+        "areas_to_improve": analysis.get("areas_to_improve", []),
+        "credits_earned": credits,
+        "credits_breakdown": credits_breakdown,
+        "total_credits": new_credit_total,
+        "badges_earned": newly_earned_badges,
+        "streak_updated": True,
+        "current_streak": current_streak,
+        "fallback_used": analysis.get("fallback_used", False),
+        "attempt_number": data.attempt_number,
+    }
+
+
+# ─── GET /api/practice/history ───────────────────────────────
+@router.get("/history")
+async def get_history(user=Depends(get_current_user)):
+    """Get user's last 10 practice records for the home page."""
+    db = get_db()
+
+    records = await db.practice_records.find(
+        {"user_id": user["id"]}
+    ).sort("submitted_at", -1).limit(10).to_list(length=10)
+
+    # Load templates for titles
+    templates_list = _get_templates()
+    templates_map = {t["task_id"]: t for t in templates_list}
+
+    history = []
+    for r in records:
+        task_info = templates_map.get(r.get("task_id", ""), {})
+        history.append({
+            "practice_id": str(r["_id"]),
+            "task_id": r.get("task_id", ""),
+            "task_type": r.get("task_type", ""),
+            "task_title": task_info.get("title", r.get("task_type", "Practice")),
+            "overall_score": r.get("overall_score", 0),
+            "credits_earned": r.get("credits_earned", 0),
+            "submitted_at": r.get("submitted_at"),
+            "mode": r.get("mode", ""),
+            "icon": _type_icon(r.get("task_type", "")),
+        })
+
+    # Aggregate stats
+    total_count = await db.practice_records.count_documents({"user_id": user["id"]})
+    pipeline = [
+        {"$match": {"user_id": user["id"]}},
+        {"$group": {
+            "_id": None,
+            "avg_score": {"$avg": "$overall_score"},
+            "total_credits": {"$sum": "$credits_earned"},
+        }}
+    ]
+    agg = await db.practice_records.aggregate(pipeline).to_list(length=1)
+    avg_score = round(agg[0]["avg_score"], 1) if agg else 0
+
+    return {
+        "history": history,
+        "stats": {
+            "total_done": total_count,
+            "avg_score": avg_score,
+        }
+    }

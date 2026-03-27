@@ -8,7 +8,7 @@ from bson import ObjectId
 from datetime import datetime
 import json
 
-from config import get_db, hash_password, verify_password, create_jwt_token
+from config import get_db, hash_password, verify_password, create_jwt_token, generate_session_id
 from middleware.auth_middleware import get_current_user
 from services.email_service import generate_otp, save_otp, verify_otp as verify_otp_db, send_otp_email
 from services.pattern_service import update_streak
@@ -46,12 +46,15 @@ async def signup(data: SignupRequest):
         "settings": UserSettings().model_dump(),
     }
     
-    await db.users.insert_one(user_doc)
+    inserted = await db.users.insert_one(user_doc)
     
     # Generate and send OTP
     otp = generate_otp()
     await save_otp(data.email, otp, "signup")
-    await send_otp_email(data.email, otp, "signup")
+    sent = await send_otp_email(data.email, otp, "signup")
+    if not sent:
+        await db.users.delete_one({"_id": inserted.inserted_id})
+        raise HTTPException(status_code=500, detail="Failed to send OTP email. Please try again.")
     
     return {"message": "Signup successful! OTP sent to your email."}
 
@@ -62,19 +65,24 @@ async def verify_otp_endpoint(data: OtpVerifyRequest):
     db = get_db()
     
     # Verify OTP
-    is_valid = await verify_otp_db(data.email, data.otp)
+    is_valid = await verify_otp_db(data.email, data.otp, "signup")
     if not is_valid:
         raise HTTPException(status_code=400, detail="Invalid or expired OTP")
     
+    session_id = generate_session_id()
+
     # Mark email as verified
     await db.users.update_one(
         {"email": data.email},
-        {"$set": {"email_verified": True}}
+        {"$set": {
+            "email_verified": True,
+            "active_session_id": session_id
+        }}
     )
     
     # Get user and generate token
     user = await db.users.find_one({"email": data.email})
-    token = create_jwt_token(str(user["_id"]))
+    token = create_jwt_token(str(user["_id"]), session_id)
     
     return {
         "token": token,
@@ -94,7 +102,9 @@ async def resend_otp(data: ResendOtpRequest):
     
     otp = generate_otp()
     await save_otp(data.email, otp, "signup")
-    await send_otp_email(data.email, otp, "signup")
+    sent = await send_otp_email(data.email, otp, "signup")
+    if not sent:
+        raise HTTPException(status_code=500, detail="Failed to resend OTP email. Please try again.")
     
     return {"message": "OTP resent successfully!"}
 
@@ -114,21 +124,36 @@ async def login(data: LoginRequest):
     if not user.get("email_verified", False):
         raise HTTPException(status_code=403, detail="Please verify your email first")
     
+    session_id = generate_session_id()
+
     # Update last login
     await db.users.update_one(
         {"_id": user["_id"]},
-        {"$set": {"last_login": datetime.utcnow()}}
+        {"$set": {
+            "last_login": datetime.utcnow(),
+            "active_session_id": session_id
+        }}
     )
     
     # Update streak
     await update_streak(str(user["_id"]))
     
-    token = create_jwt_token(str(user["_id"]))
+    token = create_jwt_token(str(user["_id"]), session_id)
     
     return {
         "token": token,
         "user": _format_user(user)
     }
+
+
+@router.post("/logout")
+async def logout(user=Depends(get_current_user)):
+    db = get_db()
+    await db.users.update_one(
+        {"_id": ObjectId(user["id"])},
+        {"$set": {"active_session_id": None}}
+    )
+    return {"message": "Logged out successfully"}
 
 
 # ─── Forgot Password ─────────────────────────────────────────
@@ -148,18 +173,33 @@ async def forgot_password(data: ForgotPasswordRequest):
     return {"message": "If this email is registered, a reset code has been sent."}
 
 
+@router.post("/verify-reset-otp")
+async def verify_reset_otp(data: OtpVerifyRequest):
+    """Verify forgot-password OTP before allowing password reset."""
+    is_valid = await verify_otp_db(data.email, data.otp, "forgot_password")
+    if not is_valid:
+        raise HTTPException(status_code=400, detail="Invalid or expired OTP")
+    # Re-save OTP to allow reset step after verification.
+    await save_otp(data.email, data.otp, "forgot_password_verified")
+    return {"message": "OTP verified successfully"}
+
+
 # ─── Reset Password ──────────────────────────────────────────
 @router.post("/reset-password")
 async def reset_password(data: ResetPasswordRequest):
     db = get_db()
     
-    is_valid = await verify_otp_db(data.email, data.otp)
+    # Accept reset only after OTP is verified in forgot flow.
+    is_valid = await verify_otp_db(data.email, data.otp, "forgot_password_verified")
     if not is_valid:
         raise HTTPException(status_code=400, detail="Invalid or expired OTP")
     
     await db.users.update_one(
         {"email": data.email},
-        {"$set": {"password_hash": hash_password(data.new_password)}}
+        {"$set": {
+            "password_hash": hash_password(data.new_password),
+            "active_session_id": None
+        }}
     )
     
     return {"message": "Password reset successful! Please login with your new password."}
@@ -206,7 +246,10 @@ async def change_password(data: ChangePasswordRequest, user=Depends(get_current_
     
     await db.users.update_one(
         {"_id": ObjectId(user["id"])},
-        {"$set": {"password_hash": hash_password(data.new_password)}}
+        {"$set": {
+            "password_hash": hash_password(data.new_password),
+            "active_session_id": None
+        }}
     )
     
     return {"message": "Password changed successfully!"}

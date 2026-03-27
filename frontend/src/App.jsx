@@ -1,22 +1,25 @@
 import { useState } from 'react'
-import Login from './pages/Login'
-import Signup from './pages/Signup'
+import AuthApp from './Auth'
 import Dashboard from './pages/Dashboard'
 
 function App() {
-  const [currentPage, setCurrentPage] = useState('login') // 'login', 'signup', or 'dashboard'
+  const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(localStorage.getItem('ww_token')))
 
-  return (
-    <div className="App">
-      {currentPage === 'login' ? (
-        <Login onNavigateToSignup={() => setCurrentPage('signup')} onNavigateToDashboard={() => setCurrentPage('dashboard')} />
-      ) : currentPage === 'signup' ? (
-        <Signup onNavigateToLogin={() => setCurrentPage('login')} onNavigateToDashboard={() => setCurrentPage('dashboard')} />
-      ) : (
-        <Dashboard onLogout={() => setCurrentPage('login')} />
-      )}
-    </div>
-  )
+  const handleAuthenticated = () => {
+    setIsAuthenticated(true)
+  }
+
+  const handleLogout = () => {
+    localStorage.removeItem('ww_token')
+    localStorage.removeItem('ww_user')
+    setIsAuthenticated(false)
+  }
+
+  if (isAuthenticated) {
+    return <Dashboard onLogout={handleLogout} />
+  }
+
+  return <AuthApp onAuthenticated={handleAuthenticated} />
 }
 
 export default App

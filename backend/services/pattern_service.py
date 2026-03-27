@@ -10,6 +10,7 @@ from config import get_db
 
 # ─── Credit Values ────────────────────────────────────────────
 CREDIT_VALUES = {
+    "lesson_complete": 10,    # alias used by learning.py
     "complete_lesson": 10,
     "quiz_pass": 15,          # >70%
     "quiz_perfect": 25,       # 100%
@@ -300,3 +301,104 @@ async def get_badges(user_id: str) -> list:
         })
     
     return all_badges
+
+
+# ─── Practice Credit Calculation ──────────────────────────────
+
+def calculate_practice_credits(
+    base_credits: int,
+    score: float,
+    is_first_time_type: bool,
+    total_errors: int
+) -> dict:
+    """
+    Calculate credits earned for a practice submission.
+    Score brackets:
+      1-3   → 30% of base
+      4-5   → 50% of base
+      6-7   → 70% of base
+      8-8.9 → 90% of base
+      9+    → 100% of base + bonuses
+    """
+    if score <= 3:
+        multiplier = 0.30
+    elif score <= 5:
+        multiplier = 0.50
+    elif score <= 7:
+        multiplier = 0.70
+    elif score < 9:
+        multiplier = 0.90
+    else:
+        multiplier = 1.0
+
+    base_earned = round(base_credits * multiplier)
+
+    first_time_bonus = 10 if is_first_time_type else 0
+    high_score_bonus = 20 if score >= 9 else 0
+    perfect_bonus = 20 if score == 10 else 0
+    zero_error_bonus = 15 if total_errors == 0 else 0
+
+    total = base_earned + first_time_bonus + high_score_bonus + perfect_bonus + zero_error_bonus
+
+    return {
+        "base": base_earned,
+        "first_time_bonus": first_time_bonus,
+        "high_score_bonus": high_score_bonus,
+        "perfect_bonus": perfect_bonus,
+        "zero_error_bonus": zero_error_bonus,
+        "total": total
+    }
+
+
+async def _award_badge(user_id: str, badge_id: str, db) -> dict:
+    """Award a badge, returning the badge info dict."""
+    badge_def = BADGES.get(badge_id, {})
+    badge_doc = {
+        "user_id": user_id,
+        "badge_id": badge_id,
+        "badge_name": badge_def.get("name", badge_id),
+        "description": badge_def.get("description", ""),
+        "earned_at": datetime.utcnow(),
+    }
+    await db.badges.insert_one(badge_doc)
+    return {"badge_id": badge_id, "badge_name": badge_def.get("name", badge_id)}
+
+
+async def check_practice_badges(user_id: str, db) -> list:
+    """
+    Check and award badges after a practice submission.
+    Returns list of newly earned badge dicts.
+    """
+    earned_docs = await db.badges.find({"user_id": user_id}).to_list(100)
+    already_earned = {b["badge_id"] for b in earned_docs}
+
+    newly_earned = []
+
+    # writer: completed 10 practice tasks total
+    total_practices = await db.practice_records.count_documents({"user_id": user_id})
+    if total_practices >= 10 and "writer" not in already_earned:
+        badge = await _award_badge(user_id, "writer", db)
+        newly_earned.append(badge)
+        already_earned.add("writer")
+
+    # perfectionist: scored 10/10 on any practice task
+    perfect = await db.practice_records.find_one({
+        "user_id": user_id,
+        "overall_score": 10.0
+    })
+    if perfect and "perfectionist" not in already_earned:
+        badge = await _award_badge(user_id, "perfectionist", db)
+        newly_earned.append(badge)
+        already_earned.add("perfectionist")
+
+    # sharpshooter: check via email_expert-like logic on high scores
+    email_highs = await db.practice_records.count_documents({
+        "user_id": user_id,
+        "task_type": "email",
+        "overall_score": {"$gte": 8}
+    })
+    if email_highs >= 5 and "sharpshooter" not in already_earned:
+        badge = await _award_badge(user_id, "sharpshooter", db)
+        newly_earned.append(badge)
+
+    return newly_earned

@@ -1,6 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import './Dashboard.css';
 import { useDashboard } from '../hooks/useDashboard';
+import LearningHome from './LearningHome';
+import Lesson from './Lesson';
+import { fetchChatHistory, sendChatMessage, uploadChatDocument } from '../services/api';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // DASHBOARD VIEW — wired to real backend data via useDashboard()
@@ -695,7 +698,7 @@ function AllLevelsViewComp({ setShowLearningPath, addPoints }) {
   );
 }
 
-function ChatViewComp({messages,chatInput,setChatInput,sendMessage,handleFileUpload,showHistory,setShowHistory,chatBoxRef}) {
+function ChatViewComp({messages,chatInput,setChatInput,sendMessage,handleFileUpload,showHistory,setShowHistory,chatBoxRef,isChatSending,historyItems}) {
   return (
     <div className="db-chat-root" style={{height:'100%',minHeight:500}}>
       <div className="db-chat-main">
@@ -714,12 +717,17 @@ function ChatViewComp({messages,chatInput,setChatInput,sendMessage,handleFileUpl
                 :<div className={msg.type==='user'?'db-chat-bubble-user':'db-chat-bubble-ai'}>{msg.text}</div>}
             </div>
           ))}
+          {isChatSending && (
+            <div style={{display:'flex',justifyContent:'flex-start'}}>
+              <div className="db-chat-bubble-ai">Typing...</div>
+            </div>
+          )}
         </div>
         <div className="db-chat-input-bar">
           <input type="file" id="fileUpload" style={{display:'none'}} onChange={handleFileUpload}/>
           <button className="db-chat-attach-btn" onClick={()=>document.getElementById('fileUpload').click()} title="Upload File"><i className="fa-solid fa-paperclip"></i></button>
-          <input type="text" className="db-chat-input" placeholder="Type here..." value={chatInput} onChange={(e)=>setChatInput(e.target.value)} onKeyPress={(e)=>e.key==='Enter'&&sendMessage()}/>
-          <button className="db-chat-send-btn" onClick={sendMessage}><i className="fa-solid fa-paper-plane"></i></button>
+          <input type="text" className="db-chat-input" placeholder="Type here..." value={chatInput} onChange={(e)=>setChatInput(e.target.value)} onKeyDown={(e)=>e.key==='Enter'&&sendMessage()} />
+          <button className="db-chat-send-btn" onClick={sendMessage} disabled={isChatSending}><i className="fa-solid fa-paper-plane"></i></button>
         </div>
       </div>
       <div className={'db-history-panel'+(showHistory?'':' db-history-hidden')}>
@@ -728,7 +736,16 @@ function ChatViewComp({messages,chatInput,setChatInput,sendMessage,handleFileUpl
           <button className="db-icon-btn" onClick={()=>setShowHistory(false)}><i className="fa-solid fa-xmark"></i></button>
         </div>
         <div style={{padding:'0.75rem',display:'flex',flexDirection:'column',gap:'0.5rem'}}>
-          <div className="db-history-item"><p style={{fontSize:'0.75rem',fontWeight:700,color:'var(--primary)',marginBottom:'0.2rem'}}>March 26</p><p style={{fontSize:'0.875rem',color:'var(--text-dark)',fontWeight:500}}>Proposal Tone Draft</p></div>
+          {historyItems.length > 0 ? historyItems.map((item, idx) => (
+            <div key={idx} className="db-history-item">
+              <p style={{fontSize:'0.75rem',fontWeight:700,color:'var(--primary)',marginBottom:'0.2rem'}}>{item.day}</p>
+              <p style={{fontSize:'0.875rem',color:'var(--text-dark)',fontWeight:500}}>{item.preview}</p>
+            </div>
+          )) : (
+            <div className="db-history-item">
+              <p style={{fontSize:'0.875rem',color:'var(--text-muted)'}}>No chat history yet.</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
@@ -1003,6 +1020,8 @@ function Dashboard({ onLogout }) {
   const [showQuizResult, setShowQuizResult] = useState(false);
   const [messages, setMessages] = useState([{type:'ai',text:'How can I help you refine your writing today?'}]);
   const [chatInput, setChatInput] = useState('');
+  const [isChatSending, setIsChatSending] = useState(false);
+  const [historyItems, setHistoryItems] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
   const [practiceText, setPracticeText] = useState('The AI will actively highlight grammar errors and stylistic improvements as you type.\n\nFor example, it easily catches teh common typos. It can even suggest more better phrasing to elevate your professional tone.');
   const [practiceMode, setPracticeMode] = useState('realtime');
@@ -1047,6 +1066,45 @@ function Dashboard({ onLogout }) {
       document.body.classList.remove('light-mode');
     }
   }, [isDarkMode]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadHistory = async () => {
+      try {
+        const data = await fetchChatHistory();
+        const fromApi = (data?.messages || []).map((m) => ({
+          type: m.role === 'user' ? 'user' : 'ai',
+          text: m.content || '',
+          timestamp: m.timestamp || '',
+        }));
+        if (!cancelled && fromApi.length > 0) {
+          setMessages(fromApi);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.warn('Chat history load failed:', err?.message || err);
+        }
+      }
+    };
+
+    loadHistory();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const userItems = messages
+      .filter((m) => m.type === 'user' && (m.text || '').trim().length > 0)
+      .slice(-8)
+      .reverse()
+      .map((m) => ({
+        day: 'Recent',
+        preview: m.text.length > 48 ? `${m.text.slice(0, 48)}...` : m.text,
+      }));
+    setHistoryItems(userItems);
+  }, [messages]);
 
   const addPoints = (amount) => setCredits(prev=>prev+amount);
 
@@ -1153,16 +1211,48 @@ function Dashboard({ onLogout }) {
     setShowCuratedModule(null);
   };
 
-  const sendMessage = () => {
-    if(!chatInput.trim()) return;
-    setMessages(prev=>[...prev,{type:'user',text:chatInput}]);
+  const sendMessage = async () => {
+    const message = chatInput.trim();
+    if (!message || isChatSending) return;
+
+    setMessages((prev) => [...prev, { type: 'user', text: message }]);
     setChatInput('');
-    setTimeout(()=>{if(chatBoxRef.current)chatBoxRef.current.scrollTop=chatBoxRef.current.scrollHeight;},100);
+    setIsChatSending(true);
+
+    try {
+      const data = await sendChatMessage(message);
+      const reply = (data?.response || '').trim() || 'I could not generate a response right now.';
+      setMessages((prev) => [...prev, { type: 'ai', text: reply }]);
+    } catch (err) {
+      const detail = err?.message ? ` ${err.message}` : '';
+      setMessages((prev) => [...prev, { type: 'ai', text: `Sorry, I could not respond right now.${detail}` }]);
+    } finally {
+      setIsChatSending(false);
+      setTimeout(() => {
+        if (chatBoxRef.current) chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+      }, 100);
+    }
   };
 
-  const handleFileUpload = (e) => {
-    const file=e.target.files?.[0];
-    if(file){setMessages(prev=>[...prev,{type:'file',text:file.name}]);e.target.value='';}
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setMessages((prev) => [...prev, { type: 'file', text: file.name }]);
+    e.target.value = '';
+
+    try {
+      const uploaded = await uploadChatDocument(file, file.name);
+      const title = uploaded?.title || file.name;
+      setMessages((prev) => [...prev, { type: 'ai', text: `Uploaded ${title}. I can use it in chat answers now.` }]);
+    } catch (err) {
+      const detail = err?.message ? ` ${err.message}` : '';
+      setMessages((prev) => [...prev, { type: 'ai', text: `File upload failed.${detail}` }]);
+    } finally {
+      setTimeout(() => {
+        if (chatBoxRef.current) chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
+      }, 100);
+    }
   };
 
   const navItems = [
@@ -1175,12 +1265,29 @@ function Dashboard({ onLogout }) {
     {id:'settings',label:'Settings',icon:'fa-sliders'}
   ];
 
+  const [learningLevelId, setLearningLevelId] = useState(null);
+
   const renderView = () => {
+    if (currentTab === 'learning') {
+      if (learningLevelId) {
+        return (
+          <Lesson
+            levelId={learningLevelId}
+            onBack={() => setLearningLevelId(null)}
+          />
+        );
+      }
+      return (
+        <LearningHome
+          onNavigateToLesson={(id) => setLearningLevelId(id)}
+        />
+      );
+    }
     if(currentTab==='learning' && showLearningPath) return <AllLevelsViewComp setShowLearningPath={setShowLearningPath} addPoints={addPoints}/>;
     switch(currentTab) {
       case 'dashboard': return <DashboardViewComp setCurrentTab={setCurrentTab}/>;
       case 'learning': return <LearningViewComp setCurrentTab={setCurrentTab} completedModules={completedModules} handleOpenModule={handleOpenModule} handleStartQuiz={handleStartQuiz} setShowLearningPath={setShowLearningPath} practiceText={practiceText} handlePracticeTextChange={handlePracticeTextChange} handlePracticeKeyDown={handlePracticeKeyDown} textAlignment={textAlignment} setTextAlignment={setTextAlignment} isBold={isBold} setIsBold={setIsBold} isItalic={isItalic} setIsItalic={setIsItalic} isUnderline={isUnderline} setIsUnderline={setIsUnderline} showSuggestions={showSuggestions} suggestions={suggestions}/>;
-      case 'chat': return <ChatViewComp messages={messages} chatInput={chatInput} setChatInput={setChatInput} sendMessage={sendMessage} handleFileUpload={handleFileUpload} showHistory={showHistory} setShowHistory={setShowHistory} chatBoxRef={chatBoxRef}/>;
+      case 'chat': return <ChatViewComp messages={messages} chatInput={chatInput} setChatInput={setChatInput} sendMessage={sendMessage} handleFileUpload={handleFileUpload} showHistory={showHistory} setShowHistory={setShowHistory} chatBoxRef={chatBoxRef} isChatSending={isChatSending} historyItems={historyItems}/>;
       case 'practice': return <PracticeViewComp practiceText={practiceText} handlePracticeTextChange={handlePracticeTextChange} handlePracticeKeyDown={handlePracticeKeyDown} textAlignment={textAlignment} setTextAlignment={setTextAlignment} isBold={isBold} setIsBold={setIsBold} isItalic={isItalic} setIsItalic={setIsItalic} isUnderline={isUnderline} setIsUnderline={setIsUnderline} practiceMode={practiceMode} setPracticeMode={setPracticeMode} isAnalyzing={isAnalyzing} setIsAnalyzing={setIsAnalyzing} suggestions={suggestions} setSuggestions={setSuggestions} showSuggestions={showSuggestions} handleAnalyzeText={handleAnalyzeText} errors={errors} practiceEditorRef={practiceEditorRef}/>;
       case 'projects': return <ProjectsViewComp currentProjects={currentProjects} selectedProject={selectedProject} setSelectedProject={setSelectedProject} isEditingProject={isEditingProject} setIsEditingProject={setIsEditingProject} projectContent={projectContent} setProjectContent={setProjectContent} projectTitle={projectTitle} setProjectTitle={setProjectTitle} handleNewProject={handleNewProject} handleSaveProject={handleSaveProject} handleDeleteProject={handleDeleteProject}/>;
       case 'analytics': return <AnalyticsViewComp analyticsPeriod={analyticsPeriod} setAnalyticsPeriod={setAnalyticsPeriod} showResults={showResults} setShowResults={setShowResults}/>;

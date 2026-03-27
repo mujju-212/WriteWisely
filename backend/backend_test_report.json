@@ -1,0 +1,383 @@
+{
+  "started_at": "2026-03-26T21:46:50.675521Z",
+  "ended_at": "2026-03-26T21:48:35.475687Z",
+  "duration_seconds": 104.8,
+  "base_url": "http://127.0.0.1:8000",
+  "email_used": "ww.test.5412b87a@example.com",
+  "totals": {
+    "total": 46,
+    "passed": 44,
+    "failed": 2
+  },
+  "pass_rate": 95.65,
+  "results": [
+    {
+      "name": "db.ping",
+      "ok": true,
+      "status_code": null,
+      "duration_ms": null,
+      "details": "MongoDB ping succeeded",
+      "response_excerpt": ""
+    },
+    {
+      "name": "api.root",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": 10,
+      "details": "",
+      "response_excerpt": "{\"app\": \"WriteWisely API\", \"status\": \"running\", \"version\": \"1.0.0\"}"
+    },
+    {
+      "name": "api.health",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": 3,
+      "details": "",
+      "response_excerpt": "{\"status\": \"healthy\"}"
+    },
+    {
+      "name": "auth.signup",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": 809,
+      "details": "",
+      "response_excerpt": "{\"message\": \"Signup successful! OTP sent to your email.\"}"
+    },
+    {
+      "name": "auth.otp.fetch",
+      "ok": true,
+      "status_code": null,
+      "duration_ms": null,
+      "details": "OTP fetched from otp_store",
+      "response_excerpt": ""
+    },
+    {
+      "name": "auth.verify_otp",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": 24,
+      "details": "",
+      "response_excerpt": "{\"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OWM1YTk0YjgwZmRkNjVhMTE1YzMzMTgiLCJleHAiOjE3NzQ2NDgwMTEsImlhdCI6MTc3NDU2MTYxMX0.722g4nNFGAGIzOPcIIpLjSPA21IxfZA4mt0jhpzFJaE\", \"user\": {\"id\": \"69c5a94b80fdd65a115c3318\", \"name\": \"WriteWisely Test User\", \"email\": \"ww.test.5412b87a@example.com\", \"phone\": \"9876543210\", \"role\": \"student\", \"email_verified\": true, \"profile\": {\"current_level\": 1, \"assessment_score\": 0, \"strengths\": [], \"weaknesses\": [], \"total_credits\": 0, \"current_streak\": 0, "
+    },
+    {
+      "name": "auth.login",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": 615,
+      "details": "",
+      "response_excerpt": "{\"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OWM1YTk0YjgwZmRkNjVhMTE1YzMzMTgiLCJleHAiOjE3NzQ2NDgwMTIsImlhdCI6MTc3NDU2MTYxMn0.6HSW35MMGdk-WHlzhw1f-oDXwz_iFWyXCNpuBV2s1Xw\", \"user\": {\"id\": \"69c5a94b80fdd65a115c3318\", \"name\": \"WriteWisely Test User\", \"email\": \"ww.test.5412b87a@example.com\", \"phone\": \"9876543210\", \"role\": \"student\", \"email_verified\": true, \"profile\": {\"current_level\": 1, \"assessment_score\": 0, \"strengths\": [], \"weaknesses\": [], \"total_credits\": 0, \"current_streak\": 0, "
+    },
+    {
+      "name": "auth.profile.get",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"user\": {\"name\": \"WriteWisely Test User\", \"email\": \"ww.test.5412b87a@example.com\", \"phone\": \"9876543210\", \"role\": \"student\", \"email_verified\": true, \"created_at\": \"2026-03-26T21:46:51.091000\", \"last_login\": \"2026-03-26T21:46:52.247000\", \"profile\": {\"current_level\": 1, \"assessment_score\": 0, \"strengths\": [], \"weaknesses\": [], \"total_credits\": 0, \"current_streak\": 1, \"best_streak\": 1, \"rank\": \"Beginner Writer\", \"last_active\": \"2026-03-26T21:46:52.251000\"}, \"settings\": {\"theme\": \"light\", \"font_siz"
+    },
+    {
+      "name": "auth.profile.update",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"user\": {\"id\": \"69c5a94b80fdd65a115c3318\", \"name\": \"WriteWisely API Tester\", \"email\": \"ww.test.5412b87a@example.com\", \"phone\": \"9876543210\", \"role\": \"professional\", \"email_verified\": true, \"profile\": {\"current_level\": 1, \"assessment_score\": 0, \"strengths\": [], \"weaknesses\": [], \"total_credits\": 0, \"current_streak\": 1, \"best_streak\": 1, \"rank\": \"Beginner Writer\", \"last_active\": \"2026-03-26T21:46:52.251000\"}, \"settings\": {\"theme\": \"light\", \"font_size\": \"medium\", \"notifications_enabled\": true, \"em"
+    },
+    {
+      "name": "auth.assessment_questions",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"questions\": [{\"id\": \"q1\", \"type\": \"multiple_choice\", \"category\": \"homophones\", \"difficulty\": \"beginner\", \"question\": \"Choose the correct sentence:\", \"options\": [\"Their going to the store.\", \"They're going to the store.\", \"There going to the store.\"], \"correct\": 1, \"explanation\": \"'They're' is the contraction of 'they are'. 'Their' shows possession, and 'there' refers to a place.\"}, {\"id\": \"q2\", \"type\": \"multiple_choice\", \"category\": \"spelling\", \"difficulty\": \"beginner\", \"question\": \"Which word"
+    },
+    {
+      "name": "auth.assessment_submit",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"level\": \"advanced\", \"level_number\": 21, \"score\": 6, \"total\": 6, \"strengths\": [\"homophones\", \"spelling\", \"grammar\", \"punctuation\"], \"weaknesses\": []}"
+    },
+    {
+      "name": "learning.levels",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"levels\": [{\"level_id\": 1, \"title\": \"Basic Spelling Rules\", \"topic\": \"spelling_fundamentals\", \"category\": \"beginner\", \"status\": \"available\"}, {\"level_id\": 2, \"title\": \"Common Homophones\", \"topic\": \"homophones\", \"category\": \"beginner\", \"status\": \"available\"}, {\"level_id\": 3, \"title\": \"Subject-Verb Agreement\", \"topic\": \"grammar_fundamentals\", \"category\": \"beginner\", \"status\": \"available\"}, {\"level_id\": 4, \"title\": \"Punctuation Essentials\", \"topic\": \"punctuation\", \"category\": \"beginner\", \"status\":"
+    },
+    {
+      "name": "learning.lesson_get",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"level\": 1, \"title\": \"Basic Spelling Rules\", \"topic\": \"spelling_fundamentals\", \"category\": \"beginner\", \"content\": {\"sections\": [{\"heading\": \"The Silent-E Rule\", \"explanation\": \"When a word ends in a silent 'e', you usually drop the 'e' before adding a suffix that starts with a vowel (-ing, -able, -ous). But you keep the 'e' before suffixes starting with a consonant (-ment, -ful, -ly).\", \"examples\": [{\"correct\": \"writing\", \"wrong\": \"writeing\", \"rule\": \"Drop the 'e' before -ing\"}, {\"correct\": \"ma"
+    },
+    {
+      "name": "learning.quiz_submit",
+      "ok": false,
+      "status_code": 500,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "Internal Server Error"
+    },
+    {
+      "name": "learning.assignment_submit",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"review\": [], \"score\": 2, \"total\": 2, \"credits_earned\": 30, \"analysis\": {\"errors\": [], \"fallback_used\": true}}"
+    },
+    {
+      "name": "checker.practice_live",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"errors\": [{\"type\": \"spelling\", \"word\": \"teh\", \"correction\": \"the\", \"hint\": \"Possible spelling error\", \"explanation\": \"Did you mean 'the'?\", \"position\": {\"start\": 11, \"end\": 14}, \"severity\": \"minor\", \"color\": \"red\"}], \"fallback_used\": true}"
+    },
+    {
+      "name": "checker.practice_analysis",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"errors\": [{\"type\": \"spelling\", \"word\": \"teh\", \"correction\": \"the\", \"hint\": \"Possible spelling error\", \"explanation\": \"Did you mean 'the'?\", \"position\": {\"start\": 11, \"end\": 14}, \"severity\": \"minor\", \"color\": \"red\"}], \"fallback_used\": true}"
+    },
+    {
+      "name": "checker.project",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"errors\": [{\"type\": \"spelling\", \"word\": \"teh\", \"correction\": \"the\", \"hint\": \"Possible spelling error\", \"explanation\": \"Did you mean 'the'?\", \"position\": {\"start\": 11, \"end\": 14}, \"severity\": \"minor\", \"color\": \"red\"}], \"fallback_used\": true}"
+    },
+    {
+      "name": "practice.templates",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"templates\": [{\"task_id\": \"email_01\", \"type\": \"email\", \"title\": \"Professional Email - Day Off Request\", \"prompt\": \"Write a professional email to your manager requesting a day off next Friday for a medical appointment. Include a subject line, greeting, reason, and sign-off.\", \"level\": \"beginner\", \"credits\": 25, \"word_limit\": 150}, {\"task_id\": \"letter_01\", \"type\": \"letter\", \"title\": \"Formal Letter - Complaint\", \"prompt\": \"Write a formal complaint letter to a company about a defective product you "
+    },
+    {
+      "name": "practice.submit",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"overall_score\": 5.0, \"category_scores\": {\"spelling\": 5, \"grammar\": 5, \"sentence_structure\": 5, \"tone\": 5, \"completeness\": 5}, \"errors\": [], \"improved_version\": \"Subject: Request for day off\\nDear manager, I am requesting a day off next friday for medical appointment. I will complete urgent tasks before leave and update my team. Thank you.\", \"strengths\": [\"Good effort!\"], \"areas_to_improve\": [\"Keep practicing to improve\"], \"credits_earned\": 12}"
+    },
+    {
+      "name": "project.create",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"id\": \"69c5a95080fdd65a115c331d\", \"message\": \"Project created!\"}"
+    },
+    {
+      "name": "project.list",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"projects\": [{\"id\": \"69c5a95080fdd65a115c331d\", \"title\": \"API Test Project\", \"doc_type\": \"email\", \"word_count\": 0, \"updated_at\": \"2026-03-26T21:46:56.877000\"}]}"
+    },
+    {
+      "name": "project.get",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"id\": \"69c5a95080fdd65a115c331d\", \"title\": \"API Test Project\", \"doc_type\": \"email\", \"content\": \"\", \"word_count\": 0, \"created_at\": \"2026-03-26T21:46:56.877000\", \"updated_at\": \"2026-03-26T21:46:56.877000\"}"
+    },
+    {
+      "name": "project.update",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"message\": \"Project saved!\", \"word_count\": 9}"
+    },
+    {
+      "name": "chat.history.initial",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"messages\": []}"
+    },
+    {
+      "name": "chat.send",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"response\": \"I'm having trouble connecting right now. \\ud83d\\ude05 But I can see you're at Level 21 with 42 credits! Try asking me again in a moment.\"}"
+    },
+    {
+      "name": "chat.history.after_send",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"messages\": [{\"role\": \"user\", \"content\": \"Please suggest how to improve my grammar quickly.\", \"timestamp\": \"2026-03-26T21:46:57.662000\"}, {\"role\": \"assistant\", \"content\": \"I'm having trouble connecting right now. \\ud83d\\ude05 But I can see you're at Level 21 with 42 credits! Try asking me again in a moment.\", \"timestamp\": \"2026-03-26T21:46:57.662000\"}]}"
+    },
+    {
+      "name": "chat.clear",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"message\": \"Chat history cleared!\"}"
+    },
+    {
+      "name": "analytics.dashboard",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"user_stats\": {\"level\": 21, \"total_credits\": 42, \"accuracy\": 50.0, \"current_streak\": 1, \"rank\": \"Beginner Writer\"}, \"current_lesson\": null, \"recent_activity\": [{\"type\": \"practice\", \"title\": \"email: Score 5.0/10\", \"status\": \"completed\", \"date\": \"2026-03-26T21:46:56.840000\"}, {\"type\": \"learning\", \"title\": \"Level 1: spelling_fundamentals\", \"status\": \"completed\", \"date\": \"2026-03-26T21:46:52.383000\"}], \"weekly_stats\": {\"lessons\": 1, \"practice_tasks\": 1}}"
+    },
+    {
+      "name": "analytics.overview.daily",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"stats\": {\"level\": 21, \"total_levels\": 30, \"accuracy\": 50.0, \"current_streak\": 1, \"best_streak\": 1, \"total_credits\": 42, \"rank\": \"Beginner Writer\"}, \"accuracy_graph\": [{\"date\": \"2026-03-26T21:46:56.840000\", \"score\": 5.0, \"type\": \"email\"}], \"error_patterns\": [], \"performance\": {\"lessons_completed\": 1, \"quizzes_passed\": 0, \"assignments_done\": 1, \"practice_tasks_done\": 1, \"avg_practice_score\": 5.0, \"best_practice_score\": 5.0}, \"badges\": [{\"badge_id\": \"first_steps\", \"badge_name\": \"\\ud83c\\udfc5 Firs"
+    },
+    {
+      "name": "analytics.overview.weekly",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"stats\": {\"level\": 21, \"total_levels\": 30, \"accuracy\": 50.0, \"current_streak\": 1, \"best_streak\": 1, \"total_credits\": 42, \"rank\": \"Beginner Writer\"}, \"accuracy_graph\": [{\"date\": \"2026-03-26T21:46:56.840000\", \"score\": 5.0, \"type\": \"email\"}], \"error_patterns\": [], \"performance\": {\"lessons_completed\": 1, \"quizzes_passed\": 0, \"assignments_done\": 1, \"practice_tasks_done\": 1, \"avg_practice_score\": 5.0, \"best_practice_score\": 5.0}, \"badges\": [{\"badge_id\": \"first_steps\", \"badge_name\": \"\\ud83c\\udfc5 Firs"
+    },
+    {
+      "name": "analytics.overview.monthly",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"stats\": {\"level\": 21, \"total_levels\": 30, \"accuracy\": 50.0, \"current_streak\": 1, \"best_streak\": 1, \"total_credits\": 42, \"rank\": \"Beginner Writer\"}, \"accuracy_graph\": [{\"date\": \"2026-03-26T21:46:56.840000\", \"score\": 5.0, \"type\": \"email\"}], \"error_patterns\": [], \"performance\": {\"lessons_completed\": 1, \"quizzes_passed\": 0, \"assignments_done\": 1, \"practice_tasks_done\": 1, \"avg_practice_score\": 5.0, \"best_practice_score\": 5.0}, \"badges\": [{\"badge_id\": \"first_steps\", \"badge_name\": \"\\ud83c\\udfc5 Firs"
+    },
+    {
+      "name": "analytics.settings_update",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"message\": \"Settings updated!\"}"
+    },
+    {
+      "name": "analytics.export",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"user\": {\"name\": \"WriteWisely API Tester\", \"email\": \"ww.test.5412b87a@example.com\", \"phone\": \"9876543210\", \"role\": \"professional\", \"email_verified\": true, \"created_at\": \"2026-03-26T21:46:51.091000\", \"last_login\": \"2026-03-26T21:46:52.247000\", \"profile\": {\"current_level\": 21, \"assessment_score\": 6, \"strengths\": [\"homophones\", \"spelling\", \"grammar\", \"punctuation\"], \"weaknesses\": [], \"total_credits\": 42, \"current_streak\": 1, \"best_streak\": 1, \"rank\": \"Beginner Writer\", \"last_active\": \"2026-03-26T2"
+    },
+    {
+      "name": "auth.forgot_password",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"message\": \"If this email is registered, a reset code has been sent.\"}"
+    },
+    {
+      "name": "auth.reset_password",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"message\": \"Password reset successful! Please login with your new password.\"}"
+    },
+    {
+      "name": "auth.login.after_reset",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2OWM1YTk0YjgwZmRkNjVhMTE1YzMzMTgiLCJleHAiOjE3NzQ2NDgwMTksImlhdCI6MTc3NDU2MTYxOX0.k9AcriMe9Ufq04C4HCDnkoYpeK1ys_9cL8zl7ArlzXI\", \"user\": {\"id\": \"69c5a94b80fdd65a115c3318\", \"name\": \"WriteWisely API Tester\", \"email\": \"ww.test.5412b87a@example.com\", \"phone\": \"9876543210\", \"role\": \"professional\", \"email_verified\": true, \"profile\": {\"current_level\": 21, \"assessment_score\": 6, \"strengths\": [\"homophones\", \"spelling\", \"grammar\", \"punctuation\"], \"w"
+    },
+    {
+      "name": "db.state.user",
+      "ok": true,
+      "status_code": null,
+      "duration_ms": null,
+      "details": "User document exists",
+      "response_excerpt": ""
+    },
+    {
+      "name": "db.state.learning_progress",
+      "ok": true,
+      "status_code": null,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": ""
+    },
+    {
+      "name": "db.state.practice_records",
+      "ok": true,
+      "status_code": null,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": ""
+    },
+    {
+      "name": "db.state.chat_history",
+      "ok": true,
+      "status_code": null,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": ""
+    },
+    {
+      "name": "ai.direct.call_llm",
+      "ok": false,
+      "status_code": null,
+      "duration_ms": null,
+      "details": "Direct LLM call failed: Expecting value: line 1 column 1 (char 0)",
+      "response_excerpt": ""
+    },
+    {
+      "name": "ai.direct.call_llm_chat",
+      "ok": true,
+      "status_code": null,
+      "duration_ms": null,
+      "details": "Direct chat LLM call completed",
+      "response_excerpt": "Here are two tips to help you avoid spelling mistakes:\n\n1. **Proofread with a dictionary or spell-check tool**: Before submitting your work, use a reliable dictionary or spell-check tool to check for spelling errors. Many word processing software and apps have built-in spell-check features that can catch mistakes.\n\n2. **Read your work aloud**: Reading your work aloud can help you catch spelling errors, as well as awkward phrasing and grammar mistakes. This technique can also help you identify ar"
+    },
+    {
+      "name": "project.delete",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"message\": \"Project deleted!\"}"
+    },
+    {
+      "name": "auth.delete_account",
+      "ok": true,
+      "status_code": 200,
+      "duration_ms": null,
+      "details": "",
+      "response_excerpt": "{\"message\": \"Account deleted successfully. We're sorry to see you go!\"}"
+    },
+    {
+      "name": "db.cleanup.user_deleted",
+      "ok": true,
+      "status_code": null,
+      "duration_ms": null,
+      "details": "User removed",
+      "response_excerpt": ""
+    }
+  ]
+}

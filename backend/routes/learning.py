@@ -104,7 +104,83 @@ async def get_lesson(level_id: int, user=Depends(get_current_user)):
         upsert=True
     )
     
-    return lesson
+    # Load quiz questions (from separate quiz file or lesson file)
+    quiz_questions = []
+    quiz_file = f"{QUIZZES_DIR}/quiz_{level_id:02d}.json"
+    if os.path.exists(quiz_file):
+        with open(quiz_file, "r") as f:
+            quiz_data = json.load(f)
+        quiz_questions = quiz_data.get("questions", [])
+    elif "quiz" in lesson:
+        quiz_questions = lesson.get("quiz", {}).get("questions", [])
+
+    # Get current progress to include in response
+    progress = await db.learning_progress.find_one(
+        {"user_id": user["id"], "level_number": level_id}
+    ) or {}
+
+    return {
+        "lesson": lesson,
+        "quiz": {"questions": quiz_questions},
+        "progress": {
+            "lesson_read": progress.get("lesson_read", False),
+            "quiz_completed": bool(progress.get("quiz_scores")),
+            "quiz_score": progress.get("quiz_scores", [{}])[-1].get("score", 0) if progress.get("quiz_scores") else 0,
+            "quiz_total": progress.get("quiz_scores", [{}])[-1].get("total", 0) if progress.get("quiz_scores") else 0,
+            "assignment_submitted": progress.get("assignment", {}).get("submitted", False),
+            "assignment_score": progress.get("assignment", {}).get("score", 0),
+            "assignment_total": progress.get("assignment", {}).get("total", 0),
+            "assignment_review": progress.get("assignment", {}).get("review", []),
+            "credits_earned": progress.get("credits_earned", 0),
+            "status": progress.get("status", "in_progress"),
+        }
+    }
+
+
+# ─── Mark Lesson Read ─────────────────────────────────────────
+@router.post("/lesson/{level_id}/complete")
+async def mark_lesson_read(level_id: int, user=Depends(get_current_user)):
+    db = get_db()
+    user_id = user["id"]
+
+    # Check if already marked read (no double credit)
+    progress = await db.learning_progress.find_one(
+        {"user_id": user_id, "level_number": level_id}
+    )
+
+    if progress and progress.get("lesson_read"):
+        return {
+            "message": "Lesson already marked as read",
+            "credits_earned": 0,
+            "progress": {"lesson_read": True}
+        }
+
+    credits = CREDIT_VALUES.get("lesson_complete", 10)
+
+    await db.learning_progress.update_one(
+        {"user_id": user_id, "level_number": level_id},
+        {
+            "$set": {"lesson_read": True},
+            "$inc": {"credits_earned": credits},
+            "$setOnInsert": {
+                "user_id": user_id,
+                "level_number": level_id,
+                "status": "in_progress",
+                "started_at": datetime.utcnow(),
+                "quiz_scores": [],
+                "assignment": {},
+            }
+        },
+        upsert=True
+    )
+
+    await add_credits(user_id, credits, f"Lesson Read Level {level_id}")
+
+    return {
+        "message": "Lesson marked as read",
+        "credits_earned": credits,
+        "progress": {"lesson_read": True}
+    }
 
 
 # ─── Submit Quiz ──────────────────────────────────────────────

@@ -1,62 +1,112 @@
-﻿{
-    "questions":  [
-                      {
-                          "id":  "l4q1",
-                          "question":  "Which is correct?",
-                          "options":  [
-                                          "I bought apple\u0027s and orange\u0027s.",
-                                          "I bought apples and oranges.",
-                                          "I bought apple\u0027s and oranges."
-                                      ],
-                          "correct":  1,
-                          "explanation":  "No apostrophe for plurals! Just add \u0027s\u0027."
-                      },
-                      {
-                          "id":  "l4q2",
-                          "question":  "Where does the comma go?",
-                          "options":  [
-                                          "After the game we went home.",
-                                          "After the game, we went home.",
-                                          "After, the game we went home."
-                                      ],
-                          "correct":  1,
-                          "explanation":  "Comma after introductory phrase: \u0027After the game, ...\u0027"
-                      },
-                      {
-                          "id":  "l4q3",
-                          "question":  "Which is correct?",
-                          "options":  [
-                                          "The dogs bone is here.",
-                                          "The dog\u0027s bone is here.",
-                                          "The dogs\u0027 bone is here (one dog)."
-                                      ],
-                          "correct":  1,
-                          "explanation":  "One dog owns the bone: dog\u0027s (singular possession)."
-                      },
-                      {
-                          "id":  "l4q4",
-                          "question":  "Choose the correct punctuation:",
-                          "options":  [
-                                          "I love reading, she loves writing.",
-                                          "I love reading; she loves writing.",
-                                          "I love reading: she loves writing."
-                                      ],
-                          "correct":  1,
-                          "explanation":  "Use a semicolon to connect two related independent clauses."
-                      },
-                      {
-                          "id":  "l4q5",
-                          "question":  "Which is correct?",
-                          "options":  [
-                                          "Dont forget your keys.",
-                                          "Don\u0027t forget your keys.",
-                                          "Do\u0027nt forget your keys."
-                                      ],
-                          "correct":  1,
-                          "explanation":  "Don\u0027t = do + not. The apostrophe replaces the \u0027o\u0027 in \u0027not\u0027."
-                      }
-                  ],
-    "title":  "Punctuation Essentials",
-    "quiz_id":  "quiz_04",
-    "level":  4
+{
+  "quiz_id": "quiz_04",
+  "level": 4,
+  "title": "Sentence Structure",
+  "questions": [
+    {
+      "id": "l4q1",
+      "question": "Which is a complete sentence?",
+      "options": [
+        "Running through the park.",
+        "Because it was raining.",
+        "The happy little puppy.",
+        "She runs through the park daily."
+      ],
+      "correct": 3,
+      "explanation": "D has subject (She) + verb (runs) + complete thought ✅"
+    },
+    {
+      "id": "l4q2",
+      "question": "What type of sentence is this? 'I wanted to stay, but I had to leave.'",
+      "options": ["Simple", "Complex", "Compound", "Compound-complex"],
+      "correct": 2,
+      "explanation": "Two simple sentences joined by 'but' (FANBOYS) = Compound"
+    },
+    {
+      "id": "l4q3",
+      "question": "Identify the run-on:",
+      "options": [
+        "She was tired. She went to bed.",
+        "She was tired, so she went to bed.",
+        "She was tired she went to bed.",
+        "Although she was tired, she went to bed."
+      ],
+      "correct": 2,
+      "explanation": "C is a fused sentence (no punctuation between two complete sentences)"
+    },
+    {
+      "id": "l4q4",
+      "question": "'Although it was raining ___' This is a:",
+      "options": ["Complete sentence", "Fragment", "Run-on", "Compound sentence"],
+      "correct": 1,
+      "explanation": "'Although it was raining' is a dependent clause - needs a main clause to complete it."
+    },
+    {
+      "id": "l4q5",
+      "question": "Which correctly fixes this comma splice? 'She was sad, she cried all day.'",
+      "options": [
+        "She was sad she cried all day.",
+        "She was sad, and she cried all day.",
+        "She was sad, but she cried all day.",
+        "She was sad, yet she cried all day."
+      ],
+      "correct": 1,
+      "explanation": "Add FANBOYS after comma. 'and' makes logical sense here."
+    },
+    {
+      "id": "l4q6",
+      "question": "Which is a COMPLEX sentence?",
+      "options": [
+        "I ran and she walked.",
+        "Dogs bark and cats meow.",
+        "Because he studied, he passed.",
+        "I tried but I failed."
+      ],
+      "correct": 2,
+      "explanation": "C has a subordinating conjunction 'because' making it complex."
+    },
+    {
+      "id": "l4q7",
+      "question": "'When the match ended ___' To complete this sentence correctly:",
+      "options": [
+        "When the match ended, we celebrated.",
+        "When the match ended. We celebrated.",
+        "When the match ended we celebrating.",
+        "When the match ended but we celebrated."
+      ],
+      "correct": 0,
+      "explanation": "Dependent clause first → needs comma then main clause."
+    },
+    {
+      "id": "l4q8",
+      "question": "What does a compound-complex sentence have?",
+      "options": [
+        "Two verbs and one subject",
+        "Two main clauses and one dependent clause",
+        "One main clause and two dependent clauses",
+        "Three simple sentences joined together"
+      ],
+      "correct": 1,
+      "explanation": "Compound (two main) + Complex (one dependent) = Compound-complex"
+    },
+    {
+      "id": "l4q9",
+      "question": "Which transition word shows CONTRAST?",
+      "options": ["Furthermore", "Therefore", "However", "Finally"],
+      "correct": 2,
+      "explanation": "However = shows contrast/opposite idea"
+    },
+    {
+      "id": "l4q10",
+      "question": "Fix the fragment: 'The old book with a torn cover on the dusty shelf.'",
+      "options": [
+        "Keep as is - it's correct.",
+        "The old book with a torn cover was on the dusty shelf.",
+        "On the dusty shelf the old book.",
+        "Because the old book with a torn cover."
+      ],
+      "correct": 1,
+      "explanation": "Added verb 'was' to make it a complete sentence with subject + verb + complete thought."
+    }
+  ]
 }

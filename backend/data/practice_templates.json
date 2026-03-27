@@ -1,58 +1,414 @@
 {
+  "meta": {
+    "total_templates": 14,
+    "levels": ["beginner", "intermediate", "advanced"],
+    "version": "2.0"
+  },
+
+  "level_mapping": {
+    "1": {
+      "label": "Basic Spelling",
+      "show_types": ["journal", "conversation", "message", "email_simple", "description"],
+      "focus": "Spelling + basic punctuation"
+    },
+    "2": {
+      "label": "Punctuation",
+      "show_types": ["journal", "conversation", "message", "email_simple", "description"],
+      "focus": "Punctuation use in writing"
+    },
+    "3": {
+      "label": "Grammar Mistakes",
+      "show_types": ["email_simple", "email_professional", "letter", "conversation"],
+      "focus": "Grammar accuracy"
+    },
+    "4": {
+      "label": "Sentence Structure",
+      "show_types": ["email_professional", "letter", "essay", "article", "story", "meeting_notes"],
+      "focus": "Sentence variety and structure"
+    },
+    "5": {
+      "label": "Formal Writing",
+      "show_types": ["email_professional", "letter", "report", "essay", "article", "cover_letter"],
+      "focus": "Formal tone and structure"
+    }
+  },
+
+  "retry_rules": {
+    "first_attempt": { "credits_multiplier": 1.0, "label": "Full credits" },
+    "second_attempt": { "credits_multiplier": 0.5, "label": "50% credits" },
+    "third_attempt_plus": { "credits_multiplier": 0.0, "label": "No credits (practice only)" }
+  },
+
+  "scoring_thresholds": {
+    "1-4": { "credits_multiplier": 0.0, "label": "No credits - try again" },
+    "5-6": { "credits_multiplier": 0.5, "label": "50% of template credits" },
+    "7-8": { "credits_multiplier": 1.0, "label": "Full template credits" },
+    "9-10": { "bonus_credits": 20, "credits_multiplier": 1.0, "label": "Full credits + 20 bonus" }
+  },
+
+  "evaluation_criteria": {
+    "beginner": {
+      "spelling": 35,
+      "basic_punctuation": 30,
+      "sentence_completion": 20,
+      "completeness": 15,
+      "note": "Grammar mistakes are noted but weighted less heavily"
+    },
+    "intermediate": {
+      "grammar": 30,
+      "tone_formality": 25,
+      "structure": 20,
+      "spelling": 15,
+      "completeness": 10
+    },
+    "advanced": {
+      "structure_format": 25,
+      "vocabulary_level": 20,
+      "grammar": 20,
+      "tone_formality": 20,
+      "completeness": 10,
+      "style_coherence": 5
+    }
+  },
+
   "templates": [
     {
-      "task_id": "email_01",
-      "type": "email",
-      "title": "Professional Email - Day Off Request",
-      "prompt": "Write a professional email to your manager requesting a day off next Friday for a medical appointment. Include a subject line, greeting, reason, and sign-off.",
+      "task_id": "B1",
+      "type": "journal",
+      "title": "Journal Entry - Best Day Recently",
+      "level": "beginner",
+      "credits": 20,
+      "min_words": 80,
+      "prompt": "Write a diary/journal entry about the best day you had recently. Describe:\n- What happened that day\n- Who you were with\n- How you felt\n- Why it was special to you\n\nStart with: 'Dear Diary,' and write in first person (I, my, me).",
+      "llm_checks": [
+        "Basic spelling of common words",
+        "Capital letters at start of sentences",
+        "Basic punctuation (. , ?)",
+        "Simple sentence completion",
+        "Use of first person correctly"
+      ],
+      "scoring_focus": {
+        "spelling": 40,
+        "punctuation": 30,
+        "completeness": 30
+      }
+    },
+    {
+      "task_id": "B2",
+      "type": "conversation",
+      "title": "Dialogue - Patient at the Doctor",
       "level": "beginner",
       "credits": 25,
-      "word_limit": 150
+      "min_words": 60,
+      "prompt": "Complete this conversation. Write ONLY the customer's responses (marked [YOU]):\n\nDoctor: Good morning! How are you feeling today?\nYou: [YOUR RESPONSE]\n\nDoctor: I see. How long have you had this problem?\nYou: [YOUR RESPONSE]\n\nDoctor: Do you have any allergies to medicine?\nYou: [YOUR RESPONSE]\n\nDoctor: I will prescribe some medicine. Take it twice a day. Understood?\nYou: [YOUR RESPONSE]\n\nMake your responses natural and polite.",
+      "llm_checks": [
+        "Responses make sense in context",
+        "Correct spelling",
+        "Proper punctuation in dialogue",
+        "Appropriate response length",
+        "Polite and natural tone"
+      ],
+      "scoring_focus": {
+        "spelling": 35,
+        "punctuation": 30,
+        "sentence_completion": 20,
+        "completeness": 15
+      }
     },
     {
-      "task_id": "letter_01",
-      "type": "letter",
-      "title": "Formal Letter - Complaint",
-      "prompt": "Write a formal complaint letter to a company about a defective product you purchased. Include the product name, issue, and what resolution you expect.",
+      "task_id": "B3",
+      "type": "message",
+      "title": "Short Message - Cancelling Plans",
+      "level": "beginner",
+      "credits": 20,
+      "min_words": 50,
+      "prompt": "Write a short message to your friend explaining that you cannot meet them today as planned. Include:\n- Why you cannot come\n- How you feel about missing it\n- When you can meet instead\n- A friendly ending\n\nKeep it casual - this is to a friend.",
+      "llm_checks": [
+        "Spelling of basic words",
+        "Sentence completion",
+        "Logical flow",
+        "Friendly/appropriate tone",
+        "Basic punctuation"
+      ],
+      "scoring_focus": {
+        "spelling": 35,
+        "punctuation": 30,
+        "sentence_completion": 20,
+        "completeness": 15
+      }
+    },
+    {
+      "task_id": "B4",
+      "type": "email_simple",
+      "title": "Simple Email to Teacher - Absent from Class",
+      "level": "beginner",
+      "credits": 25,
+      "min_words": 80,
+      "prompt": "Write an email to your teacher explaining why you missed class yesterday.\n\nInclude:\n- A subject line\n- A greeting\n- The reason you were absent\n- An apology\n- Ask for any missed work\n- A polite ending with your name\n\nYou were absent because you were sick with a fever.",
+      "llm_checks": [
+        "Spelling accuracy",
+        "Appropriate greeting/closing",
+        "Logical structure",
+        "Polite tone",
+        "Complete information included"
+      ],
+      "scoring_focus": {
+        "spelling": 35,
+        "punctuation": 30,
+        "sentence_completion": 20,
+        "completeness": 15
+      }
+    },
+    {
+      "task_id": "B5",
+      "type": "description",
+      "title": "Describing Your Favourite Room",
+      "level": "beginner",
+      "credits": 20,
+      "min_words": 80,
+      "prompt": "Describe your bedroom or your favourite room in your home.\n\nWrite about:\n- What the room looks like\n- What is in the room\n- What colours you see\n- Why you like this room\n- What you do in this room\n\nUse describing words (adjectives) to make it interesting.",
+      "llm_checks": [
+        "Spelling",
+        "Use of adjectives",
+        "Sentence structure",
+        "Punctuation",
+        "Coherent description"
+      ],
+      "scoring_focus": {
+        "spelling": 35,
+        "punctuation": 30,
+        "sentence_completion": 20,
+        "completeness": 15
+      }
+    },
+    {
+      "task_id": "I1",
+      "type": "email_professional",
+      "title": "Professional Email - Day Off Request",
       "level": "intermediate",
-      "credits": 35,
-      "word_limit": 200
+      "credits": 30,
+      "min_words": 120,
+      "prompt": "Write a professional email to your manager requesting one day off next Friday for a medical appointment.\n\nYour email must include:\n- A clear subject line\n- Proper formal greeting\n- Clear reason for the request\n- Assurance that work will not suffer\n- Polite request for approval\n- Professional sign-off\n\nRemember: This is to your manager, so keep it professional and respectful.",
+      "llm_checks": [
+        "Grammar accuracy (subject-verb agreement)",
+        "Correct tense usage",
+        "No contractions in formal parts",
+        "Professional vocabulary",
+        "Email structure",
+        "Spelling"
+      ],
+      "scoring_focus": {
+        "grammar": 30,
+        "tone_formality": 25,
+        "structure": 20,
+        "spelling": 15,
+        "completeness": 10
+      }
     },
     {
-      "task_id": "report_01",
-      "type": "report",
-      "title": "Short Report - Weekly Summary",
-      "prompt": "Write a short weekly report summarizing 3 tasks you completed this week, 1 challenge you faced, and your plan for next week.",
+      "task_id": "I2",
+      "type": "letter",
+      "title": "Formal Complaint Letter - Restaurant",
       "level": "intermediate",
       "credits": 40,
-      "word_limit": 250
+      "min_words": 150,
+      "prompt": "Write a formal complaint letter to the manager of a restaurant where you had a disappointing experience last Saturday.\n\nThe problems were:\n- You waited 45 minutes for your food\n- The food arrived cold\n- The waiter was rude when you complained\n- You were charged for a dish you didn't order\n\nInclude:\n- Your contact details (make them up)\n- Date\n- Formal greeting\n- Clear explanation of each problem\n- What you want them to do about it\n- Polite but firm closing",
+      "llm_checks": [
+        "Formal letter structure",
+        "Correct punctuation throughout",
+        "Grammar and tense consistency",
+        "Professional but assertive tone",
+        "Logical paragraph structure",
+        "Specific complaint details addressed"
+      ],
+      "scoring_focus": {
+        "grammar": 30,
+        "tone_formality": 25,
+        "structure": 20,
+        "spelling": 15,
+        "completeness": 10
+      }
     },
     {
-      "task_id": "conversation_01",
-      "type": "conversation",
-      "title": "Dialogue - Job Interview",
-      "prompt": "Write a short dialogue between a job interviewer and a candidate. The interviewer asks about the candidate's strengths and experience. Include at least 6 exchanges.",
-      "level": "beginner",
-      "credits": 30,
-      "word_limit": 200
-    },
-    {
-      "task_id": "article_01",
-      "type": "article",
-      "title": "Short Article - Benefits of Reading",
-      "prompt": "Write a short article about the benefits of reading books. Include an engaging introduction, at least 3 benefits with explanations, and a conclusion.",
+      "task_id": "I3",
+      "type": "essay",
+      "title": "Opinion Essay - Social Media",
       "level": "intermediate",
       "credits": 45,
-      "word_limit": 300
+      "min_words": 180,
+      "prompt": "Write a short essay giving YOUR OPINION on:\n\n'Social media does more harm than good for young people.'\n\nYour essay MUST have:\n- Introduction (state your opinion clearly)\n- Paragraph 1 (first reason/argument)\n- Paragraph 2 (second reason/argument)\n- Paragraph 3 (opposing view + your counter)\n- Conclusion (restate opinion, final thought)\n\nUse transition words between paragraphs:\n(However, Furthermore, In conclusion, etc.)",
+      "llm_checks": [
+        "Essay structure (5 paragraphs)",
+        "Transition words used correctly",
+        "Clear opinion stated and maintained",
+        "Sentence variety (simple/compound/complex)",
+        "Grammar accuracy",
+        "Punctuation",
+        "Vocabulary level"
+      ],
+      "scoring_focus": {
+        "grammar": 30,
+        "tone_formality": 25,
+        "structure": 20,
+        "spelling": 15,
+        "completeness": 10
+      }
     },
     {
-      "task_id": "essay_01",
-      "type": "essay",
-      "title": "Opinion Essay - Technology in Education",
-      "prompt": "Write an opinion essay on whether technology improves or hinders education. Take a clear stance, provide at least 2 supporting arguments, address a counterargument, and conclude with your final thoughts.",
+      "task_id": "I4",
+      "type": "story",
+      "title": "Story Continuation - The Mysterious Letter",
+      "level": "intermediate",
+      "credits": 35,
+      "min_words": 150,
+      "prompt": "Continue this story for at least 3 more paragraphs. Keep the same tone and style:\n\n--- START OF STORY ---\n'The letter arrived on a Tuesday morning, which was strange because the post never came before noon. Sarah picked it up from the doormat and noticed there was no stamp, no return address — only her name written in handwriting she did not recognize.'\n--- END OF STORY ---\n\nYour continuation must:\n- Make logical sense with the beginning\n- Have a clear sequence of events\n- Use descriptive language\n- Include at least one piece of dialogue\n- End at an interesting point (not THE end)",
+      "llm_checks": [
+        "Consistent tense (past tense throughout)",
+        "Story logic and coherence",
+        "Descriptive language used",
+        "Dialogue punctuated correctly",
+        "Paragraph structure",
+        "Sentence variety",
+        "Spelling"
+      ],
+      "scoring_focus": {
+        "grammar": 30,
+        "tone_formality": 25,
+        "structure": 20,
+        "spelling": 15,
+        "completeness": 10
+      }
+    },
+    {
+      "task_id": "I5",
+      "type": "meeting_notes",
+      "title": "Meeting Summary - Marketing Campaign",
+      "level": "intermediate",
+      "credits": 35,
+      "min_words": 120,
+      "prompt": "Read this information and write a clear meeting summary:\n\nINFORMATION:\n- Date: Monday, January 20, 2025\n- Attendees: Sarah (Manager), Tom (Sales), Lisa (Marketing), David (Finance)\n- Topic 1: Sales dropped 15% last quarter\n- Topic 2: New marketing campaign planned for February - social media focus\n- Topic 3: Budget approved for campaign: $5,000\n- Decision: Launch campaign on February 1st\n- Action: Tom to prepare sales report by Friday. Lisa to design social media posts.\n- Next meeting: February 3rd, 2 PM\n\nWrite this as a professional meeting summary with clear headings and bullet points where appropriate.",
+      "llm_checks": [
+        "All information accurately included",
+        "Professional format and headings",
+        "Clear and concise language",
+        "Correct punctuation",
+        "Grammar accuracy",
+        "Proper use of formal vocabulary"
+      ],
+      "scoring_focus": {
+        "grammar": 30,
+        "tone_formality": 25,
+        "structure": 20,
+        "spelling": 15,
+        "completeness": 10
+      }
+    },
+    {
+      "task_id": "A1",
+      "type": "report",
+      "title": "Formal Report - Four-Day Working Week",
+      "level": "advanced",
+      "credits": 50,
+      "min_words": 200,
+      "prompt": "Write a formal report for your company manager on the topic:\n\n'The Benefits and Challenges of Introducing a Four-Day Working Week'\n\nYour report MUST follow this structure:\n1. Title\n2. Introduction (purpose of report)\n3. Benefits (at least 3 points)\n4. Challenges (at least 2 points)\n5. Recommendation (what you suggest)\n6. Conclusion\n\nUse formal language throughout.\nUse headings for each section.\nWrite in third person where possible (avoid 'I think' - use 'It is recommended')",
+      "llm_checks": [
+        "Report structure followed correctly",
+        "Formal language (no contractions, no slang)",
+        "Third person used appropriately",
+        "Passive voice used correctly",
+        "Advanced vocabulary",
+        "Grammar and punctuation",
+        "Logical argument flow",
+        "Headings used correctly"
+      ],
+      "scoring_focus": {
+        "structure_format": 25,
+        "vocabulary_level": 20,
+        "grammar": 20,
+        "tone_formality": 20,
+        "completeness": 10,
+        "style_coherence": 5
+      }
+    },
+    {
+      "task_id": "A2",
+      "type": "article",
+      "title": "News Article - School Wins Robotics Competition",
+      "level": "advanced",
+      "credits": 45,
+      "min_words": 180,
+      "prompt": "Write a short newspaper article using this information:\n\nFACTS:\n- City: Manchester, England\n- Event: Local school wins national robotics competition\n- School: Greenfield Secondary School\n- Students: Team of 5, aged 14-16\n- Competition: National STEM Challenge 2025\n- Their robot: Could sort recycling automatically\n- Teacher: Mr. Ahmed Khan led the team\n- Prize: £10,000 and a trip to NASA\n\nYour article MUST include:\n- A strong headline\n- Opening paragraph (who, what, where, when)\n- Quote from a student (make it up)\n- Quote from the teacher\n- Background information\n- Closing statement",
+      "llm_checks": [
+        "Journalistic structure (inverted pyramid)",
+        "Quotes properly punctuated",
+        "Appropriate news writing style",
+        "Past tense for events",
+        "Grammar and punctuation accuracy",
+        "Headline effectiveness",
+        "All required elements included"
+      ],
+      "scoring_focus": {
+        "structure_format": 25,
+        "vocabulary_level": 20,
+        "grammar": 20,
+        "tone_formality": 20,
+        "completeness": 10,
+        "style_coherence": 5
+      }
+    },
+    {
+      "task_id": "A3",
+      "type": "cover_letter",
+      "title": "Cover Letter - Junior Marketing Assistant",
+      "level": "advanced",
+      "credits": 50,
+      "min_words": 220,
+      "prompt": "Write a cover letter for this job:\n\nJOB AD:\nPosition: Junior Marketing Assistant\nCompany: BrightMedia Agency\nRequirements:\n- Degree in Marketing or related field\n- Good communication skills\n- Social media experience\n- Ability to work in a team\n- Creative thinking\n\nYou are applying. Make up:\n- Your name and contact details\n- Your relevant qualification\n- 2-3 relevant experiences or skills\n- Why you want THIS specific company\n\nYour letter MUST have:\n- Your address and date\n- Company address\n- Formal greeting (Dear Hiring Manager)\n- Opening: why you are writing\n- Body: your relevant skills/experience\n- Why you want this job/company specifically\n- Closing: request for interview\n- Formal sign-off",
+      "llm_checks": [
+        "Letter format followed precisely",
+        "No contractions used",
+        "Advanced formal vocabulary",
+        "Persuasive but professional tone",
+        "All required elements present",
+        "Grammar and punctuation",
+        "Appropriate length and balance"
+      ],
+      "scoring_focus": {
+        "structure_format": 25,
+        "vocabulary_level": 20,
+        "grammar": 20,
+        "tone_formality": 20,
+        "completeness": 10,
+        "style_coherence": 5
+      }
+    },
+    {
+      "task_id": "A4",
+      "type": "essay_argumentative",
+      "title": "Argumentative Essay - Artificial Intelligence & Jobs",
       "level": "advanced",
       "credits": 60,
-      "word_limit": 400
+      "min_words": 250,
+      "prompt": "Write a well-structured argumentative essay on this topic:\n\n'Artificial Intelligence will create more jobs than it destroys.'\n\nDo you AGREE or DISAGREE?\n\nREQUIRED STRUCTURE:\nPara 1 - Introduction: Hook sentence + background + thesis statement\nPara 2 - Argument FOR (even if you disagree, present the strongest case for this view)\nPara 3 - Argument AGAINST\nPara 4 - Your analysis: which side is stronger and why, with specific examples\nPara 5 - Conclusion: Restate thesis, summary, final thought\n\nREQUIREMENTS:\n- Use academic vocabulary\n- Use at least 4 different transition words\n- Include at least 2 specific examples\n- No contractions\n- Varied sentence structures\n- Clear logical progression",
+      "llm_checks": [
+        "Essay structure (5 paragraphs)",
+        "Academic vocabulary level",
+        "Argument quality and logic",
+        "Transition words used correctly",
+        "Examples provided and relevant",
+        "No contractions",
+        "Grammar sophistication",
+        "Sentence variety",
+        "Spelling and punctuation"
+      ],
+      "scoring_focus": {
+        "structure_format": 25,
+        "vocabulary_level": 20,
+        "grammar": 20,
+        "tone_formality": 20,
+        "completeness": 10,
+        "style_coherence": 5
+      }
     }
   ]
 }

@@ -1,62 +1,87 @@
-﻿{
-    "questions":  [
-                      {
-                          "id":  "l3q1",
-                          "question":  "The list of items ___ on the desk.",
-                          "options":  [
-                                          "are",
-                                          "is",
-                                          "were"
-                                      ],
-                          "correct":  1,
-                          "explanation":  "Subject is \u0027list\u0027 (singular), not \u0027items\u0027. Use \u0027is\u0027."
-                      },
-                      {
-                          "id":  "l3q2",
-                          "question":  "My brother and sister ___ coming.",
-                          "options":  [
-                                          "is",
-                                          "are",
-                                          "was"
-                                      ],
-                          "correct":  1,
-                          "explanation":  "Two subjects joined by \u0027and\u0027 = plural. Use \u0027are\u0027."
-                      },
-                      {
-                          "id":  "l3q3",
-                          "question":  "She ___ to school every day.",
-                          "options":  [
-                                          "walk",
-                                          "walks",
-                                          "walking"
-                                      ],
-                          "correct":  1,
-                          "explanation":  "Singular subject \u0027she\u0027 takes singular verb \u0027walks\u0027."
-                      },
-                      {
-                          "id":  "l3q4",
-                          "question":  "Neither the teacher nor the students ___ ready.",
-                          "options":  [
-                                          "is",
-                                          "are",
-                                          "was"
-                                      ],
-                          "correct":  1,
-                          "explanation":  "With \u0027nor\u0027, match verb to nearest subject: \u0027students\u0027 (plural) â†’ \u0027are\u0027."
-                      },
-                      {
-                          "id":  "l3q5",
-                          "question":  "Everyone ___ welcome here.",
-                          "options":  [
-                                          "are",
-                                          "is",
-                                          "were"
-                                      ],
-                          "correct":  1,
-                          "explanation":  "\u0027Everyone\u0027 is a singular indefinite pronoun â†’ \u0027is\u0027."
-                      }
-                  ],
-    "title":  "Subject-Verb Agreement",
-    "quiz_id":  "quiz_03",
-    "level":  3
+{
+  "quiz_id": "quiz_03",
+  "level": 3,
+  "title": "Common Grammar Mistakes",
+  "questions": [
+    {
+      "id": "l3q1",
+      "question": "'The team of players ___ ready.'",
+      "options": ["are", "is", "were", "have"],
+      "correct": 1,
+      "explanation": "'team' is singular collective noun → is"
+    },
+    {
+      "id": "l3q2",
+      "question": "Choose the correct word: '___ going to the party tonight.'",
+      "options": ["Their", "There", "They're", "Theyre"],
+      "correct": 2,
+      "explanation": "They're = they are going → makes sense"
+    },
+    {
+      "id": "l3q3",
+      "question": "'The box of apples ___ on the table.'",
+      "options": ["are", "were", "is", "have"],
+      "correct": 2,
+      "explanation": "Subject = 'box' (singular) → is. 'of apples' just describes the box"
+    },
+    {
+      "id": "l3q4",
+      "question": "Which sentence is correct?",
+      "options": [
+        "I went to the store and I buy milk.",
+        "I went to the store and I bought milk.",
+        "I go to the store and I bought milk.",
+        "I go to the store and I will buy milk."
+      ],
+      "correct": 1,
+      "explanation": "'went' = past tense, so 'bought' must also be past (consistency)"
+    },
+    {
+      "id": "l3q5",
+      "question": "'This is ___ house, isn't it?'",
+      "options": ["you're", "your", "yor", "yore"],
+      "correct": 1,
+      "explanation": "'your' = belonging to you. 'you're house' = 'you are house' (wrong!)"
+    },
+    {
+      "id": "l3q6",
+      "question": "'Neither of the answers ___ correct.'",
+      "options": ["are", "were", "is", "have been"],
+      "correct": 2,
+      "explanation": "'Neither' is always singular → is"
+    },
+    {
+      "id": "l3q7",
+      "question": "'She put the keys ___ on the table.'",
+      "options": ["their", "they're", "there", "thare"],
+      "correct": 2,
+      "explanation": "'there' = place/location"
+    },
+    {
+      "id": "l3q8",
+      "question": "'It was ___ cold ___ go outside.'",
+      "options": ["too, to", "to, too", "two, to", "too, too"],
+      "correct": 0,
+      "explanation": "'too cold' = excessively cold. 'to go' = infinitive verb form"
+    },
+    {
+      "id": "l3q9",
+      "question": "Which is correct?",
+      "options": [
+        "Everyone have their own idea.",
+        "Everyone has their own idea.",
+        "Everyone have his own idea.",
+        "Everyone are having their idea."
+      ],
+      "correct": 1,
+      "explanation": "'Everyone' = singular → has (not have)"
+    },
+    {
+      "id": "l3q10",
+      "question": "'The students forgot ___ homework.'",
+      "options": ["they're", "there", "their", "thier"],
+      "correct": 2,
+      "explanation": "'their' = belonging to the students"
+    }
+  ]
 }

@@ -144,6 +144,7 @@ class ProjectListItem(BaseModel):
 
 class SendMessageRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=2000)
+    document_ids: Optional[List[str]] = []
 
 
 class ChatMessage(BaseModel):
