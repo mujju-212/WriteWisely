@@ -52,6 +52,40 @@ BADGES = {
 }
 
 
+def _normalize_user_id(user_id: str):
+    if ObjectId.is_valid(user_id):
+        return ObjectId(user_id)
+    return user_id
+
+
+async def create_notification(
+    user_id: str,
+    notif_type: str,
+    title: str,
+    message: str,
+    icon: str,
+    action_url: str,
+    metadata: dict | None = None,
+    db=None,
+):
+    """Create a notification for a user. Never raises to callers."""
+    try:
+        db = db or get_db()
+        await db.notifications.insert_one({
+            "user_id": _normalize_user_id(user_id),
+            "type": notif_type,
+            "title": title,
+            "message": message,
+            "icon": icon,
+            "read": False,
+            "action_url": action_url,
+            "metadata": metadata or {},
+            "created_at": datetime.utcnow(),
+        })
+    except Exception as e:
+        print(f"⚠️ Notification create failed: {e}")
+
+
 # ─── Error Pattern Functions ──────────────────────────────────
 
 async def save_errors(user_id: str, errors: list, source: str):
@@ -156,6 +190,7 @@ async def add_credits(user_id: str, amount: int, reason: str) -> int:
     )
     
     new_total = result["profile"]["total_credits"]
+    previous_total = max(new_total - amount, 0)
     
     # Update rank
     new_rank = "Beginner Writer"
@@ -167,6 +202,19 @@ async def add_credits(user_id: str, amount: int, reason: str) -> int:
         {"_id": ObjectId(user_id)},
         {"$set": {"profile.rank": new_rank}}
     )
+
+    for milestone in (100, 250, 500, 1000):
+        if previous_total < milestone <= new_total:
+            await create_notification(
+                user_id=user_id,
+                notif_type="credit_milestone",
+                title="⭐ Credit Milestone!",
+                message=f"You crossed {milestone} credits! You're now a {new_rank}.",
+                icon="⭐",
+                action_url="/analytics",
+                metadata={"milestone": milestone, "new_rank": new_rank},
+                db=db,
+            )
     
     # Check for new badges
     await _check_badges(user_id)
@@ -219,6 +267,18 @@ async def update_streak(user_id: str):
             "profile.last_active": now
         }}
     )
+
+    if current_streak in (3, 7, 14, 30):
+        await create_notification(
+            user_id=user_id,
+            notif_type="streak",
+            title=f"🔥 {current_streak} Day Streak!",
+            message=f"You're on a {current_streak} day learning streak! Keep going for more rewards.",
+            icon="🔥",
+            action_url="/dashboard",
+            metadata={"streak_days": current_streak},
+            db=db,
+        )
     
     # Award streak bonuses
     if current_streak == 7:
@@ -278,6 +338,16 @@ async def _check_badges(user_id: str):
                 "earned_at": datetime.utcnow(),
                 "credits_at_earn": profile.get("total_credits", 0)
             })
+            await create_notification(
+                user_id=user_id,
+                notif_type="badge_earned",
+                title="🏅 Badge Earned!",
+                message=f"You earned the {badge_def['name']} badge!",
+                icon="🏅",
+                action_url="/analytics",
+                metadata={"badge_id": badge_id},
+                db=db,
+            )
 
 
 async def get_badges(user_id: str) -> list:
@@ -361,6 +431,16 @@ async def _award_badge(user_id: str, badge_id: str, db) -> dict:
         "earned_at": datetime.utcnow(),
     }
     await db.badges.insert_one(badge_doc)
+    await create_notification(
+        user_id=user_id,
+        notif_type="badge_earned",
+        title="🏅 Badge Earned!",
+        message=f"You earned the {badge_doc['badge_name']} badge!",
+        icon="🏅",
+        action_url="/analytics",
+        metadata={"badge_id": badge_id},
+        db=db,
+    )
     return {"badge_id": badge_id, "badge_name": badge_def.get("name", badge_id)}
 
 

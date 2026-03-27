@@ -3,9 +3,115 @@ services/checker_service.py — Spell/Grammar Check Logic
 Pipeline: Tier 1 (edit distance, instant) → Tier 2 (AI deep analysis) → Merge
 """
 
+import re
+
 from services.llm_service import call_llm
 from services.pattern_service import save_errors
 from prompts.templates import get_prompt
+
+
+def _norm_token(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "", (value or "").lower())
+
+
+def _find_word_span(text: str, word: str, taken_spans: list[tuple[int, int]]) -> tuple[int, int] | None:
+    """Find a non-overlapping span for `word` in `text` using word boundaries."""
+    if not text or not word:
+        return None
+
+    word_clean = _norm_token(word)
+    if not word_clean:
+        return None
+
+    for m in re.finditer(r"\b{}\b".format(re.escape(word_clean)), text.lower()):
+        start, end = m.start(), m.end()
+        overlaps = any(start < t_end and end > t_start for t_start, t_end in taken_spans)
+        if not overlaps:
+            return start, end
+
+    # Fallback: substring lookup without boundaries
+    idx = text.lower().find(word_clean)
+    if idx >= 0:
+        start, end = idx, idx + len(word_clean)
+        overlaps = any(start < t_end and end > t_start for t_start, t_end in taken_spans)
+        if not overlaps:
+            return start, end
+
+    return None
+
+
+def _normalize_error_positions(text: str, errors: list) -> list:
+    """Ensure all errors have sane character positions mapped to the actual text."""
+    if not errors:
+        return []
+
+    normalized = []
+    taken_spans: list[tuple[int, int]] = []
+    text_len = len(text)
+
+    for err in errors:
+        e = dict(err)
+        etype = e.get("type", "grammar")
+        e.setdefault("color", "red" if etype == "spelling" else "yellow")
+
+        word = (e.get("word") or e.get("original") or "").strip()
+        pos = e.get("position") or {}
+        start = pos.get("start")
+        end = pos.get("end")
+
+        has_valid_position = (
+            isinstance(start, int)
+            and isinstance(end, int)
+            and 0 <= start < end <= text_len
+        )
+
+        if has_valid_position and word:
+            slice_clean = _norm_token(text[start:end])
+            word_clean = _norm_token(word)
+            if slice_clean != word_clean:
+                has_valid_position = False
+
+        if not has_valid_position:
+            span = _find_word_span(text, word, taken_spans)
+            if span:
+                start, end = span
+                has_valid_position = True
+            elif isinstance(start, int) and isinstance(end, int):
+                # Clamp to valid range as a last resort.
+                s = max(0, min(start, max(0, text_len - 1)))
+                e_pos = max(s + 1, min(end, text_len))
+                start, end = s, e_pos
+                has_valid_position = True
+
+        if has_valid_position:
+            e["position"] = {"start": start, "end": end}
+            taken_spans.append((start, end))
+
+        normalized.append(e)
+
+    # Deduplicate by error type + word + position.
+    deduped = _dedupe_errors(normalized)
+    return deduped
+
+
+def _dedupe_errors(errors: list) -> list:
+    """Deduplicate errors by type + normalized word + position."""
+    deduped = []
+    seen = set()
+    for e in errors:
+        pos = e.get("position") or {}
+        key = (
+            e.get("type", "grammar"),
+            (e.get("word") or e.get("original") or "").strip().lower(),
+            pos.get("start"),
+            pos.get("end"),
+        )
+        if key in seen:
+            continue
+        seen.add(key)
+        deduped.append(e)
+
+    return deduped
 
 
 async def check_text(text: str, mode: str, context: str, user_level: str, user_id: str = None, task_prompt: str = None) -> dict:
@@ -38,6 +144,9 @@ async def check_text(text: str, mode: str, context: str, user_level: str, user_i
         else:
             result = await _check_project(text, context, user_level, tier1_errors)
 
+        # Normalize AI positions before merging so frontend highlights line up.
+        result["errors"] = _normalize_error_positions(text, result.get("errors", []))
+
         # ── MERGE: AI takes priority, Tier 1 fills gaps ───────────
         result = _merge_results(tier1_errors, result, mode)
         result["fallback_used"] = False
@@ -65,40 +174,47 @@ def _merge_results(tier1_errors: list, ai_result: dict, mode: str) -> dict:
     Merge Tier 1 (edit distance) and Tier 2 (AI) results.
     - AI errors always take priority (richer info)
     - Tier 1 errors fill in anything AI missed
-    - Deduplication by character position overlap
+    - Deduplication by word-text overlap (not just start char)
     """
     ai_errors = ai_result.get("errors", [])
 
-    # Build set of positions covered by AI
-    ai_covered_positions = set()
+    # Build set of character positions already covered by AI errors.
+    # Positions are end-exclusive.
+    ai_covered = set()
     for err in ai_errors:
-        pos = err.get("position", {})
+        pos = err.get("position") or {}
         start = pos.get("start", -1)
-        end = pos.get("end", -1)
-        if start >= 0:
-            for i in range(start, end + 1):
-                ai_covered_positions.add(i)
+        end   = pos.get("end", -1)
+        if start >= 0 and end > start:
+            for i in range(start, end):
+                ai_covered.add(i)
 
-    # Add Tier 1 errors that AI didn't cover
-    merged_errors = list(ai_errors)
-    for t1_err in tier1_errors:
-        pos = t1_err.get("position", {})
+    # Add Tier 1 errors only where AI has no overlap
+    merged = list(ai_errors)
+    for t1 in tier1_errors:
+        pos   = t1.get("position") or {}
         start = pos.get("start", -1)
-        if start >= 0 and start not in ai_covered_positions:
-            # AI missed this — add Tier 1 result (as spelling only)
-            if mode == "practice_live":
-                # In live mode, strip correction (hints only)
-                merged_errors.append({
-                    "type": "spelling",
-                    "word": t1_err.get("word", ""),
-                    "hint": "Check the spelling of this word",
-                    "position": t1_err.get("position"),
-                    "color": "red"
-                })
-            else:
-                merged_errors.append(t1_err)
+        end   = pos.get("end", start)
+        if start < 0:
+            continue
+        # Skip if any character in this word is already covered by AI
+        word_range = set(range(start, end))
+        if word_range & ai_covered:
+            continue
+        # Not covered — add it
+        if mode == "practice_live":
+            merged.append({
+                "type": "spelling",
+                "word": t1.get("word", ""),
+                "hint": "Check the spelling of this word",
+                "correction": t1.get("correction", ""),
+                "position": pos,
+                "color": "red"
+            })
+        else:
+            merged.append(t1)
 
-    ai_result["errors"] = merged_errors
+    ai_result["errors"] = _dedupe_errors(merged)
     return ai_result
 
 
@@ -118,7 +234,6 @@ async def _check_live(text: str, context: str, user_level: str, tier1_errors: li
     errors = result.get("errors", [])
     for error in errors:
         error.setdefault("color", "red" if error.get("type") == "spelling" else "yellow")
-        error.pop("correction", None)
         error.pop("explanation", None)
         error.pop("improved_version", None)
 
@@ -175,11 +290,11 @@ def _format_tier1_for_prompt(tier1_errors: list) -> str:
 
 def _fallback_check(text: str) -> dict:
     """
-    Tier 1: Edit distance spell check using common misspellings dictionary.
-    Runs instantly (<5ms). Catches obvious typos.
-    Always runs BEFORE AI — results passed as context to AI prompt.
+    Tier 1: Dictionary-based spell check.
+    Runs instantly (<5ms). Catches common typos.
+    Positions are measured by scanning the original string so multi-space
+    gaps, newlines, and punctuation don't throw offsets off.
     """
-    # Expanded common misspellings dictionary
     common_corrections = {
         "teh": "the", "recieve": "receive", "occurence": "occurrence",
         "seperate": "separate", "definately": "definitely", "accomodate": "accommodate",
@@ -230,9 +345,9 @@ def _fallback_check(text: str) -> dict:
         "jewlry": "jewelry", "jurnalist": "journalist", "knolwedge": "knowledge",
         "liesure": "leisure", "libary": "library", "lisense": "license",
         "litrally": "literally", "lonliness": "loneliness", "medeival": "medieval",
-        "mispell": "misspell", "missle": "missile", "morale": "morale",
+        "mispell": "misspell", "missle": "missile",
         "narative": "narrative", "naturaly": "naturally", "negociate": "negotiate",
-        "nervious": "nervous", "occaisional": "occasional", "offence": "offence",
+        "nervious": "nervous", "occaisional": "occasional",
         "ommit": "omit", "oppertunity": "opportunity", "oposition": "opposition",
         "origional": "original", "paramter": "parameter", "particuarly": "particularly",
         "penninsula": "peninsula", "percentige": "percentage", "permenant": "permanent",
@@ -240,12 +355,12 @@ def _fallback_check(text: str) -> dict:
         "posible": "possible", "practicle": "practical", "predjudice": "prejudice",
         "preperation": "preparation", "presense": "presence", "preveous": "previous",
         "princapal": "principal", "proably": "probably", "professionaly": "professionally",
-        "promissory": "promissory", "propably": "probably", "purposly": "purposely",
-        "reccomend": "recommend", "recieve": "receive", "relavant": "relevant",
+        "propably": "probably", "purposly": "purposely",
+        "reccomend": "recommend", "relavant": "relevant",
         "religous": "religious", "repitition": "repetition", "responsable": "responsible",
         "rediculous": "ridiculous", "scedule": "schedule", "senstive": "sensitive",
-        "similer": "similar", "sincerly": "sincerely", "skillful": "skillful",
-        "souviner": "souvenir", "specifly": "specify", "stationery": "stationery",
+        "similer": "similar", "sincerly": "sincerely",
+        "souviner": "souvenir", "specifly": "specify",
         "studing": "studying", "succede": "succeed", "sumary": "summary",
         "supercede": "supersede", "suprize": "surprise", "surounded": "surrounded",
         "tecnology": "technology", "temperment": "temperament", "tendancy": "tendency",
@@ -256,28 +371,39 @@ def _fallback_check(text: str) -> dict:
         "vegatable": "vegetable", "violance": "violence", "visability": "visibility",
         "volcane": "volcano", "voluntery": "voluntary", "vulernable": "vulnerable",
         "wenever": "whenever", "wheter": "whether", "widley": "widely",
-        "wonderfull": "wonderful", "writting": "writing", "yesturday": "yesterday",
+        "wonderfull": "wonderful", "yesturday": "yesterday",
     }
 
-    words = text.split()
+    STRIP_CHARS = ".,!?;:\"'()[]{}\u2013\u2014-"
     errors = []
-    pos = 0
+    scan_pos = 0  # current char position in the ORIGINAL string
 
-    for word in words:
-        clean_word = word.strip(".,!?;:\"'()[]{}-").lower()
+    # Split on whitespace but keep track of real positions in original text
+    import re
+    for match in re.finditer(r'\S+', text):
+        raw_word = match.group()          # e.g. "teh,"
+        word_start = match.start()        # real offset in original string
 
-        if clean_word in common_corrections:
+        # Strip surrounding punctuation for dictionary lookup only
+        clean = raw_word.strip(STRIP_CHARS).lower()
+        if not clean:
+            continue
+
+        if clean in common_corrections:
+            # Find where the clean word starts within raw_word (skip leading punct)
+            leading_stripped = len(raw_word) - len(raw_word.lstrip(STRIP_CHARS))
+            err_start = word_start + leading_stripped
+            err_end   = err_start + len(clean)   # end = first char AFTER the word
+
             errors.append({
                 "type": "spelling",
-                "word": word,
-                "correction": common_corrections[clean_word],
-                "hint": "Possible spelling error",
-                "explanation": f"Did you mean '{common_corrections[clean_word]}'?",
-                "position": {"start": pos, "end": pos + len(word)},
+                "word": clean,          # the misspelled word (no punctuation)
+                "correction": common_corrections[clean],
+                "hint": f"Did you mean \u2018{common_corrections[clean]}\u2019?",
+                "explanation": f"\u2018{clean}\u2019 is misspelled. The correct spelling is \u2018{common_corrections[clean]}\u2019.",
+                "position": {"start": err_start, "end": err_end},
                 "severity": "minor",
                 "color": "red"
             })
-
-        pos += len(word) + 1  # +1 for space
 
     return {"errors": errors}

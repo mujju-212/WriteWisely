@@ -57,21 +57,26 @@ export const submitAssignment = (levelId, text) =>
 
 // ─── Practice ─────────────────────────────────────────────
 export const fetchPracticeTemplates = () => api('/practice/templates');
+export const getPracticeTask = (taskId) => api(`/practice/templates/${taskId}`);
+export const checkLiveText = (text, taskType) =>
+  api('/practice/check', { method: 'POST', body: JSON.stringify({ text, task_type: taskType }) });
 export const submitPractice = (data) =>
   api('/practice/submit', { method: 'POST', body: JSON.stringify(data) });
+export const fetchPracticeHistory = () => api('/practice/history');
 
 // ─── Checker ──────────────────────────────────────────────
 export const checkText = (text, mode, context) =>
   api('/checker/check', { method: 'POST', body: JSON.stringify({ text, mode, context }) });
 
 // ─── Projects ─────────────────────────────────────────────
-export const fetchProjects = () => api('/projects');
+export const fetchProjects = () => api('/project/list');
+export const getProject = (id) => api(`/project/${id}`);
 export const createProject = (data) =>
-  api('/projects', { method: 'POST', body: JSON.stringify(data) });
+  api('/project/create', { method: 'POST', body: JSON.stringify(data) });
 export const updateProject = (id, data) =>
-  api(`/projects/${id}`, { method: 'PUT', body: JSON.stringify(data) });
+  api(`/project/${id}`, { method: 'PUT', body: JSON.stringify(data) });
 export const deleteProject = (id) =>
-  api(`/projects/${id}`, { method: 'DELETE' });
+  api(`/project/${id}`, { method: 'DELETE' });
 
 // ─── Chat ─────────────────────────────────────────────────
 export const fetchChatHistory = () => api('/chat/history');
@@ -101,6 +106,16 @@ export async function uploadChatDocument(file, title = '') {
 
   return res.json();
 }
+
+// ─── Notifications ────────────────────────────────────────
+export const fetchNotifications = () => api('/notifications');
+export const markNotificationsRead = (notificationIds = []) =>
+  api('/notifications/mark-read', {
+    method: 'PATCH',
+    body: JSON.stringify({ notification_ids: notificationIds }),
+  });
+export const markAllNotificationsRead = () =>
+  api('/notifications/mark-all-read', { method: 'PATCH', body: JSON.stringify({}) });
 
 // ─── Settings ─────────────────────────────────────────────
 export const updateSettings = (data) =>

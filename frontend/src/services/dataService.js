@@ -29,3 +29,18 @@ export const submitAssignment = (levelId, text) =>
     method: 'POST',
     body: JSON.stringify({ text }),
   });
+
+// ── Notifications ────────────────────────────────────────────
+export const getNotifications = () => api('/notifications');
+
+export const markNotificationsRead = (ids = []) =>
+  api('/notifications/mark-read', {
+    method: 'PATCH',
+    body: JSON.stringify({ notification_ids: ids }),
+  });
+
+export const markAllNotificationsRead = () =>
+  api('/notifications/mark-all-read', {
+    method: 'PATCH',
+    body: JSON.stringify({}),
+  });

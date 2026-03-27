@@ -6,7 +6,7 @@ Run: uvicorn main:app --reload
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from config import connect_db, close_db
-from routes import auth, learning, practice, project, chat, checker, analytics
+from routes import auth, learning, practice, project, chat, checker, analytics, notifications
 
 # ─── Create App ────────────────────────────────────────────────
 app = FastAPI(
@@ -46,6 +46,7 @@ app.include_router(project.router, prefix="/api/project", tags=["Project"])
 app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
 app.include_router(checker.router, prefix="/api/checker", tags=["Checker"])
 app.include_router(analytics.router, prefix="/api/analytics", tags=["Analytics"])
+app.include_router(notifications.router, prefix="/api/notifications", tags=["Notifications"])
 
 
 # ─── Health Check ──────────────────────────────────────────────
