@@ -11,7 +11,7 @@ import os
 
 from config import get_db
 from middleware.auth_middleware import get_current_user
-from services.pattern_service import add_credits, save_errors, CREDIT_VALUES
+from services.pattern_service import add_credits, save_errors, create_notification, CREDIT_VALUES
 from services.checker_service import check_text
 from models.schemas import SubmitQuizRequest, SubmitAssignmentRequest
 
@@ -271,6 +271,8 @@ async def submit_assignment(level_id: int, data: SubmitAssignmentRequest, user=D
     db = get_db()
     user_id = user["id"]
     user_level = user.get("profile", {}).get("current_level", 1)
+    existing_progress = await db.learning_progress.find_one({"user_id": user_id, "level_number": level_id})
+    was_completed = bool(existing_progress and existing_progress.get("status") == "completed")
     
     # Determine level name
     if user_level <= 10:
@@ -342,6 +344,21 @@ async def submit_assignment(level_id: int, data: SubmitAssignmentRequest, user=D
         )
     
     await add_credits(user_id, credits, f"Assignment Level {level_id}")
+
+    if not was_completed:
+        topic = (
+            (existing_progress or {}).get("topic")
+            or f"Level {level_id}"
+        )
+        await create_notification(
+            user_id=user_id,
+            notif_type="level_complete",
+            title="✅ Level Completed!",
+            message=f"You completed Level {level_id}: {topic}. +{credits} credits earned!",
+            icon="✅",
+            action_url="/learn",
+            metadata={"level": level_id, "credits": credits},
+        )
     
     return {
         "review": review,

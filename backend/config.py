@@ -70,6 +70,8 @@ async def connect_db():
         await db.projects.create_index([("user_id", 1), ("updated_at", -1)])
         await db.chat_history.create_index("user_id")
         await db.badges.create_index("user_id")
+        await db.notifications.create_index([("user_id", 1), ("created_at", -1)])
+        await db.notifications.create_index([("user_id", 1), ("read", 1)])
         
         print("✅ Connected to MongoDB")
     except Exception as e:

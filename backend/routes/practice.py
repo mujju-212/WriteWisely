@@ -73,6 +73,12 @@ async def get_templates(user=Depends(get_current_user)):
         t_level = t.get("level", "beginner")
         t_level_order = level_order.get(t_level, 0)
 
+        # Synthesize a short description if not present
+        if not t.get("description"):
+            prompt_first_line = t.get("prompt", "").split("\n")[0]
+            t = dict(t)  # don't mutate original
+            t["description"] = prompt_first_line[:100] + ("..." if len(prompt_first_line) > 100 else "")
+
         # Only show current level + one above (locked)
         if t_level_order > user_level_order + 1:
             continue
@@ -168,12 +174,15 @@ async def check_live(data: CheckLiveRequest, user=Depends(get_current_user)):
     # Strip corrections — live mode shows hints only
     cleaned_errors = []
     for err in errors:
+        err_type = err.get("type", "spelling")
         cleaned_errors.append({
-            "type": err.get("type", "spelling"),
+            "type": err_type,
             "word": err.get("word") or err.get("original", ""),
             "hint": err.get("hint", "Check this word"),
+            "suggestion": err.get("correction") or err.get("suggestion") or "",
             "position": err.get("position", {}),
-            "color": err.get("color", "red"),
+            "severity": err.get("severity", "minor"),
+            "color": err.get("color", "red" if err_type == "spelling" else "yellow"),
         })
 
     # Count by type

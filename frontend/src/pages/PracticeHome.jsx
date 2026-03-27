@@ -1,17 +1,26 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { fetchPracticeTemplates, getPracticeHistory } from '../services/api';
+import { fetchPracticeTemplates, fetchPracticeHistory } from '../services/api';
 
 const TYPE_ICONS = {
-  email: '📧', letter: '📄', report: '📊',
-  conversation: '💬', article: '📰', essay: '📝',
+  email: '📧', email_simple: '📧', email_professional: '📧',
+  letter: '📄', report: '📊', conversation: '💬',
+  article: '📰', essay: '📝', essay_argumentative: '📝',
+  journal: '📓', message: '💌', description: '✏️',
+  story: '📖', meeting_notes: '📋', cover_letter: '📄',
 };
 const TYPE_COLORS = {
-  email: '#3B82F6', letter: '#8B5CF6', report: '#F97316',
-  conversation: '#10B981', article: '#EAB308', essay: '#EF4444',
+  email: '#3B82F6', email_simple: '#3B82F6', email_professional: '#1D4ED8',
+  letter: '#8B5CF6', cover_letter: '#7C3AED', report: '#F97316',
+  conversation: '#10B981', article: '#EAB308', essay: '#EF4444', essay_argumentative: '#DC2626',
+  journal: '#06B6D4', message: '#EC4899', description: '#14B8A6',
+  story: '#A855F7', meeting_notes: '#64748B',
 };
 const TYPE_BG = {
-  email: '#EFF6FF', letter: '#F5F3FF', report: '#FFF7ED',
-  conversation: '#ECFDF5', article: '#FEFCE8', essay: '#FEF2F2',
+  email: '#EFF6FF', email_simple: '#EFF6FF', email_professional: '#EFF6FF',
+  letter: '#F5F3FF', cover_letter: '#F5F3FF', report: '#FFF7ED',
+  conversation: '#ECFDF5', article: '#FEFCE8', essay: '#FEF2F2', essay_argumentative: '#FEF2F2',
+  journal: '#ECFEFF', message: '#FDF2F8', description: '#F0FDFA',
+  story: '#FAF5FF', meeting_notes: '#F8FAFC',
 };
 const LEVEL_COLORS = {
   beginner: { bg: '#ECFDF5', color: '#16A34A', label: 'Beginner' },
@@ -23,7 +32,23 @@ const DIFFICULTY_STARS = (n) =>
     <span key={i} style={{ color: i < n ? '#F59E0B' : '#E2E8F0', fontSize: '0.75rem' }}>★</span>
   ));
 
-const FILTERS = ['all', 'email', 'letter', 'report', 'essay', 'conversation', 'article'];
+const FILTERS = [
+  'all', 'email', 'letter', 'essay', 'report',
+  'journal', 'conversation', 'message', 'article',
+  'story', 'description', 'cover_letter', 'meeting_notes',
+];
+
+// Get a clean label for filter buttons
+const FILTER_LABEL = (f) => {
+  const names = {
+    email: 'Email', letter: 'Letter', essay: 'Essay', report: 'Report',
+    journal: 'Journal', conversation: 'Conversation', message: 'Message',
+    article: 'Article', story: 'Story', description: 'Description',
+    cover_letter: 'Cover Letter', meeting_notes: 'Meeting Notes',
+    all: 'All Types',
+  };
+  return names[f] || f;
+};
 
 export default function PracticeHome({ onNavigate }) {
   const [templates, setTemplates] = useState([]);
@@ -52,7 +77,13 @@ export default function PracticeHome({ onNavigate }) {
       .finally(() => setHistLoading(false));
   }, []);
 
-  const filtered = filter === 'all' ? templates : templates.filter(t => t.type === filter);
+  const filtered = filter === 'all'
+    ? templates
+    : templates.filter(t => {
+        if (filter === 'email') return t.type === 'email' || t.type?.startsWith('email');
+        if (filter === 'essay') return t.type === 'essay' || t.type?.startsWith('essay');
+        return t.type === filter;
+      });
 
   const handleRandom = () => {
     const available = filtered.filter(t => !t.locked);
@@ -114,7 +145,7 @@ export default function PracticeHome({ onNavigate }) {
               className={`pw-filter-btn${filter === f ? ' active' : ''}`}
               onClick={() => setFilter(f)}
             >
-              {f === 'all' ? 'All Types' : `${TYPE_ICONS[f] || ''} ${f.charAt(0).toUpperCase() + f.slice(1)}`}
+              {f === 'all' ? 'All Types' : `${TYPE_ICONS[f] || ''} ${FILTER_LABEL(f)}`}
             </button>
           ))}
         </div>

@@ -42,6 +42,9 @@ Rules:
 Text: "{text}"
 User Level: {user_level}
 
+Pre-scan found these possible spelling issues (verify and include if real):
+{tier1_hint}
+
 Return JSON with ONLY HINTS (do NOT give the correct answer):
 {{
   "errors": [
@@ -59,7 +62,8 @@ CRITICAL RULES:
 - Do NOT include the correct answer or correction
 - Hints should describe the ERROR TYPE, not the solution
 - This is practice - the user must figure out the fix themselves
-- "red" = spelling errors, "yellow" = grammar/punctuation/word choice""",
+- "red" = spelling errors, "yellow" = grammar/punctuation/word choice
+- Position values are 0-indexed character offsets in the text""",
 
     # ─── Practice Full Analysis (after submission) ────────────
     "practice_analysis": """Analyze this {task_type} written by a {user_level} level student.

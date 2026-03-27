@@ -3,7 +3,18 @@ import './Dashboard.css';
 import { useDashboard } from '../hooks/useDashboard';
 import LearningHome from './LearningHome';
 import Lesson from './Lesson';
-import { fetchChatHistory, sendChatMessage, uploadChatDocument } from '../services/api';
+import PracticeHome from './PracticeHome';
+import PracticeEditor from './PracticeEditor';
+import Projects from './Projects';
+import {
+  fetchChatHistory,
+  sendChatMessage,
+  uploadChatDocument,
+  fetchDashboard as fetchDashboardData,
+} from '../services/api';
+import NotificationBell from '../components/NotificationBell';
+import ProfileDropdown from '../components/ProfileDropdown';
+import authService from '../services/authService';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // DASHBOARD VIEW — wired to real backend data via useDashboard()
@@ -1006,9 +1017,21 @@ function SettingsViewComp({isDarkMode,setIsDarkMode,setShowEditNameModal,setShow
 
 // ─── Main Dashboard Component ─────────────────────────────────────────────────
 
+function _readStoredUser() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem('ww_user') || '{}');
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
 function Dashboard({ onLogout }) {
+  const storedUser = _readStoredUser();
+  const storedProfile = storedUser?.profile || {};
+
   const [currentTab, setCurrentTab] = useState('dashboard');
-  const [credits, setCredits] = useState(1250);
+  const [credits, setCredits] = useState(() => Number(storedProfile.total_credits || storedUser.credits || 0));
   const [showLearningPath, setShowLearningPath] = useState(false);
   const [showQuiz, setShowQuiz] = useState(false);
   const [showCuratedModule, setShowCuratedModule] = useState(null);
@@ -1036,14 +1059,22 @@ function Dashboard({ onLogout }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyticsPeriod, setAnalyticsPeriod] = useState('weekly');
   const [showResults, setShowResults] = useState(false);
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [showNotification, setShowNotification] = useState(false);
-  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem('ww_theme') || 'light');
+  const [openPanel, setOpenPanel] = useState(null); // null | notifications | profile
+  const [toast, setToast] = useState(null);
+  const [authUser, setAuthUser] = useState(storedUser);
+  const [profileStats, setProfileStats] = useState({
+    level: Number(storedProfile.current_level || storedUser.level || 1),
+    credits: Number(storedProfile.total_credits || storedUser.credits || 0),
+    streak: Number(storedProfile.current_streak || storedUser.streak || 0),
+    accuracy: Number(storedProfile.accuracy || storedUser.accuracy || 0),
+    rank: storedProfile.rank || storedUser.rank || 'Beginner Writer',
+  });
   const [showEditNameModal, setShowEditNameModal] = useState(false);
   const [showEditPasswordModal, setShowEditPasswordModal] = useState(false);
-  const [userName, setUserName] = useState('John Doe');
-  const [userPhone] = useState('+1 (555) 123-4567');
-  const [editNameValue, setEditNameValue] = useState('John Doe');
+  const [userName, setUserName] = useState(storedUser.name || 'John Doe');
+  const [userPhone] = useState(storedUser.phone || 'Not provided');
+  const [editNameValue, setEditNameValue] = useState(storedUser.name || 'John Doe');
   const [editPasswordValue, setEditPasswordValue] = useState('');
   const [currentProjects, setCurrentProjects] = useState([
     {id:1,title:'My First Story',type:'Story',content:'Once upon a time...',words:234,lastEdited:'Today'},
@@ -1055,17 +1086,105 @@ function Dashboard({ onLogout }) {
   const [projectTitle, setProjectTitle] = useState('');
   const chatBoxRef = useRef(null);
   const practiceEditorRef = useRef(null);
+  const topbarRef = useRef(null);
 
-  // Apply theme based on isDarkMode state
-  React.useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('light-mode');
-      document.body.classList.add('light-mode');
-    } else {
-      document.documentElement.classList.remove('light-mode');
-      document.body.classList.remove('light-mode');
+  const isDarkMode = theme === 'dark';
+  const setIsDarkMode = (next) => {
+    const nextValue = typeof next === 'function' ? next(isDarkMode) : next;
+    setTheme(nextValue ? 'dark' : 'light');
+  };
+
+  const togglePanel = (panel) => {
+    setOpenPanel((prev) => (prev === panel ? null : panel));
+  };
+
+  const showToastMessage = (title, message, type = 'success') => {
+    setToast({ title, message, type });
+    setTimeout(() => setToast(null), 2200);
+  };
+
+  const handlePanelNavigate = (path) => {
+    if (!path) {
+      setCurrentTab('dashboard');
+      setOpenPanel(null);
+      return;
     }
-  }, [isDarkMode]);
+
+    if (path.includes('/analytics')) {
+      setCurrentTab('analytics');
+    } else if (path.includes('/settings')) {
+      setCurrentTab('settings');
+    } else if (path.includes('/learn')) {
+      setCurrentTab('learning');
+    } else if (path.includes('/chat')) {
+      setCurrentTab('chat');
+    } else {
+      setCurrentTab('dashboard');
+    }
+
+    setOpenPanel(null);
+  };
+
+  const handleProfileLogout = async () => {
+    await authService.logout();
+    setOpenPanel(null);
+    showToastMessage('Logged out', 'Logged out successfully');
+    setTimeout(() => {
+      onLogout?.();
+    }, 250);
+  };
+
+  React.useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    localStorage.setItem('ww_theme', theme);
+  }, [theme]);
+
+  useEffect(() => {
+    const outsideHandler = (e) => {
+      if (topbarRef.current && !topbarRef.current.contains(e.target)) {
+        setOpenPanel(null);
+      }
+    };
+
+    document.addEventListener('mousedown', outsideHandler);
+    return () => document.removeEventListener('mousedown', outsideHandler);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadProfileStats = async () => {
+      try {
+        const dashboard = await fetchDashboardData();
+        if (cancelled) return;
+
+        const stats = dashboard?.stats || {};
+        const levelCurrent = Number(stats?.level?.current || 1);
+        const creditsTotal = Number(stats?.credits?.total || 0);
+        const streakCurrent = Number(stats?.streak?.current || 0);
+        const accuracyPct = Number(stats?.accuracy?.percentage || 0);
+        const rankName = stats?.credits?.rank || 'Beginner Writer';
+
+        setProfileStats({
+          level: levelCurrent,
+          credits: creditsTotal,
+          streak: streakCurrent,
+          accuracy: accuracyPct,
+          rank: rankName,
+        });
+        setCredits(creditsTotal);
+      } catch (e) {
+        if (!cancelled) {
+          console.warn('Profile stats fetch failed:', e?.message || e);
+        }
+      }
+    };
+
+    loadProfileStats();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -1140,7 +1259,19 @@ function Dashboard({ onLogout }) {
   };
 
   const handleSaveName = () => {
-    if(editNameValue.trim()){setUserName(editNameValue);setShowEditNameModal(false);alert('✅ Name updated!');}
+    const nextName = editNameValue.trim();
+    if (nextName) {
+      setUserName(nextName);
+      setAuthUser((prev) => ({ ...prev, name: nextName }));
+      try {
+        const current = _readStoredUser();
+        localStorage.setItem('ww_user', JSON.stringify({ ...current, name: nextName }));
+      } catch {
+        // Ignore storage errors.
+      }
+      setShowEditNameModal(false);
+      alert('✅ Name updated!');
+    }
   };
 
   const handleSavePassword = () => {
@@ -1166,8 +1297,6 @@ function Dashboard({ onLogout }) {
       alert('✅ Project deleted!');
     }
   };
-
-  const showNotificationAlert = () => {setShowNotification(true);setTimeout(()=>setShowNotification(false),3000);};
 
   const quizQuestions = [
     {id:1,question:'Which sentence is grammatically correct?',options:['She have completed her homework.','She has completed her homework.','She having completed her homework.','She complete her homework.'],correctAnswer:1,points:50},
@@ -1266,6 +1395,7 @@ function Dashboard({ onLogout }) {
   ];
 
   const [learningLevelId, setLearningLevelId] = useState(null);
+  const [practiceTaskId, setPracticeTaskId] = useState(null);
 
   const renderView = () => {
     if (currentTab === 'learning') {
@@ -1288,8 +1418,24 @@ function Dashboard({ onLogout }) {
       case 'dashboard': return <DashboardViewComp setCurrentTab={setCurrentTab}/>;
       case 'learning': return <LearningViewComp setCurrentTab={setCurrentTab} completedModules={completedModules} handleOpenModule={handleOpenModule} handleStartQuiz={handleStartQuiz} setShowLearningPath={setShowLearningPath} practiceText={practiceText} handlePracticeTextChange={handlePracticeTextChange} handlePracticeKeyDown={handlePracticeKeyDown} textAlignment={textAlignment} setTextAlignment={setTextAlignment} isBold={isBold} setIsBold={setIsBold} isItalic={isItalic} setIsItalic={setIsItalic} isUnderline={isUnderline} setIsUnderline={setIsUnderline} showSuggestions={showSuggestions} suggestions={suggestions}/>;
       case 'chat': return <ChatViewComp messages={messages} chatInput={chatInput} setChatInput={setChatInput} sendMessage={sendMessage} handleFileUpload={handleFileUpload} showHistory={showHistory} setShowHistory={setShowHistory} chatBoxRef={chatBoxRef} isChatSending={isChatSending} historyItems={historyItems}/>;
-      case 'practice': return <PracticeViewComp practiceText={practiceText} handlePracticeTextChange={handlePracticeTextChange} handlePracticeKeyDown={handlePracticeKeyDown} textAlignment={textAlignment} setTextAlignment={setTextAlignment} isBold={isBold} setIsBold={setIsBold} isItalic={isItalic} setIsItalic={setIsItalic} isUnderline={isUnderline} setIsUnderline={setIsUnderline} practiceMode={practiceMode} setPracticeMode={setPracticeMode} isAnalyzing={isAnalyzing} setIsAnalyzing={setIsAnalyzing} suggestions={suggestions} setSuggestions={setSuggestions} showSuggestions={showSuggestions} handleAnalyzeText={handleAnalyzeText} errors={errors} practiceEditorRef={practiceEditorRef}/>;
-      case 'projects': return <ProjectsViewComp currentProjects={currentProjects} selectedProject={selectedProject} setSelectedProject={setSelectedProject} isEditingProject={isEditingProject} setIsEditingProject={setIsEditingProject} projectContent={projectContent} setProjectContent={setProjectContent} projectTitle={projectTitle} setProjectTitle={setProjectTitle} handleNewProject={handleNewProject} handleSaveProject={handleSaveProject} handleDeleteProject={handleDeleteProject}/>;
+      case 'practice':
+        if (practiceTaskId) {
+          return (
+            <PracticeEditor
+              taskId={practiceTaskId}
+              onBack={() => setPracticeTaskId(null)}
+              onNavigate={(tab) => { setPracticeTaskId(null); setCurrentTab(tab); }}
+            />
+          );
+        }
+        return (
+          <PracticeHome
+            onNavigate={(view, taskId) => {
+              if (view === 'editor' && taskId) setPracticeTaskId(taskId);
+            }}
+          />
+        );
+      case 'projects': return <Projects />;
       case 'analytics': return <AnalyticsViewComp analyticsPeriod={analyticsPeriod} setAnalyticsPeriod={setAnalyticsPeriod} showResults={showResults} setShowResults={setShowResults}/>;
       case 'settings': return <SettingsViewComp isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} setShowEditNameModal={setShowEditNameModal} setShowEditPasswordModal={setShowEditPasswordModal}/>;
       default: return <DashboardViewComp setCurrentTab={setCurrentTab}/>;
@@ -1326,44 +1472,44 @@ function Dashboard({ onLogout }) {
         {/* Top Bar */}
         <header className="db-topbar">
           <div className="db-topbar-title">Welcome to <span>WriteWisely</span></div>
-          <div className="db-topbar-actions">
+          <div className="db-topbar-actions" ref={topbarRef}>
             <div className="db-credits-badge">
               <i className="fa-solid fa-coins"></i> {credits.toLocaleString()} Credits
             </div>
-            <button className="db-icon-btn" onClick={showNotificationAlert} style={{position:'relative'}}>
-              <i className="fa-regular fa-bell"></i>
-              <span className="db-notif-dot"></span>
-            </button>
-            <div style={{position:'relative'}}>
-              <button className="db-avatar-btn" onClick={()=>setShowProfileModal(!showProfileModal)}>
-                <img src={'https://ui-avatars.com/api/?name='+userName+'&background=6C5CE7&color=fff'} className="db-avatar-img" alt="avatar"/>
-                <span className="db-avatar-name">{userName.split(' ')[0]}</span>
-              </button>
-              {showProfileModal && (
-                <div className="db-profile-dropdown">
-                  <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',paddingBottom:'1rem',borderBottom:'1px solid var(--border)',marginBottom:'1rem'}}>
-                    <div><p style={{fontSize:'0.75rem',color:'var(--text-muted)',fontWeight:600}}>Profile</p><p style={{fontWeight:700,color:'var(--text-dark)'}}>{userName}</p></div>
-                    <button className="db-icon-btn" onClick={()=>setShowProfileModal(false)}><i className="fa-solid fa-xmark"></i></button>
-                  </div>
-                  <div style={{background:'#F9FAFB',borderRadius:8,padding:'0.75rem',marginBottom:'0.75rem'}}>
-                    <p style={{fontSize:'0.875rem',color:'var(--text-dark)'}}>📱 {userPhone}</p>
-                  </div>
-                  <div style={{background:'#F9FAFB',borderRadius:8,padding:'0.75rem',marginBottom:'0.75rem'}}>
-                    <p style={{fontSize:'0.7rem',fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',marginBottom:'0.25rem'}}>Credits</p>
-                    <p style={{fontSize:'1.5rem',fontWeight:700,color:'var(--primary)'}}>💰 {credits}</p>
-                  </div>
-                  <button className="db-btn-primary" style={{width:'100%',justifyContent:'center'}} onClick={()=>setCurrentTab('settings')}>⚙️ Settings</button>
-                </div>
-              )}
-            </div>
+            <NotificationBell
+              isOpen={openPanel === 'notifications'}
+              onToggle={() => togglePanel('notifications')}
+              onNavigate={handlePanelNavigate}
+            />
+            <ProfileDropdown
+              isOpen={openPanel === 'profile'}
+              onToggle={() => togglePanel('profile')}
+              user={{
+                ...authUser,
+                name: userName,
+                phone: userPhone,
+              }}
+              stats={{
+                ...profileStats,
+                credits,
+                rank: profileStats.rank || 'Beginner Writer',
+              }}
+              theme={theme}
+              toggleTheme={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+              onNavigate={handlePanelNavigate}
+              onLogout={handleProfileLogout}
+            />
           </div>
         </header>
 
-        {/* Notification Toast */}
-        {showNotification && (
-          <div className="db-toast">
-            <i className="fa-solid fa-bell"></i>
-            <div><p style={{fontWeight:700,fontSize:'0.875rem'}}>New Notification</p><p style={{fontSize:'0.8rem',opacity:0.9}}>You have 2 new messages and 1 achievement unlocked!</p></div>
+        {/* Toast */}
+        {toast && (
+          <div className="db-toast" style={{ background: toast.type === 'error' ? '#EF4444' : '#10B981' }}>
+            <i className={`fa-solid ${toast.type === 'error' ? 'fa-circle-xmark' : 'fa-circle-check'}`}></i>
+            <div>
+              <p style={{fontWeight:700,fontSize:'0.875rem'}}>{toast.title}</p>
+              <p style={{fontSize:'0.8rem',opacity:0.9}}>{toast.message}</p>
+            </div>
           </div>
         )}
 
