@@ -5,26 +5,45 @@ Handles: Environment variables, MongoDB connection, JWT, Password hashing
 
 import os
 from datetime import datetime, timedelta
+import uuid
+from pathlib import Path
 from dotenv import load_dotenv
 from motor.motor_asyncio import AsyncIOMotorClient
 from jose import JWTError, jwt
 
-# Load .env
-load_dotenv()
+# Load .env (prefer backend/.env, then workspace root .env)
+BASE_DIR = Path(__file__).resolve().parent
+load_dotenv(BASE_DIR / ".env")
+load_dotenv(BASE_DIR.parent / ".env")
+
+
+def _env(name: str, default: str = "") -> str:
+    value = os.getenv(name, default)
+    if isinstance(value, str):
+        return value.strip()
+    return value
+
+
+def _env_bool(name: str, default: bool = False) -> bool:
+    raw = _env(name, "true" if default else "false").lower()
+    return raw in {"1", "true", "yes", "on"}
 
 # ─── Environment Variables ────────────────────────────────────
-MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
-JWT_SECRET = os.getenv("JWT_SECRET", "dev-secret-key")
-JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
-JWT_EXPIRY_HOURS = int(os.getenv("JWT_EXPIRY_HOURS", "24"))
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY", "")
-LLM_MODEL = os.getenv("LLM_MODEL", "google/gemma-3-12b-it:free")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.0-flash")
-MAILERSEND_API_KEY = os.getenv("MAILERSEND_API_KEY", "")
-MAILERSEND_DOMAIN = os.getenv("MAILERSEND_DOMAIN", "")
-SENDER_EMAIL = os.getenv("SENDER_EMAIL", "")
-SENDER_NAME = os.getenv("SENDER_NAME", "WriteWisely")
+MONGODB_URL = _env("MONGODB_URL", "mongodb://localhost:27017")
+JWT_SECRET = _env("JWT_SECRET", "dev-secret-key")
+JWT_ALGORITHM = _env("JWT_ALGORITHM", "HS256")
+JWT_EXPIRY_HOURS = int(_env("JWT_EXPIRY_HOURS", "24"))
+OPENROUTER_API_KEY = _env("OPENROUTER_API_KEY", "")
+LLM_MODEL = _env("LLM_MODEL", "google/gemma-3-12b-it:free")
+GEMINI_API_KEY = _env("GEMINI_API_KEY", "")
+GEMINI_MODEL = _env("GEMINI_MODEL", "gemini-2.0-flash")
+HF_API_KEY = _env("HF_API_KEY", "")
+HF_MODEL = _env("HF_MODEL", "meta-llama/Llama-3.2-1B-Instruct")
+MAILERSEND_API_KEY = _env("MAILERSEND_API_KEY", "")
+MAILERSEND_DOMAIN = _env("MAILERSEND_DOMAIN", "")
+SENDER_EMAIL = _env("SENDER_EMAIL", "")
+SENDER_NAME = _env("SENDER_NAME", "WriteWisely")
+ALLOW_OTP_DEV_FALLBACK = _env_bool("ALLOW_OTP_DEV_FALLBACK", True)
 
 # ─── MongoDB Connection ───────────────────────────────────────
 client: AsyncIOMotorClient = None
@@ -72,25 +91,34 @@ def get_db():
 
 
 # ─── JWT Token Management ─────────────────────────────────────
-def create_jwt_token(user_id: str) -> str:
-    """Create a JWT token for a user."""
+def generate_session_id() -> str:
+    """Generate a unique session identifier."""
+    return uuid.uuid4().hex
+
+
+def create_jwt_token(user_id: str, session_id: str) -> str:
+    """Create a JWT token for a user session."""
     expire = datetime.utcnow() + timedelta(hours=JWT_EXPIRY_HOURS)
     payload = {
         "sub": str(user_id),
+        "sid": session_id,
         "exp": expire,
         "iat": datetime.utcnow()
     }
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 
-def verify_jwt_token(token: str) -> str:
-    """Verify JWT token and return user_id. Raises JWTError if invalid."""
+def verify_jwt_token(token: str) -> dict:
+    """Verify JWT token and return decoded payload. Raises JWTError if invalid."""
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
         user_id = payload.get("sub")
+        session_id = payload.get("sid")
         if user_id is None:
             raise JWTError("No user_id in token")
-        return user_id
+        if session_id is None:
+            raise JWTError("No session_id in token")
+        return payload
     except JWTError:
         raise
 

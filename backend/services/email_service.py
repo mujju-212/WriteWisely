@@ -5,7 +5,7 @@ services/email_service.py — Send OTP emails via MailerSend API
 import random
 import httpx
 from datetime import datetime, timedelta
-from config import MAILERSEND_API_KEY, SENDER_EMAIL, SENDER_NAME, get_db
+from config import MAILERSEND_API_KEY, SENDER_EMAIL, SENDER_NAME, ALLOW_OTP_DEV_FALLBACK, get_db
 
 MAILERSEND_URL = "https://api.mailersend.com/v1/email"
 
@@ -19,8 +19,8 @@ async def save_otp(email: str, otp: str, purpose: str = "signup"):
     """Save OTP to database with 10-minute expiry."""
     db = get_db()
     
-    # Delete any existing OTP for this email
-    await db.otp_store.delete_many({"email": email})
+    # Delete any existing OTP for this email and purpose
+    await db.otp_store.delete_many({"email": email, "purpose": purpose})
     
     # Save new OTP
     await db.otp_store.insert_one({
@@ -32,13 +32,14 @@ async def save_otp(email: str, otp: str, purpose: str = "signup"):
     })
 
 
-async def verify_otp(email: str, otp: str) -> bool:
-    """Verify OTP from database. Returns True if valid and not expired."""
+async def verify_otp(email: str, otp: str, purpose: str = "signup") -> bool:
+    """Verify OTP from database for a given purpose. Returns True if valid and not expired."""
     db = get_db()
     
     otp_doc = await db.otp_store.find_one({
         "email": email,
         "otp": otp,
+        "purpose": purpose,
         "expires_at": {"$gt": datetime.utcnow()}
     })
     
@@ -52,6 +53,12 @@ async def verify_otp(email: str, otp: str) -> bool:
 
 async def send_otp_email(email: str, otp: str, purpose: str = "signup") -> bool:
     """Send OTP email via MailerSend API."""
+    if not MAILERSEND_API_KEY:
+        print("❌ MailerSend API key missing. Set MAILERSEND_API_KEY in backend/.env")
+        return False
+    if not SENDER_EMAIL:
+        print("❌ Sender email missing. Set SENDER_EMAIL in backend/.env")
+        return False
     
     if purpose == "signup":
         subject = "WriteWisely - Verify Your Email"
@@ -111,7 +118,19 @@ async def send_otp_email(email: str, otp: str, purpose: str = "signup") -> bool:
                 print(f"✅ OTP email sent to {email}")
                 return True
             else:
-                print(f"❌ MailerSend error {response.status_code}: {response.text}")
+                body_text = response.text or ""
+                if (
+                    ALLOW_OTP_DEV_FALLBACK
+                    and response.status_code == 422
+                    and "MS42225" in body_text
+                ):
+                    print(
+                        "⚠️ MailerSend trial recipient limit reached. "
+                        f"Dev fallback active; OTP for {email}: {otp}"
+                    )
+                    return True
+
+                print(f"❌ MailerSend error {response.status_code}: {body_text}")
                 return False
     except Exception as e:
         print(f"❌ Email send failed: {e}")

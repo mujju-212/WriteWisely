@@ -12,7 +12,7 @@ from datetime import datetime
 class SignupRequest(BaseModel):
     name: str = Field(..., min_length=2, max_length=100)
     email: EmailStr
-    phone: str = Field(..., min_length=10, max_length=15)
+    phone: str = Field(default="", max_length=20)
     password: str = Field(..., min_length=8)
     role: str = Field(..., pattern="^(student|professional|writer|teacher|other)$")
 

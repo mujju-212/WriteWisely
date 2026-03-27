@@ -1,55 +1,347 @@
 {
   "level": 2,
-  "title": "Common Homophones",
-  "topic": "homophones",
+  "title": "Punctuation Basics",
+  "chapter": "Chapter 2: Punctuation - The Traffic Signals of Writing",
+  "emoji": "🟢",
+  "topic": "punctuation_basics",
   "category": "beginner",
-  "content": {
-    "sections": [
-      {
-        "heading": "Their / They're / There",
-        "explanation": "These three words sound the same but have completely different meanings. 'Their' shows possession (belonging to them). 'They're' is a contraction of 'they are'. 'There' refers to a place or introduces a sentence.",
+  "xp_reward": 100,
+  "sections": [
+    {
+      "id": "s1",
+      "heading": "Why Punctuation Matters",
+      "body": "Punctuation controls how your reader reads. It tells them when to pause, stop, and feel emotion.",
+      "comparison": {
+        "wrong": "let's eat grandma let's eat grandma foods and recipes for eating grandma",
+        "right": "Let's eat, Grandma! Let's eat, Grandma! Foods and recipes for eating, Grandma."
+      },
+      "key_point": "Punctuation literally saves lives — and grandmas! Punctuation = Road signs for your reader."
+    },
+    {
+      "id": "s2",
+      "heading": "The Period (.)",
+      "explanation": "A period (.) ends a complete thought. Also called a 'full stop' in British English.",
+      "uses": [
+        {
+          "title": "Ending a statement",
+          "examples": [
+            "The sun rises in the east.",
+            "I finished my homework.",
+            "She works at a hospital.",
+            "Dogs are loyal animals."
+          ]
+        },
+        {
+          "title": "Abbreviations",
+          "items": [
+            { "abbr": "Dr.", "meaning": "Doctor" },
+            { "abbr": "Mr.", "meaning": "Mister" },
+            { "abbr": "Mrs.", "meaning": "Missus (married woman)" },
+            { "abbr": "Ms.", "meaning": "Miss (any woman)" },
+            { "abbr": "Prof.", "meaning": "Professor" },
+            { "abbr": "etc.", "meaning": "et cetera (and so on)" },
+            { "abbr": "e.g.", "meaning": "for example" },
+            { "abbr": "i.e.", "meaning": "that is" },
+            { "abbr": "vs.", "meaning": "versus" },
+            { "abbr": "approx.", "meaning": "approximately" }
+          ],
+          "examples": ["Dr. Smith and Prof. Jones met at approx. 3 p.m."]
+        },
+        {
+          "title": "Initials",
+          "examples": [
+            "J.K. Rowling wrote Harry Potter.",
+            "The USA was founded in 1776."
+          ]
+        }
+      ],
+      "common_mistakes": [
+        {
+          "description": "Missing period at end",
+          "wrong": "I love reading books I read every day",
+          "right": "I love reading books. I read every day."
+        },
+        {
+          "description": "Period inside quotes (American style)",
+          "wrong": "\"I am happy\".",
+          "right": "\"I am happy.\" (period goes INSIDE quotes)"
+        },
+        {
+          "description": "Double period with abbreviation",
+          "wrong": "I woke up at 7 a.m..",
+          "right": "I woke up at 7 a.m. (one period is enough)"
+        }
+      ]
+    },
+    {
+      "id": "s3",
+      "heading": "The Comma (,)",
+      "explanation": "The comma (,) is the most used AND most misused punctuation mark in English.",
+      "uses": [
+        {
+          "title": "Lists (3 or more items)",
+          "examples": [
+            "I bought apples, oranges, and bananas.",
+            "She is smart, kind, and hardworking.",
+            "We visited Paris, Rome, and London."
+          ],
+          "note": "The last comma before 'and' is called the Oxford Comma. It prevents confusion.",
+          "oxford_comma_example": {
+            "without": "I love my parents, Batman and Superman. (sounds like Batman and Superman ARE your parents!)",
+            "with": "I love my parents, Batman, and Superman. (clearly three separate things)"
+          }
+        },
+        {
+          "title": "Joining two complete sentences with FANBOYS",
+          "explanation": "FANBOYS = For, And, Nor, But, Or, Yet, So (Coordinating Conjunctions)",
+          "pattern": "[sentence], FANBOYS [sentence]",
+          "examples": [
+            "I wanted to go, but it was raining.",
+            "She studied hard, so she passed the exam.",
+            "He was tired, yet he kept working.",
+            "You can call me, or you can text me.",
+            "I worked all day, for I needed the money."
+          ],
+          "wrong_examples": [
+            "I wanted to go but it was raining.",
+            "She studied hard so she passed the exam."
+          ]
+        },
+        {
+          "title": "After Introductory Words/Phrases",
+          "explanation": "When a sentence STARTS with extra info → use comma after that intro part",
+          "examples": [
+            "However, I disagree with that idea.",
+            "In 2020, the pandemic changed everything.",
+            "After the movie, we went for dinner.",
+            "Although it was cold, we went outside.",
+            "First of all, let me introduce myself.",
+            "On the other hand, there are benefits.",
+            "To be honest, I don't know the answer."
+          ],
+          "intro_words": ["However", "Therefore", "Moreover", "Furthermore", "Nevertheless", "Meanwhile", "Consequently", "Finally", "First", "Second", "In addition", "On the other hand", "In conclusion", "As a result", "For example", "In fact"]
+        },
+        {
+          "title": "Setting off Extra Information",
+          "explanation": "When you add extra info in the MIDDLE of a sentence → put commas around it",
+          "examples": [
+            "My teacher, Mr. Johnson, is very helpful.",
+            "London, the capital of England, is beautiful.",
+            "The dog, which was brown, ran away."
+          ],
+          "note": "If removing the middle part leaves the sentence complete → it needs commas"
+        },
+        {
+          "title": "In Dates and Addresses",
+          "examples": [
+            "I was born on July 4, 1990, in New York.",
+            "The event is on Monday, January 20, 2025.",
+            "Send it to 123 Main Street, New York, USA."
+          ]
+        }
+      ],
+      "common_mistakes": [
+        {
+          "description": "Comma splice (joining two sentences with ONLY a comma - no FANBOYS)",
+          "wrong": "I was tired, I went to sleep.",
+          "right_options": ["I was tired, so I went to sleep.", "I was tired. I went to sleep."]
+        },
+        {
+          "description": "Missing comma with FANBOYS",
+          "wrong": "I tried hard but I failed.",
+          "right": "I tried hard, but I failed."
+        },
+        {
+          "description": "No comma after intro phrase",
+          "wrong": "However I think you are wrong.",
+          "right": "However, I think you are wrong."
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "heading": "The Question Mark (?)",
+      "explanation": "Use question mark at the end of a DIRECT question.",
+      "direct_questions": {
+        "description": "A direct question is when you DIRECTLY ask something.",
         "examples": [
-          {"correct": "They're going to their house over there.", "wrong": "There going to they're house over their.", "rule": "Each word has a specific purpose"},
-          {"correct": "Their dog is friendly.", "wrong": "There dog is friendly.", "rule": "'Their' = possession"},
-          {"correct": "They're happy today.", "wrong": "Their happy today.", "rule": "'They're' = they are"}
+          "What is your name?",
+          "Where are you going?",
+          "Can you help me?",
+          "Why did you do that?",
+          "Is this seat taken?",
+          "How many people are coming?"
+        ]
+      },
+      "indirect_questions": {
+        "description": "An indirect question is when you REPORT or INCLUDE a question inside a statement. Do NOT use ?",
+        "examples": [
+          { "wrong": "She asked me where was I going?", "right": "She asked me where I was going." },
+          { "wrong": "I wonder what is his name?", "right": "I wonder what his name is." },
+          { "wrong": "He asked whether I could help him?", "right": "He asked whether I could help him." }
         ],
-        "memory_tip": "They're = They ARE (has an apostrophe like a contraction). Their = possessION (has 'heir' in it — an heir inherits possessions). There = a place (has 'here' in it)."
+        "memory_trick": "If the sentence starts with 'I wonder...', 'He asked...', 'She questioned...' → It is INDIRECT → NO question mark!"
+      }
+    },
+    {
+      "id": "s5",
+      "heading": "The Exclamation Mark (!)",
+      "explanation": "Use exclamation mark to show strong emotion (surprise, excitement, anger), commands, or emphasis.",
+      "correct_uses": [
+        "Watch out! (warning/danger)",
+        "I can't believe it! (surprise)",
+        "Happy birthday! (celebration)",
+        "Stop right there! (command)",
+        "What a beautiful day! (excitement)",
+        "Help! (emergency)"
+      ],
+      "wrong_uses": [
+        {
+          "description": "Too many exclamation marks",
+          "wrong": "I went to the store! It was nice! I bought milk! Then I came home! The milk was good!",
+          "note": "Save ! for truly exciting moments only. Too many = none feel special."
+        },
+        {
+          "description": "Exclamation mark for normal statements",
+          "wrong": "My name is John!",
+          "right": "My name is John. (your name is not exciting news)"
+        },
+        {
+          "description": "Combining with question mark",
+          "wrong": "Are you serious?!",
+          "right": "Are you serious? (formal writing)"
+        }
+      ],
+      "pro_tip": "In professional/academic writing: Use exclamation mark RARELY (almost never). Maximum 1-2 times in an entire essay. Let strong words create emphasis instead."
+    },
+    {
+      "id": "s6",
+      "heading": "The Apostrophe (')",
+      "explanation": "Apostrophes have TWO main jobs: 1. Show possession (belonging) and 2. Show missing letters (contractions).",
+      "job1_possession": {
+        "title": "Possession (belonging to someone)",
+        "single_owner": {
+          "rule": "Single owner → add 's",
+          "examples": [
+            "John's book (the book belongs to John)",
+            "the dog's tail (the tail of the dog)",
+            "my mother's car (the car of my mother)",
+            "the company's policy",
+            "today's weather"
+          ]
+        },
+        "multiple_owners_s": {
+          "rule": "Multiple owners (plural ending in S) → add ' only",
+          "examples": [
+            "the teachers' lounge (lounge for teachers)",
+            "the dogs' food bowls (bowls for dogs)",
+            "the students' books (books of students)",
+            "the workers' rights (rights of workers)"
+          ]
+        },
+        "multiple_owners_no_s": {
+          "rule": "Multiple owners (plural NOT ending in S) → add 's",
+          "examples": [
+            "the children's toys (toys of children)",
+            "the men's room (room for men)",
+            "the women's team (team of women)",
+            "the people's choice (choice of people)"
+          ]
+        }
+      },
+      "job2_contractions": {
+        "title": "Contractions (missing letters)",
+        "list": [
+          { "contraction": "I'm", "full_form": "I am", "removed": "a" },
+          { "contraction": "I've", "full_form": "I have", "removed": "ha" },
+          { "contraction": "I'll", "full_form": "I will", "removed": "wi" },
+          { "contraction": "you're", "full_form": "you are", "removed": "a" },
+          { "contraction": "he's", "full_form": "he is", "removed": "i" },
+          { "contraction": "she's", "full_form": "she is", "removed": "i" },
+          { "contraction": "it's", "full_form": "it is", "removed": "i" },
+          { "contraction": "we're", "full_form": "we are", "removed": "a" },
+          { "contraction": "they're", "full_form": "they are", "removed": "a" },
+          { "contraction": "don't", "full_form": "do not", "removed": "o" },
+          { "contraction": "doesn't", "full_form": "does not", "removed": "o" },
+          { "contraction": "didn't", "full_form": "did not", "removed": "o" },
+          { "contraction": "won't", "full_form": "will not", "removed": "ill + o" },
+          { "contraction": "can't", "full_form": "cannot", "removed": "no" },
+          { "contraction": "couldn't", "full_form": "could not", "removed": "o" },
+          { "contraction": "wouldn't", "full_form": "would not", "removed": "o" },
+          { "contraction": "shouldn't", "full_form": "should not", "removed": "o" },
+          { "contraction": "isn't", "full_form": "is not", "removed": "o" },
+          { "contraction": "aren't", "full_form": "are not", "removed": "o" },
+          { "contraction": "wasn't", "full_form": "was not", "removed": "o" },
+          { "contraction": "weren't", "full_form": "were not", "removed": "o" },
+          { "contraction": "hasn't", "full_form": "has not", "removed": "o" },
+          { "contraction": "haven't", "full_form": "have not", "removed": "o" },
+          { "contraction": "let's", "full_form": "let us", "removed": "u" },
+          { "contraction": "that's", "full_form": "that is", "removed": "i" },
+          { "contraction": "there's", "full_form": "there is", "removed": "i" },
+          { "contraction": "what's", "full_form": "what is", "removed": "i" },
+          { "contraction": "who's", "full_form": "who is", "removed": "i" }
+        ]
+      },
+      "biggest_mistake": {
+        "title": "ITS vs IT'S",
+        "rules": [
+          "it's = it is (contraction)",
+          "its = belonging to it (possession - NO apostrophe!)"
+        ],
+        "examples": [
+          { "sentence": "It's raining outside.", "explanation": "It is raining" },
+          { "sentence": "The dog wagged its tail.", "explanation": "tail belonging to it" }
+        ],
+        "wrong_examples": ["The dog wagged it's tail.", "Its going to be a good day."],
+        "memory_trick": "Replace with 'it is' in your sentence. If it makes sense → use it's. If it doesn't → use its."
+      }
+    }
+  ],
+  "assignment": {
+    "title": "Level 2 Assignment",
+    "tasks": [
+      {
+        "task_number": 1,
+        "instruction": "Add correct punctuation (no changes to words) to each sentence.",
+        "sentences": [
+          {
+            "text": "its a lovely day isnt it",
+            "answer": "It's a lovely day, isn't it?"
+          },
+          {
+            "text": "however i disagree with your idea because the plan is not ready",
+            "answer": "However, I disagree with your idea because the plan is not ready."
+          },
+          {
+            "text": "i bought rice vegetables oil and salt from the market but i forgot the bread",
+            "answer": "I bought rice, vegetables, oil, and salt from the market, but I forgot the bread."
+          },
+          {
+            "text": "the dogs bowl is empty and its been empty since morning",
+            "answer": "The dog's bowl is empty, and it's been empty since morning."
+          },
+          {
+            "text": "she asked me where was i going at that time",
+            "answer": "She asked me where I was going at that time."
+          }
+        ]
       },
       {
-        "heading": "Your / You're",
-        "explanation": "'Your' shows possession (something belongs to you). 'You're' is a contraction of 'you are'.",
-        "examples": [
-          {"correct": "You're doing your best.", "wrong": "Your doing you're best.", "rule": "You're = you are, Your = possession"},
-          {"correct": "Is this your book?", "wrong": "Is this you're book?", "rule": "'Your' before a noun = possession"},
-          {"correct": "You're welcome.", "wrong": "Your welcome.", "rule": "'You're' = you are welcome"}
-        ],
-        "memory_tip": "If you can replace the word with 'you are' and it still makes sense → use you're. Otherwise → your."
-      },
-      {
-        "heading": "Its / It's",
-        "explanation": "'Its' shows possession (belonging to it). 'It's' is a contraction of 'it is' or 'it has'. This one is tricky because we usually add 's for possession!",
-        "examples": [
-          {"correct": "It's raining outside.", "wrong": "Its raining outside.", "rule": "It's = it is"},
-          {"correct": "The dog wagged its tail.", "wrong": "The dog wagged it's tail.", "rule": "'its' = possession"},
-          {"correct": "It's been a long day.", "wrong": "Its been a long day.", "rule": "It's = it has"}
-        ],
-        "memory_tip": "Try replacing with 'it is' — if it works, use it's (with apostrophe). If not, use its (no apostrophe)."
+        "task_number": 2,
+        "instruction": "Write 3 original sentences:",
+        "requirements": [
+          "One sentence with a list of 4 items",
+          "One sentence joining two ideas with a FANBOY",
+          "One sentence with an apostrophe for possession"
+        ]
       }
     ]
   },
-  "quiz": {
-    "questions": [
-      {"id": "l2q1", "question": "___ going to the park.", "options": ["There", "Their", "They're"], "correct": 2, "explanation": "'They're' = 'They are' going to the park."},
-      {"id": "l2q2", "question": "Is this ___ car?", "options": ["your", "you're", "yore"], "correct": 0, "explanation": "'Your' shows possession — the car belongs to you."},
-      {"id": "l2q3", "question": "The cat licked ___ paw.", "options": ["it's", "its", "its'"], "correct": 1, "explanation": "'Its' (no apostrophe) shows possession."},
-      {"id": "l2q4", "question": "___ a beautiful day!", "options": ["Its", "It's", "Its'"], "correct": 1, "explanation": "'It's' = 'It is' a beautiful day."},
-      {"id": "l2q5", "question": "The students left ___ bags in the classroom.", "options": ["there", "they're", "their"], "correct": 2, "explanation": "'Their' = belonging to them."}
-    ]
-  },
-  "assignment": {
-    "prompt": "Write 3 sentences correctly using at least one of each: their/they're/there, your/you're, and its/it's.",
-    "hints": ["Example: They're parking their car over there."],
-    "min_sentences": 3
-  },
-  "credits": {"lesson": 10, "quiz_pass": 15, "quiz_perfect": 25, "assignment": 15, "assignment_perfect": 30}
+  "credits": {
+    "lesson_complete": 10,
+    "quiz_pass": 15,
+    "quiz_perfect": 25,
+    "assignment_submit": 20,
+    "assignment_perfect": 35
+  }
 }

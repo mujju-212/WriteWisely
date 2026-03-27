@@ -1,62 +1,112 @@
-﻿{
-    "questions":  [
-                      {
-                          "id":  "l5q1",
-                          "question":  "The rain will ___ the match.",
-                          "options":  [
-                                          "affect",
-                                          "effect",
-                                          "afect"
-                                      ],
-                          "correct":  0,
-                          "explanation":  "\u0027Affect\u0027 is the verb (to influence). The rain will affect (influence) the match."
-                      },
-                      {
-                          "id":  "l5q2",
-                          "question":  "She runs faster ___ me.",
-                          "options":  [
-                                          "then",
-                                          "than",
-                                          "then"
-                                      ],
-                          "correct":  1,
-                          "explanation":  "\u0027Than\u0027 is used for comparisons: faster than me."
-                      },
-                      {
-                          "id":  "l5q3",
-                          "question":  "This bag is ___ heavy ___ carry.",
-                          "options":  [
-                                          "to, to",
-                                          "too, to",
-                                          "two, too"
-                                      ],
-                          "correct":  1,
-                          "explanation":  "\u0027Too\u0027 = excessively heavy. \u0027To\u0027 = infinitive (to carry)."
-                      },
-                      {
-                          "id":  "l5q4",
-                          "question":  "Everyone passed ___ John.",
-                          "options":  [
-                                          "accept",
-                                          "except",
-                                          "exept"
-                                      ],
-                          "correct":  1,
-                          "explanation":  "\u0027Except\u0027 = excluding. Everyone passed excluding John."
-                      },
-                      {
-                          "id":  "l5q5",
-                          "question":  "The change had a large ___.",
-                          "options":  [
-                                          "affect",
-                                          "effect",
-                                          "efect"
-                                      ],
-                          "correct":  1,
-                          "explanation":  "\u0027Effect\u0027 is the noun (a result). The change had a large effect."
-                      }
-                  ],
-    "title":  "Common Confusing Words",
-    "quiz_id":  "quiz_05",
-    "level":  5
+{
+  "quiz_id": "quiz_05",
+  "level": 5,
+  "title": "Formal vs Informal Writing",
+  "questions": [
+    {
+      "id": "l5q1",
+      "question": "Which is appropriate for a formal email to your employer?",
+      "options": [
+        "Hey boss! Can't come tomorrow. Sick 😷",
+        "Hi, I won't be able to make it tomorrow.",
+        "Dear Mr. Brown, I am writing to inform you that I am unable to attend work tomorrow due to illness.",
+        "Mr. Brown, I'm sick so I can't come."
+      ],
+      "correct": 2,
+      "explanation": "C uses formal greeting, no contractions, polite formal language."
+    },
+    {
+      "id": "l5q2",
+      "question": "Which sign-off is correct for a formal letter to someone you don't know?",
+      "options": ["Love, James", "Cheers, James", "Yours faithfully, James", "See ya, James"],
+      "correct": 2,
+      "explanation": "'Yours faithfully' is used when you don't know the person's name."
+    },
+    {
+      "id": "l5q3",
+      "question": "Which is the formal version of 'find out'?",
+      "options": ["figure out", "determine", "dig up", "check out"],
+      "correct": 1,
+      "explanation": "'determine' is the formal equivalent."
+    },
+    {
+      "id": "l5q4",
+      "question": "Which opening is correct for a formal email?",
+      "options": [
+        "I hope you're well! I wanna ask...",
+        "I am writing to inquire about...",
+        "Hey, just wanted to check...",
+        "So basically, I need help with..."
+      ],
+      "correct": 1,
+      "explanation": "B uses formal language and states purpose clearly. No contractions."
+    },
+    {
+      "id": "l5q5",
+      "question": "Convert to formal: 'The results were really good.'",
+      "options": [
+        "The results were quite nice.",
+        "The results were highly satisfactory.",
+        "The results were pretty awesome.",
+        "The results were OK."
+      ],
+      "correct": 1,
+      "explanation": "'highly satisfactory' is precise and professional."
+    },
+    {
+      "id": "l5q6",
+      "question": "Which subject line is best for a formal email about a job application?",
+      "options": [
+        "Job",
+        "Hi",
+        "Application for Marketing Manager Position - Ref: MKT2025",
+        "Looking for work ASAP"
+      ],
+      "correct": 2,
+      "explanation": "C is specific, professional, and includes a reference number."
+    },
+    {
+      "id": "l5q7",
+      "question": "Which sentence is written in appropriate formal style?",
+      "options": [
+        "I can't make it to the meeting.",
+        "I will not be able to attend the meeting.",
+        "Meeting's not gonna happen for me.",
+        "Won't be at the meeting, sorry!"
+      ],
+      "correct": 1,
+      "explanation": "B has no contractions, uses full words, professional tone."
+    },
+    {
+      "id": "l5q8",
+      "question": "In a formal letter, where does YOUR address go?",
+      "options": ["Bottom left", "Bottom right", "Top left", "Top right"],
+      "correct": 3,
+      "explanation": "Your address goes top right. Recipient's address goes left (below date)."
+    },
+    {
+      "id": "l5q9",
+      "question": "Which situation requires INFORMAL writing?",
+      "options": [
+        "A job application letter",
+        "A complaint letter to a company",
+        "A text message to your best friend",
+        "An academic essay"
+      ],
+      "correct": 2,
+      "explanation": "Informal writing is appropriate for personal communication with friends/family."
+    },
+    {
+      "id": "l5q10",
+      "question": "Fix this formal email opening: 'Hey Dr. Smith! I'm a student and I wanna ask about the assignment. Can you help ASAP? Thanks!'",
+      "options": [
+        "Dear Dr. Smith, I'm writing to ask about the assignment.",
+        "Dear Dr. Smith, I am writing to inquire about the assignment details. I would appreciate your guidance at your earliest convenience.",
+        "Hi Dr. Smith, Could you please tell me about the assignment?",
+        "Dear Dr. Smith, I need help with the assignment immediately."
+      ],
+      "correct": 1,
+      "explanation": "B has: formal greeting, no contractions, formal vocabulary 'inquire', polite closing phrase, no slang/abbreviations."
+    }
+  ]
 }

@@ -1,94 +1,270 @@
 {
   "level": 1,
   "title": "Basic Spelling Rules",
+  "chapter": "Chapter 1: The Building Blocks of Spelling",
+  "emoji": "🟢",
   "topic": "spelling_fundamentals",
   "category": "beginner",
-  "content": {
-    "sections": [
-      {
-        "heading": "The Silent-E Rule",
-        "explanation": "When a word ends in a silent 'e', you usually drop the 'e' before adding a suffix that starts with a vowel (-ing, -able, -ous). But you keep the 'e' before suffixes starting with a consonant (-ment, -ful, -ly).",
+  "xp_reward": 100,
+  "sections": [
+    {
+      "id": "s1",
+      "heading": "Why Spelling Matters",
+      "body": "Spelling is the foundation of all writing. When you spell correctly, your reader understands you clearly. When you spell wrong, it creates confusion and looks unprofessional.",
+      "comparison": {
+        "wrong": "I recieved ur messege yestday",
+        "right": "I received your message yesterday"
+      },
+      "key_point": "Spelling = Your writing's first impression."
+    },
+    {
+      "id": "s2",
+      "heading": "The I Before E Rule",
+      "rule": "I before E, except after C, or when sounded like AY as in neighbor and weigh.",
+      "sub_rules": [
+        {
+          "title": "Part 1: I before E (most common)",
+          "explanation": "When you hear the 'EE' sound → write IE",
+          "words": [
+            { "word": "believe", "breakdown": "bel-IE-ve", "meaning": "to think something is true" },
+            { "word": "achieve", "breakdown": "ach-IE-ve", "meaning": "to accomplish something" },
+            { "word": "relief", "breakdown": "rel-IE-f", "meaning": "freedom from pain/stress" },
+            { "word": "piece", "breakdown": "p-IE-ce", "meaning": "a part of something" },
+            { "word": "field", "breakdown": "f-IE-ld", "meaning": "open land" },
+            { "word": "friend", "breakdown": "fr-IE-nd", "meaning": "a person you like" },
+            { "word": "grief", "breakdown": "gr-IE-f", "meaning": "deep sadness" },
+            { "word": "shield", "breakdown": "sh-IE-ld", "meaning": "protection" },
+            { "word": "yield", "breakdown": "y-IE-ld", "meaning": "to give way" },
+            { "word": "thief", "breakdown": "th-IE-f", "meaning": "someone who steals" }
+          ],
+          "examples": [
+            "I believe she will achieve great things.",
+            "He felt relief when he found his missing piece.",
+            "The farmer walked through the field."
+          ]
+        },
+        {
+          "title": "Part 2: E before I (after C)",
+          "explanation": "After the letter C → write EI (not IE)",
+          "words": [
+            { "word": "receive", "breakdown": "re-c-EI-ve", "meaning": "to get something" },
+            { "word": "deceive", "breakdown": "de-c-EI-ve", "meaning": "to trick someone" },
+            { "word": "ceiling", "breakdown": "c-EI-ling", "meaning": "top of a room" },
+            { "word": "receipt", "breakdown": "re-c-EI-pt", "meaning": "proof of purchase" },
+            { "word": "conceive", "breakdown": "con-c-EI-ve", "meaning": "to imagine/create" },
+            { "word": "perceive", "breakdown": "per-c-EI-ve", "meaning": "to sense/notice" }
+          ],
+          "examples": [
+            "Did you receive my letter?",
+            "The ceiling needs to be painted.",
+            "Keep your receipt after shopping."
+          ]
+        },
+        {
+          "title": "Part 3: EI when sounded like AY",
+          "explanation": "When the sound is 'AY' → write EI",
+          "words": [
+            { "word": "neighbor", "sound": "NAY-bor", "meaning": "person living nearby" },
+            { "word": "weigh", "sound": "WAY", "meaning": "to measure weight" },
+            { "word": "eight", "sound": "AYT", "meaning": "the number 8" },
+            { "word": "freight", "sound": "FRAYT", "meaning": "goods transported" },
+            { "word": "veil", "sound": "VAYL", "meaning": "thin covering" },
+            { "word": "reign", "sound": "RAYN", "meaning": "rule of a king/queen" },
+            { "word": "sleigh", "sound": "SLAY", "meaning": "a snow vehicle" }
+          ],
+          "examples": [
+            "My neighbor weighs exactly eight kilos more than me.",
+            "The queen's reign lasted forty years."
+          ]
+        }
+      ],
+      "memory_trick": "I before E (believe, achieve), Except after C (receive, ceiling), Or sounded as AY (neighbor, weigh). Say it out loud 3 times — it rhymes!",
+      "exceptions": ["weird", "either", "neither", "seize", "species"]
+    },
+    {
+      "id": "s3",
+      "heading": "Silent Letters",
+      "explanation": "English has many letters that are written but NOT spoken. These cause spelling mistakes!",
+      "groups": [
+        {
+          "type": "Silent K (before N)",
+          "note": "The K is written but not spoken",
+          "words": [
+            { "word": "know", "pronunciation": "NO", "meaning": "to be aware of" },
+            { "word": "knee", "pronunciation": "NEE", "meaning": "joint in your leg" },
+            { "word": "knife", "pronunciation": "NIFE", "meaning": "cutting tool" },
+            { "word": "knock", "pronunciation": "NOK", "meaning": "to hit a door" },
+            { "word": "knight", "pronunciation": "NITE", "meaning": "a warrior" },
+            { "word": "knot", "pronunciation": "NOT", "meaning": "a tied loop" },
+            { "word": "kneel", "pronunciation": "NEEL", "meaning": "to go down on knees" }
+          ],
+          "examples": [
+            "I know he will knock on the door with his knee.",
+            "The knight cut the knot with his knife."
+          ],
+          "memory_trick": "The K is Knocked out"
+        },
+        {
+          "type": "Silent W (before R)",
+          "note": "The W is written but not spoken",
+          "words": [
+            { "word": "write", "pronunciation": "RITE", "meaning": "to put words on paper" },
+            { "word": "wrong", "pronunciation": "RONG", "meaning": "not correct" },
+            { "word": "wrist", "pronunciation": "RIST", "meaning": "joint between hand and arm" },
+            { "word": "wrap", "pronunciation": "RAP", "meaning": "to cover something" },
+            { "word": "wreck", "pronunciation": "REK", "meaning": "to destroy" },
+            { "word": "wrestle", "pronunciation": "RESL", "meaning": "to fight/struggle" },
+            { "word": "wrinkle", "pronunciation": "RINKL", "meaning": "a fold in skin/fabric" }
+          ],
+          "examples": [
+            "It is wrong to write with a wrinkled paper.",
+            "He hurt his wrist trying to wrestle."
+          ],
+          "memory_trick": "The W goes Wrong and disappears"
+        },
+        {
+          "type": "Silent B (after M or before T)",
+          "words": [
+            { "word": "bomb", "pronunciation": "BOM", "meaning": "explosive device" },
+            { "word": "climb", "pronunciation": "CLIME", "meaning": "to go up" },
+            { "word": "comb", "pronunciation": "KOME", "meaning": "hair tool" },
+            { "word": "lamb", "pronunciation": "LAM", "meaning": "baby sheep" },
+            { "word": "thumb", "pronunciation": "THUM", "meaning": "short finger" },
+            { "word": "debt", "pronunciation": "DET", "meaning": "money owed" },
+            { "word": "doubt", "pronunciation": "DOUT", "meaning": "uncertainty" },
+            { "word": "subtle", "pronunciation": "SUTL", "meaning": "not obvious" }
+          ],
+          "examples": [
+            "I have no doubt that I owe a debt.",
+            "The lamb climbed the subtle hill."
+          ],
+          "memory_trick": "B is hugging M so tight it can't speak"
+        },
+        {
+          "type": "Silent G (before N)",
+          "words": [
+            { "word": "gnome", "pronunciation": "NOME", "meaning": "small mythical creature" },
+            { "word": "gnat", "pronunciation": "NAT", "meaning": "tiny insect" },
+            { "word": "gnaw", "pronunciation": "NAW", "meaning": "to bite/chew slowly" },
+            { "word": "sign", "pronunciation": "SINE", "meaning": "a symbol/notice" },
+            { "word": "foreign", "pronunciation": "FOR-in", "meaning": "from another country" },
+            { "word": "design", "pronunciation": "di-ZINE", "meaning": "a plan/pattern" },
+            { "word": "campaign", "pronunciation": "cam-PANE", "meaning": "organized effort" }
+          ],
+          "examples": [
+            "The foreign sign had a unique design.",
+            "The dog gnawed on the bone near the gnome."
+          ],
+          "memory_trick": "G and N together, G stays quiet"
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "heading": "The Doubling Letters Rule",
+      "explanation": "When do you double the final consonant?",
+      "rule_name": "The 1-1-1 Rule",
+      "rule_description": "If a word has 1 syllable + 1 vowel + 1 final consonant → DOUBLE the consonant before adding -ing/-ed/-er",
+      "examples_double": [
+        { "base": "run", "with_ing": "running", "with_er": "runner" },
+        { "base": "sit", "with_ing": "sitting" },
+        { "base": "hop", "with_ing": "hopping", "with_ed": "hopped", "with_er": "hopper" },
+        { "base": "stop", "with_ing": "stopping", "with_ed": "stopped" },
+        { "base": "plan", "with_ing": "planning", "with_ed": "planned", "with_er": "planner" },
+        { "base": "swim", "with_ing": "swimming" },
+        { "base": "win", "with_ing": "winning", "with_er": "winner" }
+      ],
+      "no_double_two_vowels": [
+        { "word": "read", "with_ing": "reading", "reason": "2 vowels (ea) → no double" },
+        { "word": "clean", "with_ing": "cleaning", "reason": "2 vowels (ea) → no double" },
+        { "word": "wait", "with_ing": "waiting", "reason": "2 vowels (ai) → no double" },
+        { "word": "meet", "with_ing": "meeting", "reason": "2 vowels (ee) → no double" }
+      ],
+      "no_double_two_consonants": [
+        { "word": "jump", "with_ing": "jumping", "reason": "ends in mp → no double" },
+        { "word": "help", "with_ing": "helping", "reason": "ends in lp → no double" },
+        { "word": "talk", "with_ing": "talking", "reason": "ends in lk → no double" },
+        { "word": "start", "with_ing": "starting", "reason": "ends in rt → no double" }
+      ],
+      "memory_trick": "1 syllable + 1 vowel + 1 consonant = DOUBLE it. Think: Three 1s = Double trouble!"
+    },
+    {
+      "id": "s5",
+      "heading": "Dropping the Silent E",
+      "explanation": "Many words end in silent E. When you add a suffix, you often DROP the E.",
+      "drop_e_rule": {
+        "when": "Drop E when adding vowel suffixes: -ing, -ed, -er, -est, -able, -ous",
         "examples": [
-          {"correct": "writing", "wrong": "writeing", "rule": "Drop the 'e' before -ing"},
-          {"correct": "making", "wrong": "makeing", "rule": "Drop the 'e' before -ing"},
-          {"correct": "lovable", "wrong": "loveable", "rule": "Drop the 'e' before -able"},
-          {"correct": "excitement", "wrong": "excitment", "rule": "Keep the 'e' before -ment"}
-        ],
-        "memory_tip": "The 'e' is silent because it already did its job (making the vowel long). When a vowel suffix comes along, the 'e' steps aside!"
+          { "base": "write", "suffix": "-ing", "correct": "writing", "wrong": "writeing" },
+          { "base": "make", "suffix": "-ing", "correct": "making", "wrong": "makeing" },
+          { "base": "love", "suffix": "-ing", "correct": "loving", "wrong": "loveing" },
+          { "base": "hope", "suffix": "-ing", "correct": "hoping", "wrong": "hopeing" },
+          { "base": "use", "suffix": "-able", "correct": "usable", "wrong": "useable" },
+          { "base": "note", "suffix": "-able", "correct": "notable", "wrong": "noteable" },
+          { "base": "fame", "suffix": "-ous", "correct": "famous", "wrong": "fameous" },
+          { "base": "nerve", "suffix": "-ous", "correct": "nervous", "wrong": "nerveous" }
+        ]
       },
-      {
-        "heading": "The I Before E Rule",
-        "explanation": "'I before E, except after C, or when sounding like A as in neighbor and weigh.' This classic rule helps with many common words, though there are exceptions.",
+      "keep_e_rule": {
+        "when": "Keep E when adding consonant suffixes: -ment, -ness, -ful, -less, -ly",
         "examples": [
-          {"correct": "believe", "wrong": "beleive", "rule": "I before E"},
-          {"correct": "receive", "wrong": "recieve", "rule": "Except after C"},
-          {"correct": "weight", "wrong": "wieght", "rule": "Sounds like A"},
-          {"correct": "friend", "wrong": "freind", "rule": "I before E"}
-        ],
-        "memory_tip": "Think: I before E, except after C. Most words follow this pattern!"
+          { "base": "love", "suffix": "-ly", "correct": "lovely" },
+          { "base": "hope", "suffix": "-ful", "correct": "hopeful" },
+          { "base": "care", "suffix": "-less", "correct": "careless" },
+          { "base": "sincere", "suffix": "-ly", "correct": "sincerely" },
+          { "base": "entire", "suffix": "-ly", "correct": "entirely" }
+        ]
       },
-      {
-        "heading": "Double Letter Rules",
-        "explanation": "When adding a suffix to a short word ending in consonant-vowel-consonant (CVC), double the last consonant. This keeps the vowel sound short.",
-        "examples": [
-          {"correct": "running", "wrong": "runing", "rule": "run → running (CVC pattern)"},
-          {"correct": "beginning", "wrong": "begining", "rule": "begin → beginning (stress on last syllable)"},
-          {"correct": "stopped", "wrong": "stoped", "rule": "stop → stopped (CVC pattern)"},
-          {"correct": "happening", "wrong": "happenning", "rule": "happen → happening (stress NOT on last syllable, don't double)"}
-        ],
-        "memory_tip": "If the word is short (one syllable) and ends CVC, double it! For longer words, only double if the stress is on the LAST syllable."
-      }
-    ]
-  },
-  "quiz": {
-    "questions": [
-      {
-        "id": "l1q1",
-        "question": "Which is correct?",
-        "options": ["writeing", "writing", "writting"],
-        "correct": 1,
-        "explanation": "Drop the silent 'e' before adding '-ing': write → writing."
-      },
-      {
-        "id": "l1q2",
-        "question": "Which is spelled correctly?",
-        "options": ["beleive", "believe", "beleve"],
-        "correct": 1,
-        "explanation": "I before E (when not after C): believe."
-      },
-      {
-        "id": "l1q3",
-        "question": "Fill in: The runner kept ___",
-        "options": ["runing", "running", "runeing"],
-        "correct": 1,
-        "explanation": "Run ends in CVC (r-u-n), so double the 'n': running."
-      },
-      {
-        "id": "l1q4",
-        "question": "Which is correct?",
-        "options": ["excitement", "excitment", "exciteing"],
-        "correct": 0,
-        "explanation": "Keep the 'e' before -ment (consonant suffix): excitement."
-      },
-      {
-        "id": "l1q5",
-        "question": "Which is spelled correctly?",
-        "options": ["recieve", "receive", "receeve"],
-        "correct": 1,
-        "explanation": "After C, it's E before I: receive."
-      }
-    ]
-  },
+      "memory_trick": "Vowel suffix? Drop the E (it's too shy). Consonant suffix? Keep the E (it stays to say hi)"
+    }
+  ],
   "assignment": {
-    "prompt": "Write 3 sentences using words that follow the spelling rules you just learned. Try to use at least one silent-e word, one i-before-e word, and one double-letter word.",
-    "hints": ["Try words like: making, believing, running, writing, receiving, stopped"],
-    "min_sentences": 3
+    "title": "Level 1 Assignment",
+    "tasks": [
+      {
+        "task_number": 1,
+        "instruction": "Correct all spelling mistakes in each sentence.",
+        "sentences": [
+          {
+            "text": "I beleive she will recieve the packege tomorrow.",
+            "errors": ["beleive → believe", "recieve → receive", "packege → package"]
+          },
+          {
+            "text": "The nief on the table is sharper than the one in the droor.",
+            "errors": ["nief → knife", "droor → drawer"]
+          },
+          {
+            "text": "She is writting a letter to her nieghbor about the foriegn design.",
+            "errors": ["writting → writing", "nieghbor → neighbor", "foriegn → foreign"]
+          },
+          {
+            "text": "The theif was runing away but stoped at the feild.",
+            "errors": ["theif → thief", "runing → running", "stoped → stopped", "feild → field"]
+          },
+          {
+            "text": "I have no dout that the celing needs a new desing.",
+            "errors": ["dout → doubt", "celing → ceiling", "desing → design"]
+          }
+        ],
+        "points_per_sentence": 2,
+        "total_points": 10
+      },
+      {
+        "task_number": 2,
+        "instruction": "Write 5 sentences using these words correctly (one word per sentence):",
+        "words": ["receive", "writing", "neighbor", "believe", "known"],
+        "example": "I believe this is the right answer.",
+        "points_per_sentence": 2,
+        "total_points": 10
+      }
+    ],
+    "total_points": 20
   },
   "credits": {
-    "lesson": 10,
+    "lesson_complete": 10,
     "quiz_pass": 15,
     "quiz_perfect": 25,
-    "assignment": 15,
-    "assignment_perfect": 30
+    "assignment_submit": 20,
+    "assignment_perfect": 35
   }
 }

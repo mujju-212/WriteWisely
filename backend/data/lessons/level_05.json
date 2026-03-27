@@ -1,65 +1,304 @@
 {
   "level": 5,
-  "title": "Common Confusing Words",
-  "topic": "word_choice",
-  "category": "beginner",
-  "content": {
-    "sections": [
+  "title": "Formal vs Informal Writing",
+  "chapter": "Chapter 5: Writing for Different Situations",
+  "emoji": "🟡",
+  "topic": "formal_informal_writing",
+  "category": "intermediate",
+  "xp_reward": 150,
+  "sections": [
+    {
+      "id": "s1",
+      "heading": "What is Formal Writing?",
+      "explanation": "Writing style changes based on WHO you are writing to and WHY.",
+      "formal_used_when": [
+        "Writing to someone you don't know well",
+        "Writing to authority figures (boss, teacher)",
+        "Academic papers and essays",
+        "Professional emails and letters",
+        "Job applications and resumes",
+        "Official documents and reports"
+      ],
+      "informal_used_when": [
+        "Texting/messaging friends and family",
+        "Personal diary/journal",
+        "Social media posts (usually)",
+        "Casual emails to friends",
+        "Personal conversations"
+      ],
+      "comparison": {
+        "situation": "Telling someone you can't attend a meeting",
+        "informal": "Hey! So sorry, can't make it tomorrow. Something came up 😅 Maybe next time? xx",
+        "formal": "Dear Mr. Thompson,\n\nI am writing to inform you that I will be unable to attend the meeting scheduled for tomorrow, January 21st. I sincerely apologize for any inconvenience this may cause. Please let me know if we could reschedule at a time that is convenient for you.\n\nYours sincerely,\nSarah Johnson"
+      }
+    },
+    {
+      "id": "s2",
+      "heading": "Key Differences",
+      "differences_table": [
+        { "feature": "Contractions", "formal": "AVOID — use 'I am' not 'I'm'", "informal": "OK to use — 'I'm', 'can't'" },
+        { "feature": "Slang", "formal": "NEVER", "informal": "Common — 'awesome', 'cool'" },
+        { "feature": "Abbreviations", "formal": "Avoid/explain — write 'as soon as possible'", "informal": "LOL, ASAP, BTW" },
+        { "feature": "Sentences", "formal": "Complete, varied", "informal": "Can be short/incomplete" },
+        { "feature": "Vocabulary", "formal": "Advanced, precise", "informal": "Simple, everyday" },
+        { "feature": "First person", "formal": "Sometimes avoid — 'This paper argues'", "informal": "Always okay — 'I think'" },
+        { "feature": "Emojis", "formal": "NEVER", "informal": "Common 😊" },
+        { "feature": "Exclamation !", "formal": "Rarely", "informal": "Often!!!" },
+        { "feature": "Passive voice", "formal": "Common — 'It was found'", "informal": "Rare" },
+        { "feature": "Opening", "formal": "'Dear Mr. Smith,' or 'To Whom It May Concern,'", "informal": "'Hey John,' or just jump in" },
+        { "feature": "Closing", "formal": "'Yours sincerely,' 'Kind regards,' 'Respectfully,'", "informal": "'See you!' 'Talk soon,' 'Love,'" }
+      ],
+      "vocabulary_comparison": [
+        { "informal": "get", "formal": "obtain / receive" },
+        { "informal": "show", "formal": "demonstrate / illustrate" },
+        { "informal": "think", "formal": "believe / consider" },
+        { "informal": "very big", "formal": "substantial / considerable" },
+        { "informal": "bad", "formal": "unfavorable / inadequate" },
+        { "informal": "good", "formal": "satisfactory / commendable" },
+        { "informal": "help", "formal": "assist / facilitate" },
+        { "informal": "use", "formal": "utilize / employ" },
+        { "informal": "need", "formal": "require / necessitate" },
+        { "informal": "find out", "formal": "discover / determine" },
+        { "informal": "talk about", "formal": "discuss / address" },
+        { "informal": "set up", "formal": "establish / implement" },
+        { "informal": "ok/okay", "formal": "acceptable / satisfactory" },
+        { "informal": "a lot", "formal": "numerous / a significant amount" },
+        { "informal": "start", "formal": "commence / initiate" },
+        { "informal": "end", "formal": "conclude / terminate" },
+        { "informal": "buy", "formal": "purchase" },
+        { "informal": "ask", "formal": "inquire / request" },
+        { "informal": "tell", "formal": "inform / notify" },
+        { "informal": "sorry", "formal": "I apologize / I regret" },
+        { "informal": "thanks", "formal": "Thank you / I am grateful" }
+      ],
+      "contractions_to_avoid": [
+        { "informal": "I'm", "formal": "I am" },
+        { "informal": "I've", "formal": "I have" },
+        { "informal": "I'll", "formal": "I will" },
+        { "informal": "don't", "formal": "do not" },
+        { "informal": "can't", "formal": "cannot" },
+        { "informal": "won't", "formal": "will not" },
+        { "informal": "doesn't", "formal": "does not" },
+        { "informal": "isn't", "formal": "is not" },
+        { "informal": "it's", "formal": "it is" },
+        { "informal": "they're", "formal": "they are" },
+        { "informal": "we're", "formal": "we are" },
+        { "informal": "you're", "formal": "you are" },
+        { "informal": "wouldn't", "formal": "would not" },
+        { "informal": "couldn't", "formal": "could not" },
+        { "informal": "shouldn't", "formal": "should not" }
+      ]
+    },
+    {
+      "id": "s3",
+      "heading": "Writing a Formal Email",
+      "structure": [
+        {
+          "part": 1,
+          "name": "Subject Line",
+          "rules": ["Clear and specific", "Not too long", "Capitalize main words"],
+          "good_examples": [
+            "Request for Meeting - Project Update",
+            "Application for Marketing Manager Position",
+            "Inquiry Regarding Course Registration",
+            "Follow-Up: Invoice #2024-156"
+          ],
+          "bad_examples": ["hey", "hi", "question (too vague)"]
+        },
+        {
+          "part": 2,
+          "name": "Greeting/Salutation",
+          "rules": ["Use 'Dear' + title + last name"],
+          "known_person": [
+            "Dear Mr. Johnson,",
+            "Dear Dr. Patel,",
+            "Dear Ms. Williams,",
+            "Dear Professor Chen,"
+          ],
+          "unknown_person": [
+            "Dear Hiring Manager,",
+            "Dear Sir or Madam,",
+            "To Whom It May Concern,"
+          ],
+          "note": "Use 'Ms.' when you don't know if a woman is married. Never assume 'Mrs.'"
+        },
+        {
+          "part": 3,
+          "name": "Opening Line",
+          "rules": ["State your PURPOSE immediately"],
+          "examples": [
+            "I am writing to inquire about...",
+            "I am writing with regard to...",
+            "I am writing to apply for...",
+            "I am writing to request...",
+            "I am contacting you regarding...",
+            "Further to our conversation on [date]...",
+            "Following up on my previous email...",
+            "Please find attached...",
+            "I would like to bring to your attention..."
+          ]
+        },
+        {
+          "part": 4,
+          "name": "Body",
+          "rules": [
+            "One idea per paragraph",
+            "Short, clear paragraphs",
+            "No slang or contractions",
+            "Formal vocabulary"
+          ],
+          "structure": [
+            "Paragraph 1: Main purpose/reason for writing",
+            "Paragraph 2: Details, context, or supporting info",
+            "Paragraph 3: What you need from them / next steps"
+          ]
+        },
+        {
+          "part": 5,
+          "name": "Closing Line",
+          "examples": [
+            "Please do not hesitate to contact me if you require any further information.",
+            "I look forward to hearing from you.",
+            "I would appreciate a response at your earliest convenience.",
+            "Thank you for your time and consideration.",
+            "I await your response with interest."
+          ]
+        },
+        {
+          "part": 6,
+          "name": "Sign-Off",
+          "know_moderately": [
+            "Yours sincerely, (UK - when you used name)",
+            "Sincerely, (US - always acceptable)",
+            "Kind regards,",
+            "Best regards,",
+            "Warm regards,"
+          ],
+          "dont_know": [
+            "Yours faithfully, (UK - when you wrote 'Dear Sir/Madam')",
+            "Respectfully,",
+            "With best wishes,"
+          ],
+          "note": "Then: Your full name, position, contact details"
+        }
+      ],
+      "complete_example": {
+        "subject": "Request for Extension - Assignment 3",
+        "body": "Dear Professor Martinez,\n\nI am writing to request an extension for Assignment 3, which is currently due on Friday, January 24th, 2025.\n\nUnfortunately, I have been unwell this week and was unable to attend classes on Monday and Tuesday. As a result, I have fallen behind with my research and do not believe I will be able to submit work of satisfactory quality by the current deadline.\n\nI would be grateful if you could grant me an extension of five days, until Wednesday, January 29th. I assure you that I will submit the completed assignment by that date.\n\nPlease find attached a medical certificate confirming my illness. I apologize for any inconvenience caused.\n\nThank you for your understanding. I look forward to your response.\n\nYours sincerely,\nJames Walker\nStudent ID: 2024/STU/0892\njames.walker@university.edu"
+      }
+    },
+    {
+      "id": "s4",
+      "heading": "Writing a Formal Letter",
+      "structure": [
+        "Your Address - top right",
+        "Date - below your address",
+        "Recipient's name and address - left side",
+        "Reference line - optional",
+        "Greeting",
+        "Body paragraphs",
+        "Closing line",
+        "Sign-off",
+        "Your name",
+        "Your position/title if relevant"
+      ],
+      "complete_example": {
+        "context": "A complaint letter about a faulty laptop",
+        "body": "45 Green Park Road\nLondon, NW3 5TH\nJanuary 20, 2025\n\nThe Customer Service Manager\nTechStore Electronics\n82 Oxford Street\nLondon, W1D 2EF\n\nDear Sir or Madam,\n\nRe: Faulty Laptop - Order Number TS-2024-88762\n\nI am writing to express my dissatisfaction with a laptop I purchased from your store on January 5th, 2025. The product, a TechPro X500 laptop, has developed a significant fault that has rendered it unusable.\n\nSpecifically, the screen began displaying horizontal lines within three days of purchase, and the device now fails to start altogether. I have followed all the troubleshooting steps outlined in the user manual; however, the problem persists.\n\nAs the product clearly does not meet the standard I would reasonably expect, I would like to request either a full replacement or a complete refund within 14 days. I have enclosed the original receipt and photographs of the fault for your reference.\n\nI trust that you will address this matter promptly. Please contact me at the above address or by telephone at 07700 900123.\n\nYours faithfully,\nMichael Thompson"
+      }
+    },
+    {
+      "id": "s5",
+      "heading": "Common Formal Writing Mistakes",
+      "mistakes": [
+        {
+          "number": 1,
+          "description": "Using contractions",
+          "wrong": "I'm writing to let you know I can't attend.",
+          "right": "I am writing to inform you that I cannot attend."
+        },
+        {
+          "number": 2,
+          "description": "Using slang",
+          "wrong_examples": ["The results were pretty awesome.", "I wanna know more about the job."],
+          "right_examples": ["The results were highly satisfactory.", "I would like to learn more about the position."]
+        },
+        {
+          "number": 3,
+          "description": "Wrong greeting",
+          "wrong_examples": ["Hey Mr. Johnson,", "Hi there,"],
+          "right": "Dear Mr. Johnson,"
+        },
+        {
+          "number": 4,
+          "description": "Wrong sign-off",
+          "wrong_examples": ["Love, Sarah (too personal)", "Cheers! (too casual)"],
+          "right_examples": ["Yours sincerely, Sarah", "Kind regards, Sarah"]
+        },
+        {
+          "number": 5,
+          "description": "Vague subject line",
+          "wrong_examples": ["Subject: Question", "Subject: Hello"],
+          "right": "Subject: Inquiry Regarding Job Opening - Ref: MKT2025"
+        },
+        {
+          "number": 6,
+          "description": "Emotional or aggressive tone",
+          "wrong": "I am absolutely furious about this!",
+          "right": "I am writing to express my concern about..."
+        },
+        {
+          "number": 7,
+          "description": "Too casual vocabulary",
+          "wrong": "I need to ask you about the meeting.",
+          "right": "I would like to inquire about the scheduled meeting."
+        },
+        {
+          "number": 8,
+          "description": "Abbreviations",
+          "wrong_examples": ["ASAP", "FYI", "btw"],
+          "right_examples": ["as soon as possible", "for your information", "by the way (or just remove it)"]
+        },
+        {
+          "number": 9,
+          "description": "No paragraph structure",
+          "wrong": "Writing everything in one long paragraph",
+          "right": "Separate different ideas into different paragraphs"
+        }
+      ]
+    }
+  ],
+  "assignment": {
+    "title": "Level 5 Assignment",
+    "tasks": [
       {
-        "heading": "Affect vs. Effect",
-        "explanation": "'Affect' is usually a VERB (to influence). 'Effect' is usually a NOUN (a result). Think: Affect = Action (both start with A), Effect = End result (both start with E).",
-        "examples": [
-          {"correct": "The weather affects my mood.", "wrong": "The weather effects my mood.", "rule": "Affect = verb (to influence)"},
-          {"correct": "The medicine had a positive effect.", "wrong": "The medicine had a positive affect.", "rule": "Effect = noun (a result)"},
-          {"correct": "How will this affect the outcome?", "wrong": "How will this effect the outcome?", "rule": "Affect = verb (action word)"}
-        ],
-        "memory_tip": "RAVEN: Remember, Affect is a Verb, Effect is a Noun."
+        "task_number": 1,
+        "instruction": "Rewrite in FORMAL style (keep same meaning):",
+        "informal_text": "hey i missed class yesterday can u send me the notes?? i was sick and couldn't come its really important for me. thanks a lot!!",
+        "model_answer": "Dear [Teacher's Name],\n\nI am writing to request the class notes from yesterday's session, which I was unfortunately unable to attend due to illness.\n\nI understand the importance of keeping up with the course material and would be grateful if you could share the relevant notes at your earliest convenience.\n\nThank you for your time and assistance.\n\nYours sincerely,\n[Your Name]"
       },
       {
-        "heading": "Then vs. Than",
-        "explanation": "'Then' relates to TIME (what happens next). 'Than' is used for COMPARISONS.",
-        "examples": [
-          {"correct": "I ate dinner, then I went to bed.", "wrong": "I ate dinner, than I went to bed.", "rule": "'Then' = time/sequence"},
-          {"correct": "She is taller than her brother.", "wrong": "She is taller then her brother.", "rule": "'Than' = comparison"},
-          {"correct": "First study, then play.", "wrong": "First study, than play.", "rule": "'Then' = next step"}
+        "task_number": 2,
+        "instruction": "Write a complete formal email:",
+        "situation": "Write an email to the manager of a restaurant where you had a bad experience. The food was cold, the service was slow, and you waited 45 minutes for your order.",
+        "requirements": [
+          "Appropriate subject line",
+          "Formal greeting",
+          "Clear opening sentence stating purpose",
+          "Body with specific details",
+          "What you want them to do",
+          "Polite closing sentence",
+          "Formal sign-off with your name"
         ],
-        "memory_tip": "thEN = whEN (both about time). thAN = compArisoN (both have 'an')."
-      },
-      {
-        "heading": "To / Too / Two",
-        "explanation": "'To' is a preposition or infinitive marker. 'Too' means 'also' or 'excessively'. 'Two' is the number 2.",
-        "examples": [
-          {"correct": "I went to the store.", "wrong": "I went too the store.", "rule": "'To' = direction/preposition"},
-          {"correct": "She is too tired to study.", "wrong": "She is to tired to study.", "rule": "'Too' = excessively"},
-          {"correct": "I want to come too!", "wrong": "I want to come to!", "rule": "'Too' = also"},
-          {"correct": "I have two cats.", "wrong": "I have to cats.", "rule": "'Two' = the number 2"}
-        ],
-        "memory_tip": "'Too' has too many o's — it means 'too much' or 'also'!"
-      },
-      {
-        "heading": "Accept vs. Except",
-        "explanation": "'Accept' means to receive or agree (verb). 'Except' means excluding or but (preposition/conjunction).",
-        "examples": [
-          {"correct": "I accept your invitation.", "wrong": "I except your invitation.", "rule": "Accept = receive/agree"},
-          {"correct": "Everyone came except Tom.", "wrong": "Everyone came accept Tom.", "rule": "Except = excluding"}
-        ],
-        "memory_tip": "Accept starts with 'ac' = ACquire. Except starts with 'ex' = EXclude."
+        "minimum_words": 150
       }
     ]
   },
-  "quiz": {
-    "questions": [
-      {"id": "l5q1", "question": "The rain will ___ the match.", "options": ["affect", "effect", "afect"], "correct": 0, "explanation": "'Affect' is the verb (to influence). The rain will affect (influence) the match."},
-      {"id": "l5q2", "question": "She runs faster ___ me.", "options": ["then", "than", "then"], "correct": 1, "explanation": "'Than' is used for comparisons: faster than me."},
-      {"id": "l5q3", "question": "This bag is ___ heavy ___ carry.", "options": ["to, to", "too, to", "two, too"], "correct": 1, "explanation": "'Too' = excessively heavy. 'To' = infinitive (to carry)."},
-      {"id": "l5q4", "question": "Everyone passed ___ John.", "options": ["accept", "except", "exept"], "correct": 1, "explanation": "'Except' = excluding. Everyone passed excluding John."},
-      {"id": "l5q5", "question": "The change had a large ___.", "options": ["affect", "effect", "efect"], "correct": 1, "explanation": "'Effect' is the noun (a result). The change had a large effect."}
-    ]
-  },
-  "assignment": {
-    "prompt": "Write 4 sentences using these commonly confused words correctly: affect/effect, then/than, to/too/two, and accept/except. Use at least one pair in each sentence.",
-    "hints": ["Example: The new policy had a positive effect on productivity, which affected everyone except the interns."],
-    "min_sentences": 4
-  },
-  "credits": {"lesson": 10, "quiz_pass": 15, "quiz_perfect": 25, "assignment": 15, "assignment_perfect": 30}
+  "credits": {
+    "lesson_complete": 10,
+    "quiz_pass": 15,
+    "quiz_perfect": 25,
+    "assignment_submit": 20,
+    "assignment_perfect": 35
+  }
 }

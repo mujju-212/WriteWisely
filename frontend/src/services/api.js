@@ -47,9 +47,13 @@ export const fetchAnalytics = (period = 'weekly') =>
 
 // ─── Learning ─────────────────────────────────────────────
 export const fetchLevels = () => api('/learning/levels');
-export const fetchLesson = (levelId) => api(`/learning/lesson/${levelId}`);
+export const fetchLesson = (levelId) => api(`/learning/levels/${levelId}`);
+export const markLessonComplete = (levelId) =>
+  api(`/learning/lesson/${levelId}/complete`, { method: 'POST', body: JSON.stringify({}) });
 export const submitQuiz = (levelId, answers) =>
-  api(`/learning/quiz/${levelId}/submit`, { method: 'POST', body: JSON.stringify({ answers }) });
+  api(`/learning/quiz/${levelId}`, { method: 'POST', body: JSON.stringify({ answers }) });
+export const submitAssignment = (levelId, text) =>
+  api(`/learning/assignment/${levelId}`, { method: 'POST', body: JSON.stringify({ text }) });
 
 // ─── Practice ─────────────────────────────────────────────
 export const fetchPracticeTemplates = () => api('/practice/templates');
@@ -74,6 +78,29 @@ export const fetchChatHistory = () => api('/chat/history');
 export const sendChatMessage = (message) =>
   api('/chat/send', { method: 'POST', body: JSON.stringify({ message }) });
 export const clearChat = () => api('/chat/clear', { method: 'DELETE' });
+export async function uploadChatDocument(file, title = '') {
+  const token = getToken();
+  const form = new FormData();
+  form.append('file', file);
+  if (title) {
+    form.append('title', title);
+  }
+
+  const res = await fetch(`${BASE}/chat/upload-document`, {
+    method: 'POST',
+    headers: {
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    body: form,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ detail: 'Upload failed' }));
+    throw new Error(err.detail || `HTTP ${res.status}`);
+  }
+
+  return res.json();
+}
 
 // ─── Settings ─────────────────────────────────────────────
 export const updateSettings = (data) =>

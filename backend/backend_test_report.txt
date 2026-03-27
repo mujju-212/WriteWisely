@@ -1,0 +1,64 @@
+WriteWisely Backend Test Report
+====================================
+Started:   2026-03-26T21:46:50.675521Z
+Ended:     2026-03-26T21:48:35.475687Z
+Duration:  104.8s
+Base URL:  http://127.0.0.1:8000
+Email:     ww.test.5412b87a@example.com
+
+Total tests: 46
+Passed:      44
+Failed:      2
+Pass rate:   95.65%
+
+Failed Tests
+------------------------------------
+- learning.quiz_submit | status=500 | details=
+- ai.direct.call_llm | status=None | details=Direct LLM call failed: Expecting value: line 1 column 1 (char 0)
+
+Passed Tests
+------------------------------------
+- db.ping
+- api.root
+- api.health
+- auth.signup
+- auth.otp.fetch
+- auth.verify_otp
+- auth.login
+- auth.profile.get
+- auth.profile.update
+- auth.assessment_questions
+- auth.assessment_submit
+- learning.levels
+- learning.lesson_get
+- learning.assignment_submit
+- checker.practice_live
+- checker.practice_analysis
+- checker.project
+- practice.templates
+- practice.submit
+- project.create
+- project.list
+- project.get
+- project.update
+- chat.history.initial
+- chat.send
+- chat.history.after_send
+- chat.clear
+- analytics.dashboard
+- analytics.overview.daily
+- analytics.overview.weekly
+- analytics.overview.monthly
+- analytics.settings_update
+- analytics.export
+- auth.forgot_password
+- auth.reset_password
+- auth.login.after_reset
+- db.state.user
+- db.state.learning_progress
+- db.state.practice_records
+- db.state.chat_history
+- ai.direct.call_llm_chat
+- project.delete
+- auth.delete_account
+- db.cleanup.user_deleted

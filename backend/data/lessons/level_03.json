@@ -1,54 +1,335 @@
 {
   "level": 3,
-  "title": "Subject-Verb Agreement",
-  "topic": "grammar_fundamentals",
+  "title": "Common Grammar Mistakes",
+  "chapter": "Chapter 3: Grammar Mistakes Everyone Makes",
+  "emoji": "🟢",
+  "topic": "grammar_mistakes",
   "category": "beginner",
-  "content": {
-    "sections": [
-      {
-        "heading": "Basic Rule: Singular Subject = Singular Verb",
-        "explanation": "A singular subject takes a singular verb (adds 's'), and a plural subject takes a plural verb (no 's'). This is the foundation of subject-verb agreement.",
+  "xp_reward": 100,
+  "sections": [
+    {
+      "id": "s1",
+      "heading": "Subject-Verb Agreement",
+      "explanation": "The subject and verb in a sentence MUST match. Singular subject → singular verb. Plural subject → plural verb.",
+      "basic_rule": {
+        "description": "Singular subjects use is/was/has/does/verb+s. Plural subjects use are/were/have/do/verb.",
         "examples": [
-          {"correct": "The dog runs fast.", "wrong": "The dog run fast.", "rule": "Singular subject 'dog' → 'runs'"},
-          {"correct": "The dogs run fast.", "wrong": "The dogs runs fast.", "rule": "Plural subject 'dogs' → 'run'"},
-          {"correct": "She writes every day.", "wrong": "She write every day.", "rule": "Singular 'she' → 'writes'"}
-        ],
-        "memory_tip": "It seems backwards: singular verbs end in 's' but singular nouns don't!"
+          { "subject": "The dog", "verb": "runs", "sentence": "The dog runs fast." },
+          { "subject": "The dogs", "verb": "run", "sentence": "The dogs run fast." },
+          { "subject": "She", "verb": "speaks", "sentence": "She speaks English." },
+          { "subject": "They", "verb": "speak", "sentence": "They speak English." },
+          { "subject": "The book", "verb": "is", "sentence": "The book is old." },
+          { "subject": "The books", "verb": "are", "sentence": "The books are old." },
+          { "subject": "He", "verb": "has", "sentence": "He has a car." },
+          { "subject": "They", "verb": "have", "sentence": "They have a car." }
+        ]
+      },
+      "tricky_situations": [
+        {
+          "title": "Words between subject and verb",
+          "note": "Don't be fooled by words in the middle!",
+          "examples": [
+            { "wrong": "The box of chocolates are delicious.", "right": "The box of chocolates is delicious.", "explanation": "Subject = 'box' (singular) → is" },
+            { "wrong": "The students in the class was quiet.", "right": "The students in the class were quiet.", "explanation": "Subject = 'students' (plural) → were" },
+            { "wrong": "A team of doctors have arrived.", "right": "A team of doctors has arrived.", "explanation": "Subject = 'team' (singular) → has" }
+          ],
+          "memory_trick": "Cover the middle words. 'The box [] is delicious.' → Correct!"
+        },
+        {
+          "title": "Collective Nouns (group words)",
+          "note": "In American English → usually singular verb",
+          "collective_nouns": ["team", "group", "family", "class", "committee", "government", "company", "audience"],
+          "use_with": "is/has/does",
+          "examples": [
+            "The team is ready to play.",
+            "The family has moved to a new house.",
+            "The committee has made a decision.",
+            "The audience was excited."
+          ]
+        },
+        {
+          "title": "Either/Neither/Everyone/Someone",
+          "note": "These are always SINGULAR",
+          "examples": [
+            "Either option is fine.",
+            "Neither answer is correct.",
+            "Everyone is welcome here.",
+            "Someone has left their bag.",
+            "Nobody knows the answer.",
+            "Each student has a textbook.",
+            "Every child needs love."
+          ],
+          "wrong_examples": [
+            "Everyone are welcome here.",
+            "Each student have a textbook.",
+            "Neither answer are correct."
+          ]
+        },
+        {
+          "title": "Compound Subjects with AND",
+          "note": "Usually PLURAL verb",
+          "examples": [
+            "John and Mary are coming.",
+            "The cat and the dog were playing.",
+            "Rice and curry are my favorite food."
+          ],
+          "exception": {
+            "note": "When two things = one unit → singular",
+            "examples": [
+              "Bread and butter is my breakfast. (one combined food item)",
+              "Law and order is important. (one concept)"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "s2",
+      "heading": "Tense Consistency",
+      "explanation": "Don't switch tenses in the middle of writing without a good reason!",
+      "wrong_example": {
+        "text": "Yesterday, I went to the market. I see a beautiful dress and decide to buy it. I was happy about my purchase.",
+        "errors": [
+          "went = past ✅",
+          "see = present ❌ (should be past)",
+          "decide = present ❌ (should be past)",
+          "was = past ✅"
+        ]
+      },
+      "correct_example": "Yesterday, I went to the market. I saw a beautiful dress and decided to buy it. I was happy about my purchase.",
+      "tenses": [
+        {
+          "name": "Past Tense",
+          "description": "Things already done",
+          "signal_words": ["yesterday", "last week", "ago", "in 2020", "before", "when I was young"],
+          "regular_rule": "Add -ed: walk → walked, talk → talked, play → played",
+          "irregular_verbs": [
+            { "base": "go", "past": "went" },
+            { "base": "see", "past": "saw" },
+            { "base": "eat", "past": "ate" },
+            { "base": "write", "past": "wrote" },
+            { "base": "take", "past": "took" },
+            { "base": "give", "past": "gave" },
+            { "base": "come", "past": "came" },
+            { "base": "run", "past": "ran" },
+            { "base": "buy", "past": "bought" },
+            { "base": "think", "past": "thought" },
+            { "base": "speak", "past": "spoke" },
+            { "base": "know", "past": "knew" },
+            { "base": "find", "past": "found" },
+            { "base": "say", "past": "said" },
+            { "base": "tell", "past": "told" },
+            { "base": "feel", "past": "felt" },
+            { "base": "make", "past": "made" },
+            { "base": "have", "past": "had" },
+            { "base": "do", "past": "did" },
+            { "base": "be", "past": "was/were" }
+          ],
+          "example": "Yesterday, I went to school and ate lunch with my friend."
+        },
+        {
+          "name": "Present Tense",
+          "description": "Things happening now",
+          "signal_words": ["now", "today", "always", "usually", "every day", "often", "never"],
+          "rules": [
+            "I/You/We/They → base verb (walk, eat, go)",
+            "He/She/It → verb + s (walks, eats, goes)"
+          ],
+          "examples": [
+            "She walks to school every day.",
+            "They always eat dinner together.",
+            "He speaks three languages.",
+            "I usually wake up at 7 a.m."
+          ]
+        },
+        {
+          "name": "Future Tense",
+          "description": "Things not yet done",
+          "signal_words": ["tomorrow", "next week", "soon", "later", "in the future", "will"],
+          "forms": [
+            {
+              "pattern": "will + base verb",
+              "examples": [
+                "I will visit my grandmother tomorrow.",
+                "She will start her new job next Monday.",
+                "They will finish the project soon."
+              ]
+            },
+            {
+              "pattern": "going to + base verb (planned future)",
+              "examples": [
+                "I am going to visit my grandmother.",
+                "She is going to start her new job."
+              ]
+            }
+          ]
+        }
+      ],
+      "memory_trick": "Past = it's DONE (the 'd' in 'done' like '-ed'). Present = PRESENT moment (it's here NOW). Future = WILL happen (will = future helper)"
+    },
+    {
+      "id": "s3",
+      "heading": "Their / There / They're",
+      "explanation": "These three words sound IDENTICAL but mean completely different things!",
+      "words": [
+        {
+          "word": "their",
+          "meaning": "Belonging to them (possession)",
+          "use_when": "Something BELONGS to a group of people",
+          "examples": [
+            "The students forgot their homework.",
+            "The team won their first match.",
+            "Everyone has their own opinion.",
+            "My parents sold their old car.",
+            "The children ate their lunch quickly."
+          ],
+          "memory_trick": "Replace 'their' with 'our'. If it makes sense → use THEIR. 'Students forgot our homework' → makes sense!"
+        },
+        {
+          "word": "there",
+          "meaning": "A place OR starting a sentence",
+          "use_when": "LOCATION or to start 'there is/are'",
+          "examples_location": [
+            "Put the book over there.",
+            "She is sitting there.",
+            "I have never been there before.",
+            "Look over there! A rainbow!"
+          ],
+          "examples_starting": [
+            "There is a problem with the plan.",
+            "There are many reasons to be happy.",
+            "There was a big storm last night.",
+            "There were 500 people at the concert."
+          ],
+          "memory_trick": "'THERE' contains 'HERE'. Both relate to PLACE (here and there). 'Put the book over HERE/THERE'"
+        },
+        {
+          "word": "they're",
+          "meaning": "They are (contraction)",
+          "use_when": "You mean 'they are'",
+          "examples": [
+            "They're going to the party tonight. (They are going to the party tonight.)",
+            "They're my best friends. (They are my best friends.)",
+            "I think they're right about this.",
+            "They're not coming today."
+          ],
+          "memory_trick": "Replace with 'they are'. If it makes sense → use THEY'RE."
+        }
+      ],
+      "combined_practice": [
+        "They're going to their house over there.",
+        "There are their books on the table.",
+        "They're happy with their new home there."
+      ]
+    },
+    {
+      "id": "s4",
+      "heading": "Your / You're & To / Too / Two",
+      "words": [
+        {
+          "word": "your",
+          "meaning": "Belonging to you",
+          "examples": [
+            "Is this your bag?",
+            "What is your name?",
+            "I love your writing style.",
+            "Your English is improving!"
+          ]
+        },
+        {
+          "word": "you're",
+          "meaning": "You are (contraction)",
+          "examples": [
+            "You're doing a great job! (You are doing a great job!)",
+            "I think you're right.",
+            "You're going to love this."
+          ],
+          "memory_trick": "Replace with 'you are'. 'You are bag?' → doesn't make sense → YOUR. 'You are doing great' → makes sense → YOU'RE"
+        },
+        {
+          "word": "to",
+          "meaning": "Direction OR part of infinitive",
+          "examples_direction": [
+            "I am going to school.",
+            "She walked to the door.",
+            "Give this to your teacher."
+          ],
+          "examples_infinitive": [
+            "I want to eat.",
+            "She likes to read.",
+            "He needs to sleep."
+          ]
+        },
+        {
+          "word": "too",
+          "meaning": "Also OR very/excessively",
+          "examples_also": [
+            "I want to come too!",
+            "She is tired, and I am too.",
+            "Can I have some too?"
+          ],
+          "examples_excessive": [
+            "It is too hot today.",
+            "You are too kind.",
+            "The bag is too heavy.",
+            "He talks too much."
+          ]
+        },
+        {
+          "word": "two",
+          "meaning": "The number 2",
+          "examples": [
+            "I have two brothers.",
+            "She bought two books.",
+            "We need two more chairs."
+          ]
+        }
+      ],
+      "combined_practice": "The two of us walked to the park, and it was too far to walk back, too."
+    }
+  ],
+  "assignment": {
+    "title": "Level 3 Assignment",
+    "tasks": [
+      {
+        "task_number": 1,
+        "instruction": "Fix all grammar errors (4 sentences):",
+        "sentences": [
+          {
+            "text": "The group of students are going on a trip tomorrow and they was very excited.",
+            "answer": "The group of students is going on a trip tomorrow and they were very excited."
+          },
+          {
+            "text": "Yesterday I go to the market, buy vegetables, and cook a meal. It taste really good.",
+            "answer": "Yesterday I went to the market, bought vegetables, and cooked a meal. It tasted really good."
+          },
+          {
+            "text": "There going to there house over their.",
+            "answer": "They're going to their house over there."
+          },
+          {
+            "text": "You're friend called and said your to busy to come.",
+            "answer": "Your friend called and said you're too busy to come."
+          }
+        ]
       },
       {
-        "heading": "Tricky Cases: Words Between Subject and Verb",
-        "explanation": "Don't be fooled when words come between the subject and verb. The verb must agree with the subject, not the nearest noun.",
-        "examples": [
-          {"correct": "The box of chocolates is on the table.", "wrong": "The box of chocolates are on the table.", "rule": "Subject is 'box' (singular), not 'chocolates'"},
-          {"correct": "The students in the class are happy.", "wrong": "The students in the class is happy.", "rule": "Subject is 'students' (plural)"}
-        ],
-        "memory_tip": "Cross out the prepositional phrase ('of chocolates', 'in the class') to find the real subject!"
-      },
-      {
-        "heading": "Compound Subjects",
-        "explanation": "Two subjects joined by 'and' take a plural verb. But subjects joined by 'or' or 'nor' match the verb to the nearest subject.",
-        "examples": [
-          {"correct": "Tom and Jerry are friends.", "wrong": "Tom and Jerry is friends.", "rule": "'And' = plural verb"},
-          {"correct": "Neither the cat nor the dogs are outside.", "wrong": "Neither the cat nor the dogs is outside.", "rule": "'Nor' → match verb to nearest subject ('dogs' = plural)"},
-          {"correct": "Either the students or the teacher is responsible.", "wrong": "Either the students or the teacher are responsible.", "rule": "'Or' → match to nearest ('teacher' = singular)"}
-        ],
-        "memory_tip": "AND = always plural. OR/NOR = look at the closest subject to the verb."
+        "task_number": 2,
+        "instruction": "Write 4 sentences using:",
+        "requirements": [
+          "'there' (as a place)",
+          "'their' (belonging to them)",
+          "'they're' (they are)",
+          "All three in ONE sentence"
+        ]
       }
     ]
   },
-  "quiz": {
-    "questions": [
-      {"id": "l3q1", "question": "The list of items ___ on the desk.", "options": ["are", "is", "were"], "correct": 1, "explanation": "Subject is 'list' (singular), not 'items'. Use 'is'."},
-      {"id": "l3q2", "question": "My brother and sister ___ coming.", "options": ["is", "are", "was"], "correct": 1, "explanation": "Two subjects joined by 'and' = plural. Use 'are'."},
-      {"id": "l3q3", "question": "She ___ to school every day.", "options": ["walk", "walks", "walking"], "correct": 1, "explanation": "Singular subject 'she' takes singular verb 'walks'."},
-      {"id": "l3q4", "question": "Neither the teacher nor the students ___ ready.", "options": ["is", "are", "was"], "correct": 1, "explanation": "With 'nor', match verb to nearest subject: 'students' (plural) → 'are'."},
-      {"id": "l3q5", "question": "Everyone ___ welcome here.", "options": ["are", "is", "were"], "correct": 1, "explanation": "'Everyone' is a singular indefinite pronoun → 'is'."}
-    ]
-  },
-  "assignment": {
-    "prompt": "Write 3 sentences demonstrating subject-verb agreement. Include one with a compound subject (using 'and'), one with words between the subject and verb, and one with 'each' or 'everyone'.",
-    "hints": ["Example: The group of students works hard every semester."],
-    "min_sentences": 3
-  },
-  "credits": {"lesson": 10, "quiz_pass": 15, "quiz_perfect": 25, "assignment": 15, "assignment_perfect": 30}
+  "credits": {
+    "lesson_complete": 10,
+    "quiz_pass": 15,
+    "quiz_perfect": 25,
+    "assignment_submit": 20,
+    "assignment_perfect": 35
+  }
 }

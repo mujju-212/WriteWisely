@@ -1,144 +1,132 @@
 {
+  "title": "Level Assessment",
+  "description": "Used to determine starting level for new users",
+  "scoring": {
+    "0-3": { "start_level": 1, "label": "Beginner" },
+    "4-6": { "start_level": 2, "label": "Elementary" },
+    "7-8": { "start_level": 4, "label": "Intermediate" },
+    "9-10": { "start_level": 5, "label": "Upper-Intermediate" }
+  },
   "questions": [
     {
-      "id": "q1",
-      "type": "multiple_choice",
-      "category": "homophones",
-      "difficulty": "beginner",
-      "question": "Choose the correct sentence:",
-      "options": [
-        "Their going to the store.",
-        "They're going to the store.",
-        "There going to the store."
-      ],
-      "correct": 1,
-      "explanation": "'They're' is the contraction of 'they are'. 'Their' shows possession, and 'there' refers to a place."
-    },
-    {
-      "id": "q2",
-      "type": "multiple_choice",
+      "id": "a1",
+      "level_tested": 1,
       "category": "spelling",
       "difficulty": "beginner",
-      "question": "Which word is spelled correctly?",
-      "options": [
-        "Definately",
-        "Definatly",
-        "Definitely"
-      ],
-      "correct": 2,
-      "explanation": "'Definitely' is the correct spelling. A common trick: it contains the word 'finite'."
+      "question": "Which is spelled correctly?",
+      "options": ["recieve", "receive", "receve", "recive"],
+      "correct": 1,
+      "explanation": "After C, write EI (not IE): receive."
     },
     {
-      "id": "q3",
-      "type": "multiple_choice",
-      "category": "grammar",
+      "id": "a2",
+      "level_tested": 1,
+      "category": "spelling",
       "difficulty": "beginner",
-      "question": "Select the grammatically correct sentence:",
-      "options": [
-        "Me and him went to the park.",
-        "He and I went to the park.",
-        "Him and me went to the park."
-      ],
-      "correct": 1,
-      "explanation": "When the pronoun is the subject of the sentence, use 'I' and 'he'. Tip: remove the other person — you'd say 'I went', not 'me went'."
+      "question": "'She is _____ a letter.'",
+      "options": ["writeing", "writting", "writing", "writng"],
+      "correct": 2,
+      "explanation": "Drop the silent E before -ing: write → writing."
     },
     {
-      "id": "q4",
-      "type": "multiple_choice",
+      "id": "a3",
+      "level_tested": 2,
       "category": "punctuation",
-      "difficulty": "intermediate",
-      "question": "Which sentence uses the comma correctly?",
+      "difficulty": "beginner",
+      "question": "Which is correctly punctuated?",
       "options": [
-        "Let's eat grandma!",
-        "Let's eat, grandma!",
-        "Lets eat, grandma!"
+        "I love reading, and she loves writing.",
+        "I love reading and, she loves writing.",
+        "I love reading and she loves writing,",
+        "I love reading. And she loves writing."
       ],
-      "correct": 1,
-      "explanation": "The comma is needed to address someone directly (vocative comma). Without it, the meaning changes entirely!"
+      "correct": 0,
+      "explanation": "Two complete sentences joined by FANBOYS 'and' need a comma before the conjunction."
     },
     {
-      "id": "q5",
-      "type": "multiple_choice",
+      "id": "a4",
+      "level_tested": 2,
+      "category": "punctuation",
+      "difficulty": "beginner",
+      "question": "'It's very hot today.' 'It's' means:",
+      "options": ["belonging to it", "it is", "it has", "its (no difference)"],
+      "correct": 1,
+      "explanation": "it's = it is (contraction with apostrophe)"
+    },
+    {
+      "id": "a5",
+      "level_tested": 3,
       "category": "homophones",
       "difficulty": "intermediate",
-      "question": "Fill in the blank: 'The medicine had a positive ___ on the patient.'",
-      "options": [
-        "affect",
-        "effect",
-        "efect"
-      ],
+      "question": "'___ going to ___ house.'",
+      "options": ["Their, there", "They're, their", "There, they're", "Their, they're"],
       "correct": 1,
-      "explanation": "'Effect' (noun) means a result or outcome. 'Affect' (verb) means to influence. Here, we need the noun."
+      "explanation": "They're = they are. Their = belonging to them."
     },
     {
-      "id": "q6",
-      "type": "multiple_choice",
+      "id": "a6",
+      "level_tested": 3,
       "category": "grammar",
       "difficulty": "intermediate",
-      "question": "Choose the correct form:",
-      "options": [
-        "Each of the students have their own book.",
-        "Each of the students has their own book.",
-        "Each of the students has his own book."
-      ],
-      "correct": 1,
-      "explanation": "'Each' is singular, so it takes 'has'. Using 'their' as a singular pronoun is now widely accepted."
+      "question": "'The group of students ___ very excited.'",
+      "options": ["are", "were", "is", "have"],
+      "correct": 2,
+      "explanation": "'group' is a singular collective noun → is"
     },
     {
-      "id": "q7",
-      "type": "multiple_choice",
-      "category": "spelling",
+      "id": "a7",
+      "level_tested": 4,
+      "category": "sentence_structure",
       "difficulty": "intermediate",
-      "question": "Which is the correct spelling?",
+      "question": "Which is a complete sentence?",
       "options": [
-        "Accomodate",
-        "Acommodate",
-        "Accommodate"
+        "Because it was raining.",
+        "Running to the bus stop.",
+        "She ran to the bus stop.",
+        "The old rusty bus stop."
       ],
       "correct": 2,
-      "explanation": "'Accommodate' has two c's and two m's. Think: it's big enough to 'accommodate' double letters!"
+      "explanation": "C has subject (She) + verb (ran) + complete thought."
     },
     {
-      "id": "q8",
-      "type": "multiple_choice",
-      "category": "grammar",
-      "difficulty": "advanced",
-      "question": "Which sentence is correct?",
-      "options": [
-        "If I was you, I would study harder.",
-        "If I were you, I would study harder.",
-        "If I am you, I would study harder."
-      ],
+      "id": "a8",
+      "level_tested": 4,
+      "category": "sentence_structure",
+      "difficulty": "intermediate",
+      "question": "Identify the error: 'I was tired, I went to bed.'",
+      "options": ["Spelling error", "Comma splice", "Fragment", "No error"],
       "correct": 1,
-      "explanation": "This is the subjunctive mood — used for hypothetical situations. 'If I were' is correct because it's not a real condition."
+      "explanation": "A comma splice is two sentences incorrectly joined by only a comma. Needs FANBOYS: 'I was tired, so I went to bed.'"
     },
     {
-      "id": "q9",
-      "type": "multiple_choice",
-      "category": "punctuation",
+      "id": "a9",
+      "level_tested": 5,
+      "category": "formal_writing",
       "difficulty": "advanced",
-      "question": "Which use of the semicolon is correct?",
+      "question": "Which is appropriate for a formal email?",
       "options": [
-        "I went to the store; and bought some milk.",
-        "I went to the store; I bought some milk.",
-        "I went to the store; because I needed milk."
+        "Hey! Can't come tomorrow 😔",
+        "I won't be able to attend tomorrow.",
+        "I am writing to inform you that I will be unable to attend tomorrow.",
+        "Tomorrow doesn't work for me, sorry!"
       ],
-      "correct": 1,
-      "explanation": "A semicolon connects two independent clauses (each could be a sentence on its own). Don't use it before conjunctions like 'and' or 'because'."
+      "correct": 2,
+      "explanation": "C uses no contractions, formal language, and states the purpose clearly."
     },
     {
-      "id": "q10",
-      "type": "multiple_choice",
-      "category": "word_choice",
+      "id": "a10",
+      "level_tested": 5,
+      "category": "formal_writing",
       "difficulty": "advanced",
-      "question": "Choose the correct word: 'The committee will ___ the new policy next week.'",
+      "question": "Spot the error: 'Dear Mr. Johnson, I'm writing to inquire about the position.'",
       "options": [
-        "apprise",
-        "appraise",
-        "approve"
+        "Wrong greeting",
+        "Contraction 'I'm' is informal",
+        "'inquire' is wrong word",
+        "No error - sentence is correct"
       ],
       "correct": 1,
-      "explanation": "'Appraise' means to evaluate or assess. 'Apprise' means to inform. 'Approve' means to accept — context here suggests evaluation."
+      "explanation": "In formal writing, contractions should be avoided. Use 'I am writing' instead of 'I'm writing'."
     }
   ]
 }

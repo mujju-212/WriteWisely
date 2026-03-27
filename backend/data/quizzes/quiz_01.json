@@ -1,62 +1,77 @@
-﻿{
-    "questions":  [
-                      {
-                          "id":  "l1q1",
-                          "question":  "Which is correct?",
-                          "options":  [
-                                          "writeing",
-                                          "writing",
-                                          "writting"
-                                      ],
-                          "correct":  1,
-                          "explanation":  "Drop the silent \u0027e\u0027 before adding \u0027-ing\u0027: write â†’ writing."
-                      },
-                      {
-                          "id":  "l1q2",
-                          "question":  "Which is spelled correctly?",
-                          "options":  [
-                                          "beleive",
-                                          "believe",
-                                          "beleve"
-                                      ],
-                          "correct":  1,
-                          "explanation":  "I before E (when not after C): believe."
-                      },
-                      {
-                          "id":  "l1q3",
-                          "question":  "Fill in: The runner kept ___",
-                          "options":  [
-                                          "runing",
-                                          "running",
-                                          "runeing"
-                                      ],
-                          "correct":  1,
-                          "explanation":  "Run ends in CVC (r-u-n), so double the \u0027n\u0027: running."
-                      },
-                      {
-                          "id":  "l1q4",
-                          "question":  "Which is correct?",
-                          "options":  [
-                                          "excitement",
-                                          "excitment",
-                                          "exciteing"
-                                      ],
-                          "correct":  0,
-                          "explanation":  "Keep the \u0027e\u0027 before -ment (consonant suffix): excitement."
-                      },
-                      {
-                          "id":  "l1q5",
-                          "question":  "Which is spelled correctly?",
-                          "options":  [
-                                          "recieve",
-                                          "receive",
-                                          "receeve"
-                                      ],
-                          "correct":  1,
-                          "explanation":  "After C, it\u0027s E before I: receive."
-                      }
-                  ],
-    "title":  "Basic Spelling Rules",
-    "quiz_id":  "quiz_01",
-    "level":  1
+{
+  "quiz_id": "quiz_01",
+  "level": 1,
+  "title": "Basic Spelling Rules",
+  "questions": [
+    {
+      "id": "l1q1",
+      "question": "Choose the correct spelling:",
+      "options": ["recieve", "receive", "receve", "recive"],
+      "correct": 1,
+      "explanation": "After C → write EI (not IE). The rule: I before E, except after C."
+    },
+    {
+      "id": "l1q2",
+      "question": "Which word is spelled correctly?",
+      "options": ["beleive", "belive", "believe", "beleave"],
+      "correct": 2,
+      "explanation": "I before E → believe (no C before it)"
+    },
+    {
+      "id": "l1q3",
+      "question": "Choose the correct form: 'She is _____ a letter to her friend.'",
+      "options": ["writeing", "writting", "writing", "writng"],
+      "correct": 2,
+      "explanation": "Drop the silent E before -ing. write → writing"
+    },
+    {
+      "id": "l1q4",
+      "question": "Which is correct?",
+      "options": ["runing", "running", "ruuning", "runeing"],
+      "correct": 1,
+      "explanation": "1-1-1 rule: run (1 syllable, 1 vowel u, 1 consonant n) → double the n → running"
+    },
+    {
+      "id": "l1q5",
+      "question": "The silent letter in 'knife' is:",
+      "options": ["n", "i", "k", "e"],
+      "correct": 2,
+      "explanation": "K before N is always silent. knife = 'nife'"
+    },
+    {
+      "id": "l1q6",
+      "question": "Choose the correct spelling:",
+      "options": ["nieve", "neice", "niece", "neise"],
+      "correct": 2,
+      "explanation": "I before E → niece. No C before it, so use IE"
+    },
+    {
+      "id": "l1q7",
+      "question": "Which word has a silent W?",
+      "options": ["window", "winter", "write", "water"],
+      "correct": 2,
+      "explanation": "W before R is silent → write = 'rite'"
+    },
+    {
+      "id": "l1q8",
+      "question": "'The book is _____ than the movie.'",
+      "options": ["biger", "biiger", "bigger", "bigeer"],
+      "correct": 2,
+      "explanation": "1-1-1 rule: big → bigger (double g)"
+    },
+    {
+      "id": "l1q9",
+      "question": "Choose the correct word:",
+      "options": ["hopeing", "hoping", "hoppeing", "hopping (this means jumping!)"],
+      "correct": 1,
+      "explanation": "hope + ing → drop e → hoping. hop + ing → double p → hopping (different meanings!)"
+    },
+    {
+      "id": "l1q10",
+      "question": "Which is spelled correctly?",
+      "options": ["foriegn", "foreign", "foregn", "fourign"],
+      "correct": 1,
+      "explanation": "Exception: foreign. G before N → G is silent. 'for-in'"
+    }
+  ]
 }

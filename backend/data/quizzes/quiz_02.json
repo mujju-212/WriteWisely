@@ -1,62 +1,107 @@
-﻿{
-    "questions":  [
-                      {
-                          "id":  "l2q1",
-                          "question":  "___ going to the park.",
-                          "options":  [
-                                          "There",
-                                          "Their",
-                                          "They\u0027re"
-                                      ],
-                          "correct":  2,
-                          "explanation":  "\u0027They\u0027re\u0027 = \u0027They are\u0027 going to the park."
-                      },
-                      {
-                          "id":  "l2q2",
-                          "question":  "Is this ___ car?",
-                          "options":  [
-                                          "your",
-                                          "you\u0027re",
-                                          "yore"
-                                      ],
-                          "correct":  0,
-                          "explanation":  "\u0027Your\u0027 shows possession â€” the car belongs to you."
-                      },
-                      {
-                          "id":  "l2q3",
-                          "question":  "The cat licked ___ paw.",
-                          "options":  [
-                                          "it\u0027s",
-                                          "its",
-                                          "its\u0027"
-                                      ],
-                          "correct":  1,
-                          "explanation":  "\u0027Its\u0027 (no apostrophe) shows possession."
-                      },
-                      {
-                          "id":  "l2q4",
-                          "question":  "___ a beautiful day!",
-                          "options":  [
-                                          "Its",
-                                          "It\u0027s",
-                                          "Its\u0027"
-                                      ],
-                          "correct":  1,
-                          "explanation":  "\u0027It\u0027s\u0027 = \u0027It is\u0027 a beautiful day."
-                      },
-                      {
-                          "id":  "l2q5",
-                          "question":  "The students left ___ bags in the classroom.",
-                          "options":  [
-                                          "there",
-                                          "they\u0027re",
-                                          "their"
-                                      ],
-                          "correct":  2,
-                          "explanation":  "\u0027Their\u0027 = belonging to them."
-                      }
-                  ],
-    "title":  "Common Homophones",
-    "quiz_id":  "quiz_02",
-    "level":  2
+{
+  "quiz_id": "quiz_02",
+  "level": 2,
+  "title": "Punctuation Basics",
+  "questions": [
+    {
+      "id": "l2q1",
+      "question": "Which sentence uses commas correctly?",
+      "options": [
+        "I bought milk eggs and bread.",
+        "I bought milk, eggs and bread.",
+        "I bought milk, eggs, and bread.",
+        "I bought, milk, eggs, and bread."
+      ],
+      "correct": 2,
+      "explanation": "Lists need commas between each item. Oxford comma before 'and' is correct."
+    },
+    {
+      "id": "l2q2",
+      "question": "Choose the correct sentence:",
+      "options": [
+        "Its a beautiful day.",
+        "It's a beautiful day.",
+        "Its' a beautiful day.",
+        "It'is a beautiful day."
+      ],
+      "correct": 1,
+      "explanation": "it's = it is (contraction with apostrophe)"
+    },
+    {
+      "id": "l2q3",
+      "question": "Which needs a question mark?",
+      "options": [
+        "I wonder where she went.",
+        "He told me what the answer was.",
+        "Can you pass the salt?",
+        "She asked if I was okay."
+      ],
+      "correct": 2,
+      "explanation": "Only DIRECT questions get ? Options A, B, D are indirect questions."
+    },
+    {
+      "id": "l2q4",
+      "question": "'However ___ I think you are correct.' Which punctuation fills the blank?",
+      "options": ["no punctuation", ":", ",", ";"],
+      "correct": 2,
+      "explanation": "Introductory word 'However' needs a comma after it."
+    },
+    {
+      "id": "l2q5",
+      "question": "Which shows correct possession?",
+      "options": [
+        "The dog's are barking.",
+        "The dogs's food is ready.",
+        "The dogs' food is ready.",
+        "The dog' food is ready."
+      ],
+      "correct": 2,
+      "explanation": "Multiple dogs → dogs' (plural ending in s, just add apostrophe)"
+    },
+    {
+      "id": "l2q6",
+      "question": "Fix the comma splice: 'I was hungry, I ate a sandwich.'",
+      "options": [
+        "I was hungry I ate a sandwich.",
+        "I was hungry, and I ate a sandwich.",
+        "I was hungry: I ate a sandwich.",
+        "I was hungry - I ate a sandwich."
+      ],
+      "correct": 1,
+      "explanation": "Two complete sentences need FANBOYS with comma OR become two sentences."
+    },
+    {
+      "id": "l2q7",
+      "question": "'The children___ toys were everywhere.' Fill the blank with correct punctuation:",
+      "options": ["children's", "childrens'", "children'", "childrens's"],
+      "correct": 0,
+      "explanation": "'children' is already plural (not regular) so add 's → children's"
+    },
+    {
+      "id": "l2q8",
+      "question": "Which contraction is correct?",
+      "options": ["wont", "wo'nt", "won't", "wil'not"],
+      "correct": 2,
+      "explanation": "will + not = won't. The 'ill' and 'o' are removed, apostrophe replaces them."
+    },
+    {
+      "id": "l2q9",
+      "question": "'I tried hard ___ I couldn't finish.' Best word + punctuation for the blank:",
+      "options": ["but I", ", but", "but,", ", but,"],
+      "correct": 1,
+      "explanation": "Two complete sentences + FANBOYS (but) needs comma BEFORE 'but'"
+    },
+    {
+      "id": "l2q10",
+      "question": "Which sentence is correctly punctuated?",
+      "options": [
+        "Dr Smith asked. Where are you going?",
+        "Dr. Smith asked where are you going?",
+        "Dr. Smith asked where you were going.",
+        "Dr. Smith asked, where you were going."
+      ],
+      "correct": 2,
+      "explanation": "Indirect question → no question mark. 'asked where you were going' is reported speech, not a direct question."
+    }
+  ]
 }

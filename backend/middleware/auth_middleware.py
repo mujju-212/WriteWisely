@@ -22,7 +22,9 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
     
     # Verify token
     try:
-        user_id = verify_jwt_token(token)
+        payload = verify_jwt_token(token)
+        user_id = payload.get("sub")
+        session_id = payload.get("sid")
     except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -38,6 +40,14 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
+        )
+
+    active_session_id = user.get("active_session_id")
+    if not active_session_id or active_session_id != session_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session expired. Please login again.",
+            headers={"WWW-Authenticate": "Bearer"},
         )
     
     if not user.get("email_verified", False):

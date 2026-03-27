@@ -1,56 +1,217 @@
 {
   "level": 4,
-  "title": "Punctuation Essentials",
-  "topic": "punctuation",
-  "category": "beginner",
-  "content": {
-    "sections": [
-      {
-        "heading": "Commas: When to Use Them",
-        "explanation": "Commas have several important uses: separating items in a list, joining clauses with a conjunction, after introductory phrases, and for direct address.",
+  "title": "Sentence Structure",
+  "chapter": "Chapter 4: Building Strong Sentences",
+  "emoji": "🟡",
+  "topic": "sentence_structure",
+  "category": "intermediate",
+  "xp_reward": 120,
+  "sections": [
+    {
+      "id": "s1",
+      "heading": "What Makes a Complete Sentence",
+      "explanation": "Every complete sentence MUST have: 1. A SUBJECT (who/what the sentence is about), 2. A VERB (what the subject does/is), 3. A COMPLETE THOUGHT (makes sense alone).",
+      "examples": [
+        { "sentence": "Birds fly.", "subject": "Birds", "verb": "fly" },
+        { "sentence": "She laughed.", "subject": "She", "verb": "laughed" },
+        { "sentence": "The old man walks slowly.", "subject": "The old man", "verb": "walks" },
+        { "sentence": "My dog barks at strangers.", "subject": "My dog", "verb": "barks" },
+        { "sentence": "Rain falls from clouds.", "subject": "Rain", "verb": "falls" },
+        { "sentence": "They finished the work.", "subject": "They", "verb": "finished" }
+      ],
+      "fragments": {
+        "description": "A fragment is missing something. It feels unfinished.",
         "examples": [
-          {"correct": "I bought apples, oranges, and bananas.", "wrong": "I bought apples oranges and bananas.", "rule": "Commas between list items"},
-          {"correct": "It was raining, so I took an umbrella.", "wrong": "It was raining so I took an umbrella.", "rule": "Comma before conjunction joining two clauses"},
-          {"correct": "After the meeting, we went for lunch.", "wrong": "After the meeting we went for lunch.", "rule": "Comma after introductory phrase"},
-          {"correct": "John, can you help me?", "wrong": "John can you help me?", "rule": "Comma for direct address"}
+          { "fragment": "Running fast.", "missing": "Who is running? (subject)" },
+          { "fragment": "The big red house.", "missing": "What about it? (verb)" },
+          { "fragment": "Because she was tired.", "missing": "What happened? (main idea)" },
+          { "fragment": "When the bell rang.", "missing": "What happened then?" },
+          { "fragment": "Although it was raining.", "missing": "What happened despite rain?" }
         ],
-        "memory_tip": "When in doubt, read the sentence aloud. If you naturally pause, you probably need a comma."
+        "how_to_fix": [
+          { "fragment": "Running fast.", "fixes": ["He was running fast.", "She kept running fast."] },
+          { "fragment": "Because she was tired.", "fixes": ["Because she was tired, she went to bed.", "She left early because she was tired."] },
+          { "fragment": "Although it was raining.", "fixes": ["Although it was raining, we went outside.", "We stayed home although it was raining."] }
+        ]
+      },
+      "complete_thought_test": "Read the words out loud. Does the listener feel like waiting for more? YES = It's a FRAGMENT (add more!). NO = It's COMPLETE ✅"
+    },
+    {
+      "id": "s2",
+      "heading": "Types of Sentences",
+      "explanation": "There are 4 types of sentences in English. Each serves a different purpose.",
+      "types": [
+        {
+          "type": 1,
+          "name": "Simple Sentence",
+          "description": "One subject + one verb = one complete thought",
+          "pattern": "[Subject] + [Verb] (+ extra info)",
+          "examples": [
+            "Dogs bark.",
+            "She laughed.",
+            "The teacher explained the lesson clearly.",
+            "My younger brother plays football every evening.",
+            "The beautiful sunset painted the sky orange."
+          ]
+        },
+        {
+          "type": 2,
+          "name": "Compound Sentence",
+          "description": "Two simple sentences joined by FANBOYS + comma OR joined by a semicolon",
+          "patterns": [
+            "[Sentence 1], FANBOYS [Sentence 2]",
+            "[Sentence 1]; [Sentence 2]"
+          ],
+          "examples": [
+            "I love reading, and she loves writing.",
+            "He was tired, but he kept working.",
+            "You can take the bus, or you can walk.",
+            "She studied hard, so she passed the test.",
+            "It was cold; we stayed inside.",
+            "He wanted to go; she wanted to stay."
+          ]
+        },
+        {
+          "type": 3,
+          "name": "Complex Sentence",
+          "description": "One main sentence + one dependent clause (joined by subordinating conjunctions)",
+          "subordinating_conjunctions": ["because", "although", "when", "while", "if", "unless", "until", "since", "before", "after", "as", "though", "even though", "whenever", "wherever", "as long as"],
+          "patterns": [
+            "Pattern A: [Main sentence] [because/when/if...] [dependent] — NO comma",
+            "Pattern B: [Because/When/If...] [dependent], [Main sentence] — needs COMMA"
+          ],
+          "examples": [
+            "I went to bed because I was tired.",
+            "Although it was raining, we went outside.",
+            "She will succeed if she works hard.",
+            "When the bell rang, the students left.",
+            "He waited until she arrived.",
+            "Because she studied hard, she passed."
+          ],
+          "note": "Pattern B (dependent clause FIRST) needs a comma. Pattern A does NOT."
+        },
+        {
+          "type": 4,
+          "name": "Compound-Complex Sentence",
+          "description": "Two main clauses + one dependent clause",
+          "examples": [
+            "Although it was raining, I went outside, and I got completely wet.",
+            "Because she worked hard, she got promoted, and her team celebrated her success.",
+            "When the meeting ended, John went home, but Mary stayed to finish the report."
+          ]
+        }
+      ],
+      "why_mix": {
+        "only_simple_example": "I woke up. I brushed my teeth. I ate breakfast. I went to school. I came home. I did homework. (boring and choppy)",
+        "mixed_example": "I woke up early and brushed my teeth quickly. After eating a light breakfast, I went to school. When I came home, I was tired, but I still finished all my homework. (natural and engaging)"
+      }
+    },
+    {
+      "id": "s3",
+      "heading": "Run-On Sentences",
+      "explanation": "A run-on sentence happens when two or more complete sentences are joined INCORRECTLY.",
+      "types": [
+        {
+          "name": "Fused Sentence",
+          "description": "No punctuation at all between sentences",
+          "wrong": "I love dogs I have three dogs they are all different breeds.",
+          "fixes": [
+            "I love dogs. I have three dogs. They are all different breeds. (Make separate sentences)",
+            "I love dogs, and I have three of them, all different breeds. (Combine with comma + FANBOYS)",
+            "I love dogs; I have three, all different breeds. (Use semicolon)"
+          ]
+        },
+        {
+          "name": "Comma Splice",
+          "description": "Comma without FANBOYS",
+          "wrong_examples": [
+            "I was hungry, I ordered pizza.",
+            "She studied all night, she still failed.",
+            "It was getting late, we had to leave."
+          ],
+          "fix_options": [
+            "I was hungry, so I ordered pizza. (Add FANBOYS after comma)",
+            "I was hungry. I ordered pizza. (Make two sentences)",
+            "I was hungry; I ordered pizza. (Use semicolon)",
+            "Because I was hungry, I ordered pizza. (Make complex sentence)"
+          ]
+        }
+      ],
+      "practice_fixes": [
+        {
+          "wrong": "The weather was perfect we decided to go for a walk it was really enjoyable.",
+          "right": "The weather was perfect, so we decided to go for a walk. It was really enjoyable."
+        },
+        {
+          "wrong": "She loves cooking, she makes amazing Italian food, her pasta is the best.",
+          "right": "She loves cooking and makes amazing Italian food. Her pasta is the best."
+        },
+        {
+          "wrong": "I called him three times he didn't answer I was worried about him.",
+          "right": "I called him three times, but he didn't answer. I was worried about him."
+        }
+      ]
+    },
+    {
+      "id": "s4",
+      "heading": "Sentence Variety & Flow",
+      "explanation": "Good writing uses a MIX of sentence lengths. Short sentences = impact and clarity. Long sentences = detail and connection.",
+      "comparison": {
+        "all_short": "I went to Paris. It was beautiful. I saw the Eiffel Tower. I ate croissants. I loved it. I want to go back. Paris is amazing. (choppy and boring)",
+        "all_long": "When I visited the magnificent city of Paris last summer, which is known for its incredible beauty and stunning architecture, I was able to see the famous Eiffel Tower, which is one of the most recognized structures in the world, and I also had the pleasure of eating authentic French croissants, which were absolutely delicious, and I truly loved every moment of the trip... (exhausting to read)",
+        "mixed": "Paris took my breath away. As I walked through its elegant streets, I felt like I was inside a painting. The Eiffel Tower stood magnificent against the golden sky, and the croissants melted on my tongue. I fell in love with the city. I will definitely return. (natural and engaging)"
+      },
+      "transition_words": {
+        "adding_information": ["Furthermore", "Moreover", "In addition", "Also", "Besides", "Additionally", "Not only that"],
+        "showing_contrast": ["However", "On the other hand", "Nevertheless", "Despite this", "Although", "Even so", "Yet"],
+        "cause_effect": ["Therefore", "As a result", "Consequently", "Because of this", "Thus", "Hence"],
+        "showing_time": ["First", "Then", "Next", "After that", "Subsequently", "Finally", "Meanwhile", "Eventually", "Later", "Immediately"],
+        "giving_examples": ["For example", "For instance", "Such as", "To illustrate", "Specifically", "Namely"],
+        "concluding": ["In conclusion", "To summarize", "Overall", "In summary", "All in all", "To conclude"]
+      }
+    }
+  ],
+  "assignment": {
+    "title": "Level 4 Assignment",
+    "tasks": [
+      {
+        "task_number": 1,
+        "instruction": "Fix the problems (identify type + fix):",
+        "sentences": [
+          {
+            "text": "Running to the bus stop every morning.",
+            "type": "Fragment",
+            "fix": "She runs to the bus stop every morning."
+          },
+          {
+            "text": "I love cooking I make Italian food my friends love it.",
+            "type": "Run-on (fused)",
+            "fix": "I love cooking and make Italian food. My friends love it."
+          },
+          {
+            "text": "She called, he didn't answer.",
+            "type": "Comma splice",
+            "fix": "She called, but he didn't answer."
+          }
+        ]
       },
       {
-        "heading": "Apostrophes: Possession vs. Contraction",
-        "explanation": "Apostrophes serve two main purposes: showing possession (the dog's bone) and forming contractions (don't = do not). Don't use them to make plurals!",
-        "examples": [
-          {"correct": "The teacher's book", "wrong": "The teachers book", "rule": "Apostrophe for possession"},
-          {"correct": "The teachers' lounge", "wrong": "The teacher's lounge (for multiple teachers)", "rule": "Apostrophe after 's' for plural possession"},
-          {"correct": "Don't worry.", "wrong": "Dont worry.", "rule": "Apostrophe in contraction"},
-          {"correct": "I bought three apples.", "wrong": "I bought three apple's.", "rule": "NO apostrophe for plurals!"}
-        ],
-        "memory_tip": "Apostrophes show something is MISSING (contraction: do not → don't) or something BELONGS (Sarah's car)."
-      },
-      {
-        "heading": "Semicolons and Colons",
-        "explanation": "Semicolons connect two related independent clauses. Colons introduce lists, explanations, or elaborations after a complete sentence.",
-        "examples": [
-          {"correct": "I love coffee; my brother prefers tea.", "wrong": "I love coffee, my brother prefers tea.", "rule": "Semicolon between related independent clauses"},
-          {"correct": "You need three things: patience, practice, and persistence.", "wrong": "You need three things; patience, practice, and persistence.", "rule": "Colon before a list"}
-        ],
-        "memory_tip": "Semicolon = soft period (connects equal clauses). Colon = drumroll (here comes the list/explanation!)."
+        "task_number": 2,
+        "instruction": "Write one of each sentence type:",
+        "requirements": [
+          "Simple sentence (your choice of topic)",
+          "Compound sentence (use 'however' or 'but')",
+          "Complex sentence (use 'because' or 'although')",
+          "One paragraph (5-6 sentences, mix all types) - Topic: Describe your favorite place"
+        ]
       }
     ]
   },
-  "quiz": {
-    "questions": [
-      {"id": "l4q1", "question": "Which is correct?", "options": ["I bought apple's and orange's.", "I bought apples and oranges.", "I bought apple's and oranges."], "correct": 1, "explanation": "No apostrophe for plurals! Just add 's'."},
-      {"id": "l4q2", "question": "Where does the comma go?", "options": ["After the game we went home.", "After the game, we went home.", "After, the game we went home."], "correct": 1, "explanation": "Comma after introductory phrase: 'After the game, ...'"},
-      {"id": "l4q3", "question": "Which is correct?", "options": ["The dogs bone is here.", "The dog's bone is here.", "The dogs' bone is here (one dog)."], "correct": 1, "explanation": "One dog owns the bone: dog's (singular possession)."},
-      {"id": "l4q4", "question": "Choose the correct punctuation:", "options": ["I love reading, she loves writing.", "I love reading; she loves writing.", "I love reading: she loves writing."], "correct": 1, "explanation": "Use a semicolon to connect two related independent clauses."},
-      {"id": "l4q5", "question": "Which is correct?", "options": ["Dont forget your keys.", "Don't forget your keys.", "Do'nt forget your keys."], "correct": 1, "explanation": "Don't = do + not. The apostrophe replaces the 'o' in 'not'."}
-    ]
-  },
-  "assignment": {
-    "prompt": "Write 3 sentences demonstrating proper punctuation. Use at least one comma, one apostrophe (for possession or contraction), and one semicolon or colon.",
-    "hints": ["Example: My sister's favorite hobby is painting; she's been doing it for years."],
-    "min_sentences": 3
-  },
-  "credits": {"lesson": 10, "quiz_pass": 15, "quiz_perfect": 25, "assignment": 15, "assignment_perfect": 30}
+  "credits": {
+    "lesson_complete": 10,
+    "quiz_pass": 15,
+    "quiz_perfect": 25,
+    "assignment_submit": 20,
+    "assignment_perfect": 35
+  }
 }
