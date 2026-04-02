@@ -6,8 +6,10 @@ import Lesson from './Lesson';
 import PracticeHome from './PracticeHome';
 import PracticeEditor from './PracticeEditor';
 import Projects from './Projects';
+import Analytics from './Analytics';
 import {
   fetchChatHistory,
+  fetchChatDocuments,
   sendChatMessage,
   uploadChatDocument,
   fetchDashboard as fetchDashboardData,
@@ -486,7 +488,7 @@ function DashboardViewComp({ setCurrentTab }) {
   );
 
   return (
-    <div className="db-animate" style={{ maxWidth: 900, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+    <div className="db-animate" style={{ maxWidth: 1320, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
       {renderGreeting()}
       {renderStatCards()}
       {renderContinueLearning()}
@@ -709,7 +711,7 @@ function AllLevelsViewComp({ setShowLearningPath, addPoints }) {
   );
 }
 
-function ChatViewComp({messages,chatInput,setChatInput,sendMessage,handleFileUpload,showHistory,setShowHistory,chatBoxRef,isChatSending,historyItems}) {
+function ChatViewComp({messages,chatInput,setChatInput,sendMessage,handleFileUpload,showHistory,setShowHistory,chatBoxRef,isChatSending,historyItems,chatDocumentNames}) {
   return (
     <div className="db-chat-root" style={{height:'100%',minHeight:500}}>
       <div className="db-chat-main">
@@ -720,6 +722,12 @@ function ChatViewComp({messages,chatInput,setChatInput,sendMessage,handleFileUpl
           </div>
           <button className="db-btn-secondary" style={{fontSize:'0.8rem'}} onClick={()=>setShowHistory(!showHistory)}>Show History</button>
         </div>
+        {chatDocumentNames.length > 0 && (
+          <div style={{padding:'0.5rem 0.875rem',borderBottom:'1px solid var(--border)',background:'#F8FAFC',fontSize:'0.78rem',color:'var(--text-muted)'}}>
+            Using uploaded docs: {chatDocumentNames.slice(0, 3).join(', ')}
+            {chatDocumentNames.length > 3 ? ` +${chatDocumentNames.length - 3} more` : ''}
+          </div>
+        )}
         <div ref={chatBoxRef} className="db-chat-messages">
           {messages.map((msg,i)=>(
             <div key={i} style={{display:'flex',justifyContent:msg.type==='user'?'flex-end':'flex-start'}}>
@@ -983,7 +991,7 @@ function AnalyticsViewComp({analyticsPeriod,setAnalyticsPeriod,showResults,setSh
 
 function SettingsViewComp({isDarkMode,setIsDarkMode,setShowEditNameModal,setShowEditPasswordModal}) {
   return (
-    <div className="db-animate" style={{maxWidth:600,margin:'0 auto',display:'flex',flexDirection:'column',gap:'1.5rem'}}>
+    <div className="db-animate" style={{maxWidth:1100,width:'100%',margin:'0 auto',display:'flex',flexDirection:'column',gap:'1.5rem'}}>
       <div><h1 className="db-page-title">Settings <span>&amp; Preferences</span></h1><p className="db-page-sub">Manage your account and appearance.</p></div>
       <div style={{display:'flex',flexDirection:'column',gap:'0.75rem'}}>
         {[
@@ -1046,6 +1054,8 @@ function Dashboard({ onLogout }) {
   const [isChatSending, setIsChatSending] = useState(false);
   const [historyItems, setHistoryItems] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
+  const [chatDocumentIds, setChatDocumentIds] = useState([]);
+  const [chatDocumentNames, setChatDocumentNames] = useState([]);
   const [practiceText, setPracticeText] = useState('The AI will actively highlight grammar errors and stylistic improvements as you type.\n\nFor example, it easily catches teh common typos. It can even suggest more better phrasing to elevate your professional tone.');
   const [practiceMode, setPracticeMode] = useState('realtime');
   const [isSessionActive, setIsSessionActive] = useState(false);
@@ -1181,6 +1191,32 @@ function Dashboard({ onLogout }) {
     };
 
     loadProfileStats();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadDocuments = async () => {
+      try {
+        const data = await fetchChatDocuments();
+        if (cancelled) return;
+        const docs = data?.documents || [];
+        setChatDocumentIds(docs.map((d) => d.id).filter(Boolean));
+        setChatDocumentNames(
+          docs.map((d) => d.title || d.filename || 'Document').filter(Boolean)
+        );
+      } catch (err) {
+        if (!cancelled) {
+          console.warn('Chat documents load failed:', err?.message || err);
+        }
+      }
+    };
+
+    loadDocuments();
+
     return () => {
       cancelled = true;
     };
@@ -1349,7 +1385,7 @@ function Dashboard({ onLogout }) {
     setIsChatSending(true);
 
     try {
-      const data = await sendChatMessage(message);
+      const data = await sendChatMessage(message, chatDocumentIds.slice(0, 5));
       const reply = (data?.response || '').trim() || 'I could not generate a response right now.';
       setMessages((prev) => [...prev, { type: 'ai', text: reply }]);
     } catch (err) {
@@ -1373,6 +1409,10 @@ function Dashboard({ onLogout }) {
     try {
       const uploaded = await uploadChatDocument(file, file.name);
       const title = uploaded?.title || file.name;
+      if (uploaded?.id) {
+        setChatDocumentIds((prev) => [uploaded.id, ...prev.filter((id) => id !== uploaded.id)]);
+      }
+      setChatDocumentNames((prev) => [title, ...prev.filter((name) => name !== title)]);
       setMessages((prev) => [...prev, { type: 'ai', text: `Uploaded ${title}. I can use it in chat answers now.` }]);
     } catch (err) {
       const detail = err?.message ? ` ${err.message}` : '';
@@ -1417,7 +1457,7 @@ function Dashboard({ onLogout }) {
     switch(currentTab) {
       case 'dashboard': return <DashboardViewComp setCurrentTab={setCurrentTab}/>;
       case 'learning': return <LearningViewComp setCurrentTab={setCurrentTab} completedModules={completedModules} handleOpenModule={handleOpenModule} handleStartQuiz={handleStartQuiz} setShowLearningPath={setShowLearningPath} practiceText={practiceText} handlePracticeTextChange={handlePracticeTextChange} handlePracticeKeyDown={handlePracticeKeyDown} textAlignment={textAlignment} setTextAlignment={setTextAlignment} isBold={isBold} setIsBold={setIsBold} isItalic={isItalic} setIsItalic={setIsItalic} isUnderline={isUnderline} setIsUnderline={setIsUnderline} showSuggestions={showSuggestions} suggestions={suggestions}/>;
-      case 'chat': return <ChatViewComp messages={messages} chatInput={chatInput} setChatInput={setChatInput} sendMessage={sendMessage} handleFileUpload={handleFileUpload} showHistory={showHistory} setShowHistory={setShowHistory} chatBoxRef={chatBoxRef} isChatSending={isChatSending} historyItems={historyItems}/>;
+      case 'chat': return <ChatViewComp messages={messages} chatInput={chatInput} setChatInput={setChatInput} sendMessage={sendMessage} handleFileUpload={handleFileUpload} showHistory={showHistory} setShowHistory={setShowHistory} chatBoxRef={chatBoxRef} isChatSending={isChatSending} historyItems={historyItems} chatDocumentNames={chatDocumentNames}/>;
       case 'practice':
         if (practiceTaskId) {
           return (
@@ -1436,7 +1476,7 @@ function Dashboard({ onLogout }) {
           />
         );
       case 'projects': return <Projects />;
-      case 'analytics': return <AnalyticsViewComp analyticsPeriod={analyticsPeriod} setAnalyticsPeriod={setAnalyticsPeriod} showResults={showResults} setShowResults={setShowResults}/>;
+      case 'analytics': return <Analytics />;
       case 'settings': return <SettingsViewComp isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} setShowEditNameModal={setShowEditNameModal} setShowEditPasswordModal={setShowEditPasswordModal}/>;
       default: return <DashboardViewComp setCurrentTab={setCurrentTab}/>;
     }

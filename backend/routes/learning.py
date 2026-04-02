@@ -13,6 +13,7 @@ from config import get_db
 from middleware.auth_middleware import get_current_user
 from services.pattern_service import add_credits, save_errors, create_notification, CREDIT_VALUES
 from services.checker_service import check_text
+from services import analytics_service
 from models.schemas import SubmitQuizRequest, SubmitAssignmentRequest
 
 router = APIRouter()
@@ -254,7 +255,18 @@ async def submit_quiz(level_id: int, data: SubmitQuizRequest, user=Depends(get_c
     
     if credits > 0:
         await add_credits(user["id"], credits, f"Quiz Level {level_id}")
-    
+
+    # Analytics tracking
+    try:
+        db2 = get_db()
+        await analytics_service.update_daily_stats_after_activity(
+            user_id=user["id"], activity_type="quiz",
+            data={"score": correct_count, "total": total, "credits": credits},
+            db=db2
+        )
+    except Exception as _ae:
+        print(f"⚠️ Analytics quiz update failed: {_ae}")
+
     return {
         "results": results,
         "score": correct_count,
@@ -344,6 +356,23 @@ async def submit_assignment(level_id: int, data: SubmitAssignmentRequest, user=D
         )
     
     await add_credits(user_id, credits, f"Assignment Level {level_id}")
+
+    # Analytics tracking
+    try:
+        from datetime import date
+        db2 = get_db()
+        error_counts = analytics_service.count_errors_by_type(errors)
+        week_start = (date.today() - __import__('datetime').timedelta(days=date.today().weekday())).isoformat()
+        await analytics_service.update_daily_stats_after_activity(
+            user_id=user_id, activity_type="assignment",
+            data={"credits": credits, "total_errors": len(errors), "error_counts": error_counts},
+            db=db2
+        )
+        today = date.today()
+        await analytics_service.aggregate_weekly_stats(user_id, week_start, db2)
+        await analytics_service.aggregate_monthly_stats(user_id, today.month, today.year, db2)
+    except Exception as _ae:
+        print(f"⚠️ Analytics assignment update failed: {_ae}")
 
     if not was_completed:
         topic = (

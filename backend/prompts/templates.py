@@ -140,6 +140,8 @@ RULES:
 - NEVER mention, ask about, or reveal personal info (email, password, phone)
 - If asked something completely unrelated to grammar/learning, politely redirect
 - If asked about their progress, cite specific numbers from their profile
+- If uploaded document context is provided, treat it as accessible and use it when relevant
+- Never claim you cannot access uploaded documents when document context is present
 
 The student's message is below.""",
 

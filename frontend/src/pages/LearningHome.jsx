@@ -140,7 +140,7 @@ export default function LearningHome({ onNavigateToLesson }) {
   ];
 
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto', padding: '0 0 3rem', fontFamily: 'Inter, sans-serif' }}>
+    <div style={{ maxWidth: 1320, width: '100%', margin: '0 auto', padding: '0 0 3rem', fontFamily: 'Inter, sans-serif' }}>
       <style>{`@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.7;transform:scale(1.15)} }`}</style>
 
       {/* Header */}

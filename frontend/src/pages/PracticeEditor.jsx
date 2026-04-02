@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { getPracticeTask, checkLiveText, submitPractice } from '../services/api';
+import { buildHighlightSegments, errorUnderlineStyle } from '../utils/errorHighlight';
 
 /* ─── Constants ─────────────────────────────────────────────── */
 const TYPE_ICONS = {
@@ -11,149 +12,76 @@ function countWords(text) {
   return text.trim() ? text.trim().split(/\s+/).length : 0;
 }
 
-/* ─── Wavy underline via SVG data-uri ─────────────────────────── */
-function wavyBorder(color) {
-  const c = color === 'red' ? '%23EF4444' : '%23EAB308';
-  return `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='6' height='3'%3E%3Cpath d='M0 2 Q1.5 0 3 2 Q4.5 4 6 2' fill='none' stroke='${c}' stroke-width='1.2'/%3E%3C/svg%3E") repeat-x bottom left`;
-}
-
 /* ─── Render mirror text with error underlines ─────────────────── */
-function renderHighlightedText(text, errors, activeTooltip, setActiveTooltip) {
-  if (!errors || errors.length === 0) {
-    return <span style={{ whiteSpace: 'pre-wrap' }}>{text}</span>;
-  }
-
-  // Normalise each error: if position is missing/wrong, find the word in text
-  const normalised = [];
-  const usedRanges = []; // [[start, end], ...] already spoken for
-
-  const isOverlap = (s, e) => usedRanges.some(([us, ue]) => s < ue && e > us);
-
-  for (const err of errors) {
-    const word = (err.word || err.original || '').trim();
-    let start = err.position?.start ?? -1;
-    let end   = err.position?.end   ?? -1;
-
-    // Validate: positions must be integers, in-bounds, non-empty, matching the word
-    const validRange = (
-      Number.isInteger(start) && Number.isInteger(end) &&
-      start >= 0 && end > start && end <= text.length &&
-      !isOverlap(start, end)
-    );
-
-    if (validRange) {
-      // Extra sanity: confirm the slice actually looks like the word
-      const slice = text.slice(start, end).toLowerCase();
-      const clean = word.toLowerCase();
-      if (slice !== clean && !slice.includes(clean) && !clean.includes(slice)) {
-        // Position mismatch — try to locate by word
-        start = -1;
-      }
-    }
-
-    if (start < 0 || !validRange) {
-      // Fallback: find the word in the text
-      if (word) {
-        let searchFrom = 0;
-        let idx = -1;
-        while (searchFrom < text.length) {
-          idx = text.toLowerCase().indexOf(word.toLowerCase(), searchFrom);
-          if (idx < 0) break;
-          const candidate = [idx, idx + word.length];
-          if (!isOverlap(candidate[0], candidate[1])) {
-            start = candidate[0];
-            end   = candidate[1];
-            break;
-          }
-          searchFrom = idx + 1;
-        }
-      }
-      if (start < 0) {
-        // Can't locate — skip rendering but don't lose the error
-        continue;
-      }
-    }
-
-    usedRanges.push([start, end]);
-    normalised.push({ ...err, word: word || text.slice(start, end), position: { start, end } });
-  }
-
-  // Sort by start position
-  const sorted = normalised.sort((a, b) => a.position.start - b.position.start);
-
-  const segments = [];
-  let cursor = 0;
-
-  for (const err of sorted) {
-    const { start, end } = err.position;
-
-    if (start > cursor) {
-      segments.push({ type: 'text', text: text.slice(cursor, start) });
-    } else if (start < cursor) {
-      // Overlapping — skip
-      continue;
-    }
-
-    segments.push({ type: 'error', text: text.slice(start, end), err, start });
-    cursor = end;
-  }
-
-  if (cursor < text.length) {
-    segments.push({ type: 'text', text: text.slice(cursor) });
-  }
+function renderHighlightedText(text, errors, activeTooltip, setActiveTooltip, textareaRef) {
+  const segments = buildHighlightSegments(text, errors);
 
   return (
     <span style={{ whiteSpace: 'pre-wrap' }}>
       {segments.map((seg, i) => {
         if (seg.type === 'text') {
-          return <span key={i}>{seg.text}</span>;
+          return <span key={i} style={{ cursor: 'text' }}>{seg.text}</span>;
         }
-        const isSpelling = seg.err.type === 'spelling';
-        const color = seg.err.color || (isSpelling ? 'red' : 'yellow');
+        const color = seg.err.colorName || 'yellow';
+        const isSpelling = color === 'red';
         const isActive = activeTooltip === i;
+        const isFirstLine = text.lastIndexOf('\n', Math.max(0, (seg.start || 0) - 1)) === -1;
+        const tooltipPlacement = isFirstLine
+          ? { top: 'calc(100% + 6px)', bottom: 'auto' }
+          : { bottom: 'calc(100% + 6px)', top: 'auto' };
         return (
           <span
             key={i}
-            style={{ position: 'relative', display: 'inline' }}
+            className="pe-error-span"
+            style={{ position: 'relative', display: 'inline', cursor: 'help' }}
             onMouseEnter={() => setActiveTooltip(i)}
             onMouseLeave={() => setActiveTooltip(null)}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setActiveTooltip(prev => (prev === i ? null : i));
+              // Forward click to textarea so user can type at this position
+              if (textareaRef?.current) {
+                textareaRef.current.focus();
+                textareaRef.current.setSelectionRange(seg.start, seg.start);
+              }
+            }}
           >
             <span style={{
-              backgroundImage: wavyBorder(color),
-              backgroundRepeat: 'repeat-x',
-              backgroundPosition: 'bottom left',
-              backgroundSize: '6px 3px',
-              paddingBottom: '3px',
-              cursor: 'help',
+              ...errorUnderlineStyle(color),
+              paddingBottom: '4px',
             }}>
               {seg.text}
             </span>
             {isActive && (
               <span style={{
                 position: 'absolute',
-                bottom: '100%',
-                left: 0,
-                marginBottom: 6,
+                left: '50%',
+                transform: 'translateX(-50%)',
                 background: '#1E293B',
                 color: '#fff',
                 borderRadius: 10,
-                padding: '8px 12px',
+                padding: '8px 14px',
                 fontSize: '0.78rem',
                 whiteSpace: 'nowrap',
-                zIndex: 100,
-                boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
+                zIndex: 200,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
                 pointerEvents: 'none',
-                lineHeight: 1.5,
+                lineHeight: 1.6,
+                minWidth: 180,
+                ...tooltipPlacement,
               }}>
-                <span style={{ fontSize: '0.85rem' }}>{isSpelling ? '🔴 Spelling Error' : '🟡 Grammar Issue'}</span>
-                <br />
-                <span style={{ color: '#94A3B8' }}>Hint: {seg.err.hint || 'Check this word'}</span>
-                {seg.err.suggestion ? (
-                  <>
-                    <br />
-                    <span style={{ color: '#86EFAC' }}>Try: {seg.err.suggestion}</span>
-                  </>
-                ) : null}
+                <span style={{ fontSize: '0.85rem', display: 'block', marginBottom: 2 }}>
+                  {isSpelling ? '🔴 Spelling Error' : '🟡 Grammar Issue'}
+                </span>
+                <span style={{ color: '#94A3B8' }}>
+                  {seg.err.hint || 'Check this word'}
+                </span>
+                {seg.err.suggestion && (
+                  <span style={{ display: 'block', color: '#86EFAC', marginTop: 3 }}>
+                    Try: {seg.err.suggestion}
+                  </span>
+                )}
               </span>
             )}
           </span>
@@ -205,7 +133,12 @@ export default function PracticeEditor({ taskId, onBack, onNavigate }) {
   // Live check debounced
   const runLiveCheck = useCallback((val) => {
     if (mode !== 'live' || !task) return;
-    if (val.length < 20) { setLiveErrors([]); setErrorCount({ spelling: 0, grammar: 0 }); return; }
+    const trimmed = val.trim();
+    if (!trimmed || !/[A-Za-z]/.test(trimmed)) {
+      setLiveErrors([]);
+      setErrorCount({ spelling: 0, grammar: 0 });
+      return;
+    }
     setLiveChecking(true);
     checkLiveText(val, task.type || 'general')
       .then(res => {
@@ -219,6 +152,7 @@ export default function PracticeEditor({ taskId, onBack, onNavigate }) {
   const handleTextChange = (e) => {
     const val = e.target.value;
     setText(val);
+    setActiveTooltip(null);
     if (mode === 'live') {
       clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(() => runLiveCheck(val), 800);
@@ -250,8 +184,7 @@ export default function PracticeEditor({ taskId, onBack, onNavigate }) {
   };
 
   const wordCount = countWords(text);
-  const minWords = task?.min_words || 20;
-  const canSubmit = wordCount >= minWords && !submitting;
+  const canSubmit = text.trim().length > 0 && !submitting;
 
   if (loading) return <LoadingState />;
   if (!task) return <div style={{ padding: '2rem', color: '#94A3B8' }}>Task not found.</div>;
@@ -266,9 +199,10 @@ export default function PracticeEditor({ taskId, onBack, onNavigate }) {
         .pe-mode-btn { border:2px solid #E2E8F0; background:#fff; padding:10px 20px; border-radius:12px; font-weight:700; font-size:0.85rem; cursor:pointer; transition:all 0.18s; display:flex;align-items:center;gap:8px; font-family:inherit; color:#64748B; }
         .pe-mode-btn.active-live { border-color:#EF4444; background:#FEF2F2; color:#DC2626; }
         .pe-mode-btn.active-after { border-color:#3B82F6; background:#EFF6FF; color:#2563EB; }
-        .pe-textarea { width:100%; box-sizing:border-box; border:none; outline:none; resize:none; font-size:1rem; line-height:1.75; font-family:'Inter',system-ui,sans-serif; background:transparent; color:#1E293B; padding:1.25rem; position:relative; z-index:2; caret-color:#1E293B; }
+        .pe-textarea { width:100%; box-sizing:border-box; border:none; outline:none; resize:none; font-size:1rem; line-height:1.75; font-family:'Inter',system-ui,sans-serif; background:transparent; color:#1E293B; padding:1.25rem; position:relative; z-index:1; caret-color:#1E293B; }
         .pe-textarea.transparent-text { color:transparent; }
-        .pe-mirror { position:absolute; inset:0; padding:1.25rem; font-size:1rem; line-height:1.75; font-family:'Inter',system-ui,sans-serif; color:#1E293B; pointer-events:none; white-space:pre-wrap; word-wrap:break-word; overflow:hidden; z-index:1; }
+        .pe-mirror { position:absolute; inset:0; padding:1.25rem; font-size:1rem; line-height:1.75; font-family:'Inter',system-ui,sans-serif; color:#1E293B; white-space:pre-wrap; word-wrap:break-word; overflow:hidden; z-index:3; pointer-events:none; }
+        .pe-mirror .pe-error-span { pointer-events:all; }
         .pe-submit-btn { padding:12px 28px; border:none; border-radius:12px; font-weight:800; font-size:0.95rem; cursor:pointer; transition:all 0.18s; font-family:inherit; display:flex;align-items:center;gap:8px; }
         .pe-submit-btn:disabled { opacity:0.5; cursor:not-allowed; }
         .err-card { border-radius:12px; padding:1rem 1.25rem; margin-bottom:0.75rem; border-left:4px solid; }
@@ -326,7 +260,6 @@ export default function PracticeEditor({ taskId, onBack, onNavigate }) {
           activeTooltip={activeTooltip}
           setActiveTooltip={setActiveTooltip}
           wordCount={wordCount}
-          minWords={minWords}
           onSubmit={handleSubmit}
           submitting={submitting}
           canSubmit={canSubmit}
@@ -338,7 +271,6 @@ export default function PracticeEditor({ taskId, onBack, onNavigate }) {
           text={text}
           onTextChange={handleTextChange}
           wordCount={wordCount}
-          minWords={minWords}
           onSubmit={handleSubmit}
           submitting={submitting}
           canSubmit={canSubmit}
@@ -368,7 +300,7 @@ export default function PracticeEditor({ taskId, onBack, onNavigate }) {
 }
 
 /* ─── Live Editor ─────────────────────────────────────────────── */
-function LiveEditor({ text, onTextChange, onScroll, liveErrors, errorCount, liveChecking, activeTooltip, setActiveTooltip, wordCount, minWords, onSubmit, submitting, canSubmit, textareaRef, mirrorRef }) {
+function LiveEditor({ text, onTextChange, onScroll, liveErrors, errorCount, liveChecking, activeTooltip, setActiveTooltip, wordCount, onSubmit, submitting, canSubmit, textareaRef, mirrorRef }) {
   // Show errors in sidebar — include any error that has a word OR a hint
   const liveSuggestions = (liveErrors || []).filter(e => e?.word || e?.hint).slice(0, 5);
 
@@ -376,7 +308,7 @@ function LiveEditor({ text, onTextChange, onScroll, liveErrors, errorCount, live
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 260px', gap: '1rem', alignItems: 'start' }}>
       {/* Left: editor */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-        <div style={{ background: '#fff', border: '2px solid #E2E8F0', borderRadius: 14, overflow: 'hidden' }}>
+        <div style={{ background: '#fff', border: '2px solid #E2E8F0', borderRadius: 14, overflow: 'visible' }}>
           <div style={{ borderBottom: '1px solid #F1F5F9', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#EF4444' }} />
             <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94A3B8' }}>🔴 Live Mode — hints shown as you type</span>
@@ -384,8 +316,8 @@ function LiveEditor({ text, onTextChange, onScroll, liveErrors, errorCount, live
           </div>
           {/* Mirror + textarea container */}
           <div style={{ position: 'relative', minHeight: 280 }}>
-            <div ref={mirrorRef} className="pe-mirror" aria-hidden="true">
-              {renderHighlightedText(text, liveErrors, activeTooltip, setActiveTooltip)}
+            <div ref={mirrorRef} className="pe-mirror">
+              {renderHighlightedText(text, liveErrors, activeTooltip, setActiveTooltip, textareaRef)}
               {/* Ghost char to keep height */}
               <span style={{ visibility: 'hidden' }}>.</span>
             </div>
@@ -403,11 +335,9 @@ function LiveEditor({ text, onTextChange, onScroll, liveErrors, errorCount, live
             />
           </div>
           {/* Footer bar */}
-          <div style={{ borderTop: '1px solid #F1F5F9', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#F8FAFC' }}>
+          <div style={{ borderTop: '1px solid #F1F5F9', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#F8FAFC', position: 'relative', zIndex: 6 }}>
             <span style={{ fontSize: '0.78rem', color: '#94A3B8' }}>
-              Words: <strong style={{ color: wordCount >= minWords ? '#16A34A' : '#1E293B' }}>{wordCount}</strong>
-              {wordCount < minWords && <> / {minWords} min</>}
-              {wordCount >= minWords && <> ✅</>}
+              Words: <strong style={{ color: '#1E293B' }}>{wordCount}</strong>
               {' '}·{' '}
               Errors: <strong style={{ color: (errorCount.spelling + errorCount.grammar) > 0 ? '#EF4444' : '#16A34A' }}>
                 {errorCount.spelling + errorCount.grammar}
@@ -464,21 +394,13 @@ function LiveEditor({ text, onTextChange, onScroll, liveErrors, errorCount, live
             ))}
           </div>
         ) : null}
-
-        <div style={{ marginTop: '1rem', borderTop: '1px solid #F1F5F9', paddingTop: '0.75rem' }}>
-          <p style={{ margin: '0 0 4px', fontSize: '0.72rem', fontWeight: 600, color: '#94A3B8' }}>MIN WORDS</p>
-          <div style={{ height: 6, background: '#F1F5F9', borderRadius: 999, overflow: 'hidden' }}>
-            <div style={{ height: '100%', borderRadius: 999, background: wordCount >= minWords ? '#16A34A' : '#2563EB', width: `${Math.min(100, (wordCount / minWords) * 100)}%`, transition: 'width 0.3s ease' }} />
-          </div>
-          <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#94A3B8' }}>{wordCount} / {minWords} words</p>
-        </div>
       </div>
     </div>
   );
 }
 
 /* ─── After Editor ────────────────────────────────────────────── */
-function AfterEditor({ text, onTextChange, wordCount, minWords, onSubmit, submitting, canSubmit }) {
+function AfterEditor({ text, onTextChange, wordCount, onSubmit, submitting, canSubmit }) {
   return (
     <div style={{ background: '#fff', border: '2px solid #E2E8F0', borderRadius: 14, overflow: 'hidden' }}>
       <div style={{ borderBottom: '1px solid #F1F5F9', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -495,8 +417,8 @@ function AfterEditor({ text, onTextChange, wordCount, minWords, onSubmit, submit
         style={{ display: 'block', minHeight: 280 }}
       />
       <div style={{ borderTop: '1px solid #F1F5F9', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#F8FAFC' }}>
-        <span style={{ fontSize: '0.78rem', color: wordCount >= minWords ? '#16A34A' : '#94A3B8', fontWeight: 600 }}>
-          {wordCount >= minWords ? '✅' : '📝'} Words: {wordCount} / {minWords} minimum
+        <span style={{ fontSize: '0.78rem', color: '#94A3B8', fontWeight: 600 }}>
+          📝 Words: {wordCount}
         </span>
         <button
           className="pe-submit-btn"

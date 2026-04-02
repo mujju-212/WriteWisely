@@ -4,6 +4,8 @@ Context Injection: queries DB for user data → builds prompt → calls LLM
 """
 
 import json
+from io import BytesIO
+import re
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form
 from bson import ObjectId
 from datetime import datetime
@@ -15,6 +17,11 @@ from services.pattern_service import get_top_errors
 from prompts.templates import get_prompt
 from models.schemas import SendMessageRequest
 
+try:
+    from pypdf import PdfReader
+except Exception:
+    PdfReader = None
+
 router = APIRouter()
 
 
@@ -25,8 +32,48 @@ def _safe_preview(text: str, limit: int = 1200) -> str:
     return clean[:limit]
 
 
+def _contains_false_doc_access_denial(text: str) -> bool:
+    """Detect responses that incorrectly claim uploaded docs are inaccessible."""
+    if not text:
+        return False
+
+    normalized = " ".join(text.lower().split())
+    has_doc_reference = re.search(r"\b(upload|uploaded|document|documents|file|files|pdf|attachment)\b", normalized)
+    has_denial = re.search(
+        r"(do not have access|don't have access|did not have access|didn't have access|"
+        r"cannot access|can't access|could not access|couldn't access|no access)",
+        normalized,
+    )
+    return bool(has_doc_reference and has_denial)
+
+
 def _extract_text_from_upload(filename: str, content: bytes) -> str:
     lower = (filename or "").lower()
+
+    if lower.endswith(".pdf"):
+        if PdfReader is None:
+            raise HTTPException(
+                status_code=500,
+                detail="PDF support is not available on the server. Install pypdf and retry."
+            )
+
+        try:
+            reader = PdfReader(BytesIO(content))
+            extracted_pages = []
+            for page in reader.pages:
+                page_text = (page.extract_text() or "").strip()
+                if page_text:
+                    extracted_pages.append(page_text)
+
+            extracted = "\n\n".join(extracted_pages).strip()
+            if extracted:
+                return extracted
+
+            raise HTTPException(status_code=400, detail="Could not extract readable text from PDF")
+        except HTTPException:
+            raise
+        except Exception:
+            raise HTTPException(status_code=400, detail="Invalid or unreadable PDF file")
 
     # MVP supports text-like documents for content injection.
     text_exts = (".txt", ".md", ".json", ".csv", ".log", ".py", ".js", ".jsx", ".ts", ".tsx")
@@ -212,6 +259,19 @@ async def send_message(data: SendMessageRequest, user=Depends(get_current_user))
         f"{docs_context}\n"
         "Use document context only when relevant to the user's question."
     )
+    if documents:
+        doc_titles = [d.get("title", d.get("filename", "Document")) for d in documents]
+        system_prompt += (
+            "\nDOCUMENT ACCESS STATUS: Uploaded documents are available in context right now. "
+            "Do not say you cannot access uploaded files."
+        )
+        system_prompt += (
+            "\nAVAILABLE DOCUMENT TITLES: "
+            + ", ".join(doc_titles)
+            + ". If the user asks about uploaded files, confirm access and reference these titles."
+        )
+    else:
+        system_prompt += "\nDOCUMENT ACCESS STATUS: No uploaded documents are currently available."
     
     # ─── STEP 3: Get chat history (last 6 messages) ───────────
     
@@ -238,6 +298,25 @@ async def send_message(data: SendMessageRequest, user=Depends(get_current_user))
     
     try:
         ai_reply = await call_llm_chat(messages_to_send)
+
+        # Safety retry: some models still hallucinate "no access" despite injected docs.
+        if documents and _contains_false_doc_access_denial(ai_reply):
+            try:
+                correction_prompt = (
+                    system_prompt
+                    + "\n\nCRITICAL CORRECTION: Uploaded documents are available for this turn. "
+                    "Rewrite your response. Never claim you cannot access uploaded documents. "
+                    "Use available document context when relevant."
+                )
+                retry_messages = [{"role": "system", "content": correction_prompt}]
+                retry_messages.extend(recent_messages)
+                retry_messages.append({"role": "user", "content": data.message})
+                corrected_reply = await call_llm_chat(retry_messages)
+                if corrected_reply and corrected_reply.strip():
+                    ai_reply = corrected_reply
+            except Exception:
+                # If retry fails, keep first answer so chat remains responsive.
+                pass
     except Exception as e:
         ai_reply = (
             f"I'm having trouble connecting right now. 😅 "

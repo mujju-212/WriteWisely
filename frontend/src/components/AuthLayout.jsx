@@ -23,7 +23,7 @@ const AuthLayout = () => {
           <div style={{ position: 'absolute', top: '40%', right: '5%', width: '100px', height: '100px', background: 'rgba(255,255,255,0.4)', borderRadius: '50%', filter: 'blur(30px)' }}></div>
 
           {/* Central Illustration Container */}
-          <div style={{ position: 'relative', width: '80%', height: '80%', zIndex: '1', display: 'flex', alignItems: 'center', justify-content: 'center' }}>
+          <div style={{ position: 'relative', width: '80%', height: '80%', zIndex: '1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg viewBox="0 0 500 500" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
               {/* Definitions for Gradients and Shadows */}
               <defs>
