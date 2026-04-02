@@ -2,7 +2,9 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   fetchProjects, getProject,
   createProject, updateProject, deleteProject,
+  checkText,
 } from '../services/api';
+import { buildHighlightSegments, errorUnderlineStyle } from '../utils/errorHighlight';
 
 /* ─── Constants ─────────────────────────────────────────────── */
 const DOC_TYPES = [
@@ -29,6 +31,77 @@ function formatDate(iso) {
 
 function countWords(text) {
   return text.trim() ? text.trim().split(/\s+/).length : 0;
+}
+
+function renderProjectHighlightedText(text, errors, activeTooltip, setActiveTooltip, textareaRef) {
+  const segments = buildHighlightSegments(text, errors);
+
+  return (
+    <span style={{ whiteSpace: 'pre-wrap' }}>
+      {segments.map((seg, i) => {
+        if (seg.type === 'text') {
+          return <span key={i}>{seg.text}</span>;
+        }
+
+        const color = seg.err.colorName || 'yellow';
+        const isSpelling = color === 'red';
+        const isActive = activeTooltip === i;
+        const isFirstLine = text.lastIndexOf('\n', Math.max(0, (seg.start || 0) - 1)) === -1;
+        const tooltipPlacement = isFirstLine
+          ? { top: 'calc(100% + 6px)', bottom: 'auto' }
+          : { bottom: 'calc(100% + 6px)', top: 'auto' };
+
+        return (
+          <span
+            key={i}
+            className="pj-error-span"
+            style={{ position: 'relative', display: 'inline', cursor: 'help' }}
+            onMouseEnter={() => setActiveTooltip(i)}
+            onMouseLeave={() => setActiveTooltip(null)}
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setActiveTooltip(prev => (prev === i ? null : i));
+              if (textareaRef?.current) {
+                textareaRef.current.focus();
+                textareaRef.current.setSelectionRange(seg.start, seg.start);
+              }
+            }}
+          >
+            <span style={errorUnderlineStyle(color)}>{seg.text}</span>
+            {isActive && (
+              <span style={{
+                position: 'absolute',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: '#1E293B',
+                color: '#fff',
+                borderRadius: 10,
+                padding: '8px 12px',
+                fontSize: '0.75rem',
+                whiteSpace: 'nowrap',
+                zIndex: 120,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+                pointerEvents: 'none',
+                lineHeight: 1.5,
+                ...tooltipPlacement,
+              }}>
+                <span style={{ display: 'block', fontWeight: 700, marginBottom: 2 }}>
+                  {isSpelling ? 'Spelling issue' : 'Grammar issue'}
+                </span>
+                <span style={{ color: '#94A3B8' }}>{seg.err.hint || seg.err.explanation || 'Check this phrase'}</span>
+                {seg.err.correction ? (
+                  <span style={{ display: 'block', color: '#86EFAC', marginTop: 3 }}>
+                    Try: {seg.err.correction}
+                  </span>
+                ) : null}
+              </span>
+            )}
+          </span>
+        );
+      })}
+    </span>
+  );
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -246,7 +319,7 @@ function ProjectList({
     : projects.filter(p => p.doc_type === filter);
 
   return (
-    <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem', animation: 'fadeInUp 0.4s ease' }}>
+    <div style={{ maxWidth: 1320, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem', animation: 'fadeInUp 0.4s ease' }}>
       <style>{`
         @keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
         @keyframes modalIn{from{opacity:0;transform:scale(0.94)}to{opacity:1;transform:scale(1)}}
@@ -446,27 +519,123 @@ function ProjectList({
   );
 }
 
-/* ─── Project Editor ──────────────────────────────────────────── */
+/* ─── Project Editor ────────────────────────────────────── */
 function ProjectEditor({
   project, content, title, saveStatus, loading,
   onTitleChange, onChange, onSave, onBack,
   onDelete, confirmDelete, onConfirmDelete, onCancelDelete,
 }) {
-  const textareaRef = useRef(null);
+  const textareaRef   = useRef(null);
+  const mirrorRef     = useRef(null);
+  const debounceRef   = useRef(null);
+
+  const [liveErrors,    setLiveErrors]    = useState([]);
+  const [checking,      setChecking]      = useState(false);
+  const [checkError,    setCheckError]    = useState(null);
+  const [errCount,      setErrCount]      = useState({ spelling: 0, grammar: 0 });
+  const [activeTooltip, setActiveTooltip] = useState(null);
+
   const wordCount = countWords(content);
   const charCount = content.length;
   const readTime  = Math.max(1, Math.ceil(wordCount / 200));
   const t = TYPE_MAP[project.doc_type] || TYPE_MAP.other;
 
-  const saveColor  = saveStatus === 'saved' ? '#16A34A' : saveStatus === 'saving' ? '#D97706' : '#EF4444';
-  const saveLabel  = saveStatus === 'saved' ? '✓ Saved' : saveStatus === 'saving' ? '💾 Saving...' : '● Unsaved';
+  const saveColor = saveStatus === 'saved' ? '#16A34A' : saveStatus === 'saving' ? '#D97706' : '#EF4444';
+  const saveLabel = saveStatus === 'saved' ? '\u2713 Saved' : saveStatus === 'saving' ? '\uD83D\uDCBE Saving...' : '\u25CF Unsaved';
+
+  // Live check: debounced for project suggestions.
+  const runCheck = useCallback((val) => {
+    clearTimeout(debounceRef.current);
+    const trimmed = val.trim();
+    if (!trimmed || !/[A-Za-z]/.test(trimmed)) {
+      setLiveErrors([]);
+      setErrCount({ spelling: 0, grammar: 0 });
+      setCheckError(null);
+      return;
+    }
+    debounceRef.current = setTimeout(async () => {
+      setChecking(true);
+      setCheckError(null);
+      try {
+        const res = await checkText(val, 'project', project.doc_type || 'general');
+        const errs = res.errors || [];
+        setLiveErrors(errs);
+        const spellingCount = errs.filter((e) => {
+          const type = String(e?.type || '').toLowerCase();
+          const color = String(e?.color || '').toLowerCase();
+          return type === 'spelling' || color === 'red';
+        }).length;
+        setErrCount({
+          spelling: spellingCount,
+          grammar: Math.max(0, errs.length - spellingCount),
+        });
+      } catch (err) {
+        setCheckError(err?.message || 'Check failed. Retrying on next change.');
+      } finally {
+        setChecking(false);
+      }
+    }, 1200);
+  }, [project.doc_type]);
+
+  // Run check on initial content once the document has loaded.
+  useEffect(() => {
+    if (!loading && content) {
+      runCheck(content);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loading]);
+
+  useEffect(() => () => clearTimeout(debounceRef.current), []);
+
+  const handleChange = (val) => {
+    setActiveTooltip(null);
+    onChange(val);
+    runCheck(val);
+  };
+
+  const syncMirrorScroll = () => {
+    if (textareaRef.current && mirrorRef.current) {
+      mirrorRef.current.scrollTop = textareaRef.current.scrollTop;
+    }
+  };
+
+  const applySuggestion = (err) => {
+    if (!err?.correction) return;
+
+    let next = content;
+    const start = err?.position?.start;
+    const end = err?.position?.end;
+
+    if (Number.isInteger(start) && Number.isInteger(end) && start >= 0 && end > start && end <= content.length) {
+      next = content.slice(0, start) + err.correction + content.slice(end);
+    } else {
+      const original = (err.original || err.word || '').trim();
+      if (!original) return;
+      const idx = next.toLowerCase().indexOf(original.toLowerCase());
+      if (idx < 0) return;
+      next = next.slice(0, idx) + err.correction + next.slice(idx + original.length);
+    }
+
+    if (next !== content) {
+      onChange(next);
+      runCheck(next);
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }
+  };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)', gap: '0', animation: 'fadeInUp 0.3s ease' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)', gap: 0, animation: 'fadeInUp 0.3s ease' }}>
       <style>{`
         @keyframes fadeInUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
-        .pe-editor{width:100%;box-sizing:border-box;border:none;outline:none;resize:none;font-size:1.05rem;line-height:1.85;font-family:'Georgia','Times New Roman',serif;color:#1E293B;background:transparent;padding:2rem;flex:1;}
-        .pe-editor::placeholder{color:#CBD5E1;}
+        .pj-editor-ta{width:100%;box-sizing:border-box;border:none;outline:none;resize:none;font-size:1.05rem;line-height:1.85;font-family:'Georgia','Times New Roman',serif;color:#1E293B;background:#fff;padding:2rem;display:block;height:100%;}
+        .pj-editor-ta::placeholder{color:#CBD5E1;}
+        .pj-editor-ta.transparent-text{color:transparent;caret-color:#1E293B;}
+        .pj-editor-wrap{position:relative;height:100%;}
+        .pj-mirror{position:absolute;inset:0;padding:2rem;font-size:1.05rem;line-height:1.85;font-family:'Georgia','Times New Roman',serif;color:#1E293B;white-space:pre-wrap;word-wrap:break-word;overflow:hidden;z-index:2;pointer-events:none;}
+        .pj-mirror .pj-error-span{pointer-events:all;}
+        .pj-suggest-card{border:1px solid #E2E8F0;border-radius:10px;padding:10px 12px;background:#fff;}
         .confirm-bar{background:#FEF2F2;border:1px solid #FECACA;border-radius:12px;padding:0.875rem 1.25rem;display:flex;align-items:center;justify-content:space-between;gap:1rem;}
       `}</style>
 
@@ -476,13 +645,11 @@ function ProjectEditor({
           ← Back
         </button>
 
-        {/* Type badge */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: t.bg, border: `1px solid ${t.color}30`, borderRadius: 8, padding: '5px 10px' }}>
           <span>{t.icon}</span>
           <span style={{ fontSize: '0.78rem', fontWeight: 700, color: t.color }}>{t.label}</span>
         </div>
 
-        {/* Inline title */}
         <input
           value={title}
           onChange={e => onTitleChange(e.target.value)}
@@ -490,14 +657,11 @@ function ProjectEditor({
           style={{ flex: 1, border: 'none', outline: 'none', fontSize: '1rem', fontWeight: 700, color: '#1E293B', background: 'transparent', fontFamily: 'inherit', cursor: 'text', minWidth: 0 }}
         />
 
-        {/* Right side */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginLeft: 'auto', flexShrink: 0 }}>
+          {checking && <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>Checking...</span>}
           <span style={{ fontSize: '0.78rem', fontWeight: 700, color: saveColor }}>{saveLabel}</span>
-          <button
-            onClick={onSave}
-            disabled={saveStatus === 'saved'}
-            style={{ background: '#2563EB', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 16px', fontWeight: 700, cursor: saveStatus === 'saved' ? 'not-allowed' : 'pointer', opacity: saveStatus === 'saved' ? 0.5 : 1, fontSize: '0.83rem', fontFamily: 'inherit' }}
-          >
+          <button onClick={onSave} disabled={saveStatus === 'saved'}
+            style={{ background: '#2563EB', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 16px', fontWeight: 700, cursor: saveStatus === 'saved' ? 'not-allowed' : 'pointer', opacity: saveStatus === 'saved' ? 0.5 : 1, fontSize: '0.83rem', fontFamily: 'inherit' }}>
             💾 Save
           </button>
           <button onClick={onDelete} style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA', borderRadius: 10, padding: '8px 14px', fontWeight: 600, cursor: 'pointer', fontSize: '0.83rem', fontFamily: 'inherit' }}>
@@ -506,38 +670,99 @@ function ProjectEditor({
         </div>
       </div>
 
-      {/* Delete confirm bar */}
+      {/* Delete confirm */}
       {confirmDelete && (
         <div className="confirm-bar" style={{ margin: '0.75rem 1.5rem 0' }}>
           <p style={{ margin: 0, fontWeight: 600, color: '#DC2626', fontSize: '0.9rem' }}>⚠️ Delete this project permanently?</p>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={onConfirmDelete} style={{ background: '#EF4444', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.85rem' }}>
-              Yes, Delete
-            </button>
-            <button onClick={onCancelDelete} style={{ background: '#F1F5F9', color: '#1E293B', border: 'none', borderRadius: 8, padding: '8px 16px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.85rem' }}>
-              Cancel
-            </button>
+            <button onClick={onConfirmDelete} style={{ background: '#EF4444', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.85rem' }}>Yes, Delete</button>
+            <button onClick={onCancelDelete} style={{ background: '#F1F5F9', color: '#1E293B', border: 'none', borderRadius: 8, padding: '8px 16px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.85rem' }}>Cancel</button>
           </div>
         </div>
       )}
 
-      {/* Editor area */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: '#fff', margin: '0.75rem 0 0', borderTop: '1px solid #F1F5F9', overflow: 'hidden' }}>
+      {/* Editor area + suggestions */}
+      <div style={{ flex: 1, background: '#fff', marginTop: '0.75rem', borderTop: '1px solid #F1F5F9', overflow: 'hidden' }}>
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, color: '#94A3B8', flexDirection: 'column', gap: '0.75rem' }}>
             <span style={{ fontSize: '2rem' }}>📄</span>
             <p style={{ fontWeight: 600 }}>Loading document...</p>
           </div>
         ) : (
-          <textarea
-            ref={textareaRef}
-            className="pe-editor"
-            value={content}
-            onChange={e => onChange(e.target.value)}
-            placeholder="Start writing here... Your work saves automatically."
-            spellCheck={true}
-            style={{ flex: 1, minHeight: 0 }}
-          />
+          <div style={{ height: '100%', display: 'grid', gridTemplateColumns: '1fr 320px' }}>
+            <div style={{ borderRight: '1px solid #E2E8F0', minHeight: 0 }}>
+              <div className="pj-editor-wrap">
+                <div ref={mirrorRef} className="pj-mirror" aria-hidden="true">
+                  {renderProjectHighlightedText(content, liveErrors, activeTooltip, setActiveTooltip, textareaRef)}
+                  <span style={{ visibility: 'hidden' }}>.</span>
+                </div>
+                <textarea
+                  ref={textareaRef}
+                  className="pj-editor-ta transparent-text"
+                  value={content}
+                  onChange={e => handleChange(e.target.value)}
+                  onScroll={syncMirrorScroll}
+                  placeholder="Start writing here... Your work saves automatically."
+                  spellCheck={false}
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                />
+              </div>
+            </div>
+            <div style={{ background: '#F8FAFC', padding: '1rem', overflowY: 'auto' }}>
+              <p style={{ margin: '0 0 0.6rem', fontSize: '0.8rem', fontWeight: 800, color: '#1E293B' }}>💡 Live Suggestions</p>
+              <p style={{ margin: '0 0 0.9rem', fontSize: '0.72rem', color: '#64748B', lineHeight: 1.5 }}>
+                Suggestions update while you type. Click Apply to fix quickly.
+              </p>
+
+              {checking && (
+                <div className="pj-suggest-card" style={{ fontSize: '0.78rem', color: '#64748B', marginBottom: '0.6rem' }}>
+                  ⏳ Checking your text...
+                </div>
+              )}
+
+              {checkError && !checking && (
+                <div className="pj-suggest-card" style={{ fontSize: '0.78rem', color: '#B91C1C', background: '#FEF2F2', border: '1px solid #FECACA', marginBottom: '0.6rem' }}>
+                  ⚠️ {checkError}
+                </div>
+              )}
+
+              {!checking && !checkError && liveErrors.length === 0 && (
+                <div className="pj-suggest-card" style={{ fontSize: '0.78rem', color: '#64748B' }}>
+                  No suggestions yet. Keep writing to get grammar and spelling feedback.
+                </div>
+              )}
+
+              {liveErrors.slice(0, 8).map((err, idx) => {
+                const type = String(err?.type || '').toLowerCase();
+                const color = String(err?.color || '').toLowerCase();
+                const isSpelling = type === 'spelling' || color === 'red';
+                const labelColor = isSpelling ? '#DC2626' : '#CA8A04';
+                return (
+                  <div key={`${err.original || err.word || 'issue'}-${idx}`} className="pj-suggest-card" style={{ marginBottom: '0.55rem' }}>
+                    <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 800, color: labelColor }}>
+                      {isSpelling ? '🔴 Spelling' : '🟡 Grammar'}
+                    </p>
+                    <p style={{ margin: '4px 0 2px', fontSize: '0.78rem', color: '#1E293B', fontWeight: 700 }}>
+                      {err.original || err.word || 'Issue detected'}
+                      {err.correction ? <span style={{ color: '#16A34A' }}> → {err.correction}</span> : null}
+                    </p>
+                    <p style={{ margin: '0 0 8px', fontSize: '0.73rem', color: '#64748B', lineHeight: 1.45 }}>
+                      {err.explanation || err.hint || 'Check this part of your sentence.'}
+                    </p>
+                    {err.correction ? (
+                      <button
+                        onClick={() => applySuggestion(err)}
+                        style={{ border: '1px solid #BBF7D0', background: '#F0FDF4', color: '#166534', borderRadius: 8, padding: '5px 10px', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+                      >
+                        Apply
+                      </button>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         )}
       </div>
 
@@ -552,7 +777,13 @@ function ProjectEditor({
         <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
           ⏱️ ~{readTime} min read
         </span>
-        <span style={{ fontSize: '0.75rem', color: '#94A3B8', marginLeft: 'auto' }}>
+        {(errCount.spelling + errCount.grammar) > 0 && (
+          <span style={{ fontSize: '0.75rem', marginLeft: 'auto', display: 'flex', gap: '0.75rem' }}>
+            {errCount.spelling > 0 && <span style={{ color: '#EF4444', fontWeight: 700 }}>🔴 {errCount.spelling} spelling</span>}
+            {errCount.grammar  > 0 && <span style={{ color: '#CA8A04', fontWeight: 700 }}>🟡 {errCount.grammar} grammar</span>}
+          </span>
+        )}
+        <span style={{ fontSize: '0.75rem', color: '#94A3B8', marginLeft: (errCount.spelling + errCount.grammar) > 0 ? 0 : 'auto' }}>
           Auto-saves every 1.5s • {saveLabel}
         </span>
       </div>

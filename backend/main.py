@@ -5,6 +5,9 @@ Run: uvicorn main:app --reload
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi import Request
+from fastapi.responses import JSONResponse
+from pymongo.errors import PyMongoError
 from config import connect_db, close_db
 from routes import auth, learning, practice, project, chat, checker, analytics, notifications
 
@@ -36,6 +39,14 @@ async def startup():
 @app.on_event("shutdown")
 async def shutdown():
     await close_db()
+
+
+@app.exception_handler(PyMongoError)
+async def mongo_exception_handler(request: Request, exc: PyMongoError):
+    return JSONResponse(
+        status_code=503,
+        content={"detail": "Database unavailable. Please ensure MongoDB is running and retry."}
+    )
 
 
 # ─── Register Routes ──────────────────────────────────────────

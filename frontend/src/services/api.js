@@ -30,19 +30,19 @@ async function api(path, opts = {}) {
 }
 
 // ─── Auth ─────────────────────────────────────────────────
-export const login = (phone, password) =>
-  api('/auth/login', { method: 'POST', body: JSON.stringify({ phone, password }) });
+export const login = (email, password) =>
+  api('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) });
 
 export const register = (data) =>
   api('/auth/register', { method: 'POST', body: JSON.stringify(data) });
 
 export const getMe = () => api('/auth/me');
 
-// ─── Dashboard ────────────────────────────────────────────
-export const fetchDashboard = () => api('/analytics/dashboard');
-
 // ─── Analytics ────────────────────────────────────────────
+export const fetchDashboard = () => api('/analytics/dashboard');
 export const fetchAnalytics = (period = 'weekly') =>
+  api(`/analytics/overview?period=${period}`);
+export const fetchAnalyticsOverview = (period = 'weekly') =>
   api(`/analytics/overview?period=${period}`);
 
 // ─── Learning ─────────────────────────────────────────────
@@ -80,8 +80,12 @@ export const deleteProject = (id) =>
 
 // ─── Chat ─────────────────────────────────────────────────
 export const fetchChatHistory = () => api('/chat/history');
-export const sendChatMessage = (message) =>
-  api('/chat/send', { method: 'POST', body: JSON.stringify({ message }) });
+export const sendChatMessage = (message, documentIds = []) =>
+  api('/chat/send', {
+    method: 'POST',
+    body: JSON.stringify({ message, document_ids: documentIds }),
+  });
+export const fetchChatDocuments = () => api('/chat/documents');
 export const clearChat = () => api('/chat/clear', { method: 'DELETE' });
 export async function uploadChatDocument(file, title = '') {
   const token = getToken();

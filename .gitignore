@@ -32,6 +32,9 @@ npm-debug.log*
 
 # MongoDB
 data/db/
+backend/.mongo-data/
+backend/.mongo-data-recovered/
+backend/.mongo-log/
 
 # Misc
 *.bak

@@ -16,6 +16,7 @@ from services.pattern_service import (
     add_credits, save_errors, get_badges, update_streak,
     CREDIT_VALUES, calculate_practice_credits, check_practice_badges
 )
+from services import analytics_service
 from models.schemas import SubmitPracticeRequest
 
 router = APIRouter()
@@ -151,7 +152,8 @@ class CheckLiveRequest(BaseModel):
 @router.post("/check")
 async def check_live(data: CheckLiveRequest, user=Depends(get_current_user)):
     """Live mode check — returns hints only (no corrections shown)."""
-    if len(data.text.strip()) < 20:
+    trimmed = data.text.strip()
+    if not trimmed or not any(ch.isalpha() for ch in trimmed):
         return {"errors": [], "error_count": {"spelling": 0, "grammar": 0}}
 
     user_level_num = user.get("profile", {}).get("current_level", 1)
@@ -174,15 +176,28 @@ async def check_live(data: CheckLiveRequest, user=Depends(get_current_user)):
     # Strip corrections — live mode shows hints only
     cleaned_errors = []
     for err in errors:
-        err_type = err.get("type", "spelling")
+        raw_type = str(err.get("type", "grammar")).strip().lower().replace(" ", "_")
+        raw_color = str(err.get("color", "")).strip().lower()
+        is_spelling = raw_type == "spelling" or raw_color == "red"
+        err_type = "spelling" if is_spelling else "grammar"
+        color = "red" if is_spelling else "yellow"
+
+        position = err.get("position", {}) or {}
+        start = position.get("start")
+        end = position.get("end")
+
+        word = (err.get("word") or err.get("original") or "").strip()
+        if not word and isinstance(start, int) and isinstance(end, int) and 0 <= start < end <= len(data.text):
+            word = data.text[start:end]
+
         cleaned_errors.append({
             "type": err_type,
-            "word": err.get("word") or err.get("original", ""),
+            "word": word,
             "hint": err.get("hint", "Check this word"),
             "suggestion": err.get("correction") or err.get("suggestion") or "",
-            "position": err.get("position", {}),
+            "position": position,
             "severity": err.get("severity", "minor"),
-            "color": err.get("color", "red" if err_type == "spelling" else "yellow"),
+            "color": color,
         })
 
     # Count by type
@@ -215,13 +230,13 @@ async def submit_practice(data: SubmitPracticeRequest, user=Depends(get_current_
     task_credits = task.get("credits", 30)
     context_type = task.get("context", task_type)
 
-    # ── Minimum word check ─────────────────────────────────
-    word_count = len(data.text.split())
-    min_words = task.get("min_words", 20)
-    if word_count < min_words:
+    # ── Input check ────────────────────────────────────────
+    stripped_text = data.text.strip()
+    word_count = len(stripped_text.split()) if stripped_text else 0
+    if word_count == 0:
         raise HTTPException(
             status_code=400,
-            detail=f"Please write at least {min_words} words (you wrote {word_count})."
+            detail="Please write something before submitting."
         )
 
     # ── Full analysis via LLM ─────────────────────────────
@@ -323,6 +338,30 @@ async def submit_practice(data: SubmitPracticeRequest, user=Depends(get_current_
         {"_id": __import__("bson").ObjectId(user_id)}
     )
     current_streak = updated_user.get("profile", {}).get("current_streak", 0) if updated_user else 0
+
+    # ─── Analytics Tracking ────────────────────────────────
+    try:
+        from datetime import date
+        error_counts = analytics_service.count_errors_by_type(analysis.get("errors", []))
+        week_start = (date.today() - __import__('datetime').timedelta(days=date.today().weekday())).isoformat()
+        await analytics_service.update_daily_stats_after_activity(
+            user_id=user_id,
+            activity_type="practice",
+            data={
+                "score": score,
+                "words": word_count,
+                "credits": credits,
+                "task_type": task_type,
+                "total_errors": total_errors,
+                "error_counts": error_counts
+            },
+            db=db
+        )
+        await analytics_service.aggregate_weekly_stats(user_id, week_start, db)
+        today = date.today()
+        await analytics_service.aggregate_monthly_stats(user_id, today.month, today.year, db)
+    except Exception as _ae:
+        print(f"⚠️ Analytics update failed (non-fatal): {_ae}")
 
     # ── Build response ─────────────────────────────────────
     return {

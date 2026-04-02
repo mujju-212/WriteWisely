@@ -14,6 +14,12 @@ def _norm_token(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "", (value or "").lower())
 
 
+def _normalize_error_type(value: str) -> str:
+    raw = (value or "grammar").strip().lower().replace(" ", "_")
+    allowed = {"spelling", "grammar", "punctuation", "word_choice", "style"}
+    return raw if raw in allowed else "grammar"
+
+
 def _find_word_span(text: str, word: str, taken_spans: list[tuple[int, int]]) -> tuple[int, int] | None:
     """Find a non-overlapping span for `word` in `text` using word boundaries."""
     if not text or not word:
@@ -51,8 +57,9 @@ def _normalize_error_positions(text: str, errors: list) -> list:
 
     for err in errors:
         e = dict(err)
-        etype = e.get("type", "grammar")
-        e.setdefault("color", "red" if etype == "spelling" else "yellow")
+        etype = _normalize_error_type(e.get("type", "grammar"))
+        e["type"] = etype
+        e["color"] = "red" if etype == "spelling" else "yellow"
 
         word = (e.get("word") or e.get("original") or "").strip()
         pos = e.get("position") or {}
@@ -233,7 +240,9 @@ async def _check_live(text: str, context: str, user_level: str, tier1_errors: li
     # Enforce no corrections in live mode
     errors = result.get("errors", [])
     for error in errors:
-        error.setdefault("color", "red" if error.get("type") == "spelling" else "yellow")
+        etype = _normalize_error_type(error.get("type", "grammar"))
+        error["type"] = etype
+        error["color"] = "red" if etype == "spelling" else "yellow"
         error.pop("explanation", None)
         error.pop("improved_version", None)
 
@@ -254,7 +263,9 @@ async def _check_project(text: str, context: str, user_level: str, tier1_errors:
 
     errors = result.get("errors", [])
     for error in errors:
-        error["color"] = "red" if error.get("type") == "spelling" else "yellow"
+        etype = _normalize_error_type(error.get("type", "grammar"))
+        error["type"] = etype
+        error["color"] = "red" if etype == "spelling" else "yellow"
 
     return {
         "errors": errors,
