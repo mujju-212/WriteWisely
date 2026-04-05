@@ -144,7 +144,9 @@ class ProjectListItem(BaseModel):
 
 class SendMessageRequest(BaseModel):
     message: str = Field(..., min_length=1, max_length=2000)
-    document_ids: Optional[List[str]] = []
+    document_ids: List[str] = Field(default_factory=list)
+    conversation_id: Optional[str] = None
+    reference_conversation_ids: Optional[List[str]] = None
 
 
 class ChatMessage(BaseModel):
@@ -210,3 +212,4 @@ class UpdateSettingsRequest(BaseModel):
     notifications_enabled: Optional[bool] = None
     email_notifications: Optional[bool] = None
     reminder_time: Optional[str] = None
+    language: Optional[str] = None

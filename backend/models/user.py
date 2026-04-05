@@ -87,6 +87,7 @@ class UserSettings(BaseModel):
     notifications_enabled: bool = True
     email_notifications: bool = True
     reminder_time: str = "09:00"
+    language: str = "en"
 
 
 # ─── Response Models ──────────────────────────────────────────

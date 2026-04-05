@@ -5,6 +5,7 @@ Expanded /dashboard endpoint returns ALL 8 sections in one call.
 
 from fastapi import APIRouter, Depends
 from datetime import datetime, timedelta
+from pathlib import Path
 from bson import ObjectId
 from collections import defaultdict
 
@@ -83,6 +84,20 @@ def _daily_minutes(doc: dict) -> int:
     return int(learning_val + practice_val)
 
 
+def _max_available_lesson_level(default: int = 1) -> int:
+    """Return the highest lesson level that currently exists in backend/data/lessons."""
+    lessons_dir = Path(__file__).resolve().parents[1] / "data" / "lessons"
+    levels = []
+    try:
+        for lesson_file in lessons_dir.glob("level_*.json"):
+            suffix = lesson_file.stem.split("_")[-1]
+            if suffix.isdigit():
+                levels.append(int(suffix))
+    except OSError:
+        return default
+    return max(levels) if levels else default
+
+
 # ─── FULL DASHBOARD (one call, 8 sections) ───────────────────
 @router.get("/dashboard")
 async def get_dashboard(user=Depends(get_current_user)):
@@ -92,6 +107,9 @@ async def get_dashboard(user=Depends(get_current_user)):
     now = datetime.utcnow()
     today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     week_ago = now - timedelta(days=7)
+    max_content_level = _max_available_lesson_level()
+    profile_level = profile.get("current_level", 1)
+    display_level = min(profile_level, max_content_level)
 
     # ── 1. Greeting ─────────────────────────────────────────
     greeting = {
@@ -141,7 +159,7 @@ async def get_dashboard(user=Depends(get_current_user)):
 
     stats = {
         "level": {
-            "current": profile.get("current_level", 1),
+            "current": display_level,
             "total": 30,
             "change": "+1 this week" if credits_this_week > 0 else "No change"
         },
@@ -174,16 +192,30 @@ async def get_dashboard(user=Depends(get_current_user)):
         "status": "in_progress"
     }, sort=[("started_at", -1)])
 
+    if in_progress and in_progress.get("level_number", 1) > max_content_level:
+        in_progress = await db.learning_progress.find_one({
+            "user_id": user_id,
+            "status": "in_progress",
+            "level_number": {"$lte": max_content_level}
+        }, sort=[("level_number", -1), ("started_at", -1)])
+
+    if not in_progress:
+        in_progress = await db.learning_progress.find_one({
+            "user_id": user_id,
+            "level_number": {"$lte": max_content_level}
+        }, sort=[("level_number", -1), ("started_at", -1)])
+
     continue_learning = None
     if in_progress:
-        lesson_doc = await db.lessons.find_one({"level_id": in_progress.get("level_number")})
+        lesson_level = min(in_progress.get("level_number", 1), max_content_level)
+        lesson_doc = await db.lessons.find_one({"level_id": lesson_level})
         # Calculate progress within lesson
         total_sections = len(in_progress.get("read_sections", [])) + 3  # approx
         read = len([s for s in in_progress.get("read_sections", []) if s])
         progress_pct = min(int((read / max(total_sections, 1)) * 100), 95)
 
         continue_learning = {
-            "level": in_progress.get("level_number", 1),
+            "level": lesson_level,
             "topic": in_progress.get("topic", lesson_doc.get("title", "Current Lesson") if lesson_doc else "Current Lesson"),
             "next_up": "Quiz on " + in_progress.get("topic", "this topic"),
             "progress": progress_pct
@@ -784,6 +816,8 @@ async def update_settings(data: UpdateSettingsRequest, user=Depends(get_current_
         update_fields["settings.email_notifications"] = data.email_notifications
     if data.reminder_time is not None:
         update_fields["settings.reminder_time"] = data.reminder_time
+    if data.language is not None:
+        update_fields["settings.language"] = data.language
 
     if update_fields:
         await db.users.update_one(
