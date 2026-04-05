@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from bson import ObjectId
 from datetime import datetime
 import json
-import os
+from pathlib import Path
 
 from config import get_db
 from middleware.auth_middleware import get_current_user
@@ -18,8 +18,9 @@ from models.schemas import SubmitQuizRequest, SubmitAssignmentRequest
 
 router = APIRouter()
 
-LESSONS_DIR = "data/lessons"
-QUIZZES_DIR = "data/quizzes"
+BASE_DIR = Path(__file__).resolve().parents[1]
+LESSONS_DIR = BASE_DIR / "data" / "lessons"
+QUIZZES_DIR = BASE_DIR / "data" / "quizzes"
 
 
 # ─── Get All Levels ───────────────────────────────────────────
@@ -32,13 +33,15 @@ async def get_all_levels(user=Depends(get_current_user)):
     # Load all lesson files
     levels = []
     for i in range(1, 31):
-        filename = f"{LESSONS_DIR}/level_{i:02d}.json"
+        filename = LESSONS_DIR / f"level_{i:02d}.json"
+        has_content = filename.exists()
         
         level_data = {"level_id": i, "title": f"Level {i}", "topic": "", "category": "beginner"}
+        level_data["has_content"] = has_content
         
-        if os.path.exists(filename):
+        if has_content:
             try:
-                with open(filename, "r") as f:
+                with open(filename, "r", encoding="utf-8") as f:
                     data = json.load(f)
                 level_data["title"] = data.get("title", f"Level {i}")
                 level_data["topic"] = data.get("topic", "")
@@ -51,7 +54,9 @@ async def get_all_levels(user=Depends(get_current_user)):
             {"user_id": user_id, "level_number": i}
         )
         
-        if progress:
+        if not has_content:
+            level_data["status"] = "coming_soon"
+        elif progress:
             level_data["status"] = progress.get("status", "available")
             level_data["score"] = progress.get("assignment", {}).get("score")
             level_data["credits_earned"] = progress.get("credits_earned", 0)
@@ -78,12 +83,12 @@ async def get_all_levels(user=Depends(get_current_user)):
 # ─── Get Single Lesson ────────────────────────────────────────
 @router.get("/levels/{level_id}")
 async def get_lesson(level_id: int, user=Depends(get_current_user)):
-    filename = f"{LESSONS_DIR}/level_{level_id:02d}.json"
+    filename = LESSONS_DIR / f"level_{level_id:02d}.json"
     
-    if not os.path.exists(filename):
-        raise HTTPException(status_code=404, detail=f"Lesson {level_id} not found")
+    if not filename.exists():
+        raise HTTPException(status_code=404, detail=f"Lesson {level_id} is coming soon")
     
-    with open(filename, "r") as f:
+    with open(filename, "r", encoding="utf-8") as f:
         lesson = json.load(f)
     
     # Mark as in_progress if not already
@@ -107,9 +112,9 @@ async def get_lesson(level_id: int, user=Depends(get_current_user)):
     
     # Load quiz questions (from separate quiz file or lesson file)
     quiz_questions = []
-    quiz_file = f"{QUIZZES_DIR}/quiz_{level_id:02d}.json"
-    if os.path.exists(quiz_file):
-        with open(quiz_file, "r") as f:
+    quiz_file = QUIZZES_DIR / f"quiz_{level_id:02d}.json"
+    if quiz_file.exists():
+        with open(quiz_file, "r", encoding="utf-8") as f:
             quiz_data = json.load(f)
         quiz_questions = quiz_data.get("questions", [])
     elif "quiz" in lesson:
@@ -190,17 +195,17 @@ async def submit_quiz(level_id: int, data: SubmitQuizRequest, user=Depends(get_c
     db = get_db()
     
     # Load quiz answers
-    quiz_file = f"{QUIZZES_DIR}/quiz_{level_id:02d}.json"
-    if not os.path.exists(quiz_file):
+    quiz_file = QUIZZES_DIR / f"quiz_{level_id:02d}.json"
+    if not quiz_file.exists():
         # Try loading from lesson file
-        lesson_file = f"{LESSONS_DIR}/level_{level_id:02d}.json"
-        if not os.path.exists(lesson_file):
+        lesson_file = LESSONS_DIR / f"level_{level_id:02d}.json"
+        if not lesson_file.exists():
             raise HTTPException(status_code=404, detail="Quiz not found")
-        with open(lesson_file, "r") as f:
+        with open(lesson_file, "r", encoding="utf-8") as f:
             lesson = json.load(f)
         quiz_questions = lesson.get("quiz", {}).get("questions", [])
     else:
-        with open(quiz_file, "r") as f:
+        with open(quiz_file, "r", encoding="utf-8") as f:
             quiz_data = json.load(f)
         quiz_questions = quiz_data.get("questions", [])
     
