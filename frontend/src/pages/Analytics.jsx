@@ -5,6 +5,7 @@ import {
   ReferenceLine, ResponsiveContainer
 } from 'recharts';
 import { fetchAnalyticsOverview } from '../services/api';
+import { useTheme } from '../context/ThemeContext';
 import './Dashboard.css';
 
 /* ─── Error-type colour map ─────────────────────────────── */
@@ -112,7 +113,7 @@ function PeriodSelector({ period, onChange }) {
     { key: 'monthly', label: 'Monthly', iconClass: 'fa-solid fa-calendar-days' },
   ];
   return (
-    <div style={{ display: 'flex', gap: 4, background: '#F1F5F9', borderRadius: 12, padding: '4px', width: 'fit-content' }}>
+    <div style={{ display: 'flex', gap: 4, background: 'var(--surface-muted)', borderRadius: 12, padding: '4px', width: 'fit-content' }}>
       {tabs.map(t => (
         <button key={t.key} onClick={() => onChange(t.key)} style={{
           padding: '8px 22px', borderRadius: 9, border: 'none', cursor: 'pointer',
@@ -357,6 +358,8 @@ function Certificate({ cards }) {
    MAIN COMPONENT
 ══════════════════════════════════════════════════════════ */
 export default function Analytics() {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [period, setPeriod] = useState('weekly');
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -391,7 +394,7 @@ export default function Analytics() {
   const insights  = data?.insights           || [];
 
   return (
-    <div className="ww-page-enter" style={{ paddingBottom: '2rem' }}>
+    <div className="analytics-root ww-page-enter" style={{ paddingBottom: '2rem' }}>
 
       {/* ── Page Header ───────────────────────────────────── */}
       <div style={{ marginBottom: '1.5rem' }}>
@@ -436,61 +439,61 @@ export default function Analytics() {
                 label: 'Average Accuracy',
                 value: `${cards.accuracy || 0}%`,
                 sub: cards.period_label || 'Selected period',
-                iconBg: '#DBEAFE',
+                iconBg: isDark ? 'rgba(59,130,246,0.22)' : '#DBEAFE',
               },
               {
                 iconClass: 'fa-solid fa-square-pen',
                 label: 'Practice Average',
                 value: `${cards.avg_practice_score || 0}/10`,
                 sub: `${cards.practice_done || 0} practice tasks`,
-                iconBg: '#DCFCE7',
+                iconBg: isDark ? 'rgba(16,185,129,0.22)' : '#DCFCE7',
               },
               {
                 iconClass: 'fa-solid fa-list-check',
                 label: 'Practice Done',
                 value: `${cards.practice_done || 0}`,
                 sub: cards.period_label || 'Selected period',
-                iconBg: '#EDE9FE',
+                iconBg: isDark ? 'rgba(139,92,246,0.24)' : '#EDE9FE',
               },
               {
                 iconClass: 'fa-solid fa-file-lines',
                 label: 'Words Written',
                 value: fmt(cards.total_words),
                 sub: cards.period_label || 'Selected period',
-                iconBg: '#FEF3C7',
+                iconBg: isDark ? 'rgba(245,158,11,0.22)' : '#FEF3C7',
               },
               {
                 iconClass: 'fa-solid fa-triangle-exclamation',
                 label: 'Errors Logged',
                 value: `${cards.total_errors || 0}`,
                 sub: 'Detected issues',
-                iconBg: '#FEE2E2',
+                iconBg: isDark ? 'rgba(239,68,68,0.22)' : '#FEE2E2',
               },
               {
                 iconClass: 'fa-solid fa-circle-check',
                 label: 'Errors Resolved',
                 value: `${cards.errors_resolved || 0}`,
                 sub: 'Improved corrections',
-                iconBg: '#DCFCE7',
+                iconBg: isDark ? 'rgba(16,185,129,0.22)' : '#DCFCE7',
               },
               {
                 iconClass: 'fa-regular fa-clock',
                 label: 'Time Logged',
                 value: `${cards.time_minutes || 0}m`,
                 sub: cards.period_label || 'Selected period',
-                iconBg: '#E2E8F0',
+                iconBg: isDark ? 'rgba(148,163,184,0.24)' : '#E2E8F0',
               },
               {
                 iconClass: 'fa-solid fa-coins',
                 label: 'Credits Earned',
                 value: fmt(cards.credits),
                 sub: cards.period_label || 'Selected period',
-                iconBg: '#FDE68A',
+                iconBg: isDark ? 'rgba(250,204,21,0.24)' : '#FDE68A',
               },
             ].map((c, i) => (
               <div key={i} className="ww-card" style={{ padding: '1.1rem 1.25rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: c.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: '#1E293B' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 10, background: c.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', color: 'var(--text-dark)' }}>
                     <i className={c.iconClass} />
                   </div>
                   <span className="ww-pill-green" style={{ fontSize: '0.65rem' }}>{period.toUpperCase()}</span>
@@ -498,7 +501,7 @@ export default function Analytics() {
                 <p style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-dark)', margin: 0 }}>{c.value}</p>
                 <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '1px 0 8px' }}>{c.label}</p>
                 <div style={{ borderTop: '1px solid var(--border)', paddingTop: 7 }}>
-                  <p style={{ fontSize: '0.73rem', color: '#94A3B8', margin: 0 }}>{c.sub}</p>
+                  <p style={{ fontSize: '0.73rem', color: 'var(--text-muted)', margin: 0 }}>{c.sub}</p>
                 </div>
               </div>
             ))}

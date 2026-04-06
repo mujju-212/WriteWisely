@@ -13,6 +13,8 @@
   --border: #E5E7EB;
   --bg-body: #F8F7FF;
   --bg-white: #FFFFFF;
+  --surface-soft: #F8FAFC;
+  --surface-muted: #F1F5F9;
   --font: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
@@ -916,6 +918,297 @@ body {
 
 .db-animate {
   animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* =============================================
+   Dark Theme Overrides
+   ============================================= */
+html.dark {
+  --primary: #818CF8;
+  --primary-hover: #6366F1;
+  --primary-light: rgba(99, 102, 241, 0.18);
+  --text-dark: #E2E8F0;
+  --text-muted: #94A3B8;
+  --border: #334155;
+  --bg-body: #0B1220;
+  --bg-white: #111827;
+  --surface-soft: #1E293B;
+  --surface-muted: #0F172A;
+}
+
+html.dark body {
+  background-color: var(--bg-body);
+  color: var(--text-dark);
+}
+
+html.dark .db-sidebar {
+  background: linear-gradient(165deg, #0F172A 0%, #111827 100%);
+}
+
+html.dark .db-nav-item.active:hover,
+html.dark .db-nav-item:hover,
+html.dark .db-nav-item.active {
+  background: var(--primary-light);
+}
+
+html.dark .db-signout-btn:hover {
+  background: rgba(239, 68, 68, 0.14);
+}
+
+html.dark .db-topbar {
+  background: rgba(15, 23, 42, 0.9);
+  border-bottom-color: var(--border);
+  box-shadow: 0 1px 10px rgba(2, 6, 23, 0.45);
+}
+
+html.dark .db-credits-badge {
+  background: rgba(99, 102, 241, 0.2);
+  border-color: rgba(129, 140, 248, 0.4);
+  color: #C7D2FE;
+}
+
+html.dark .db-icon-btn:hover {
+  background: #1E293B;
+}
+
+html.dark .db-notif-dot {
+  border-color: #0F172A;
+}
+
+html.dark .db-card,
+html.dark .db-metric-card,
+html.dark .db-profile-dropdown {
+  box-shadow: 0 8px 24px rgba(2, 6, 23, 0.35);
+}
+
+html.dark .db-btn-secondary {
+  background: #1E293B;
+  color: var(--text-dark);
+  border-color: #475569;
+}
+
+html.dark .db-btn-secondary:hover {
+  background: #334155;
+  border-color: #64748B;
+}
+
+html.dark .db-btn-primary:disabled,
+html.dark .db-btn-danger:disabled {
+  background: #334155;
+  color: #94A3B8;
+}
+
+html.dark .db-input,
+html.dark .db-textarea,
+html.dark .db-chat-input {
+  background: #0F172A;
+  color: var(--text-dark);
+  border-color: var(--border);
+}
+
+html.dark .db-chat-input:focus {
+  background: #1E293B;
+}
+
+html.dark .db-input::placeholder,
+html.dark .db-textarea::placeholder,
+html.dark .db-chat-input::placeholder {
+  color: #94A3B8;
+}
+
+html.dark .db-chat-attach-btn {
+  background: #0F172A;
+  border-color: var(--border);
+  color: var(--text-muted);
+}
+
+html.dark .db-chat-attach-btn:hover {
+  background: #1E293B;
+  border-color: #64748B;
+  color: var(--text-dark);
+}
+
+html.dark .db-history-panel {
+  background: var(--bg-white);
+}
+
+html.dark .db-practice-toolbar,
+html.dark .db-stats-bar {
+  background: #0F172A;
+}
+
+html.dark .db-toolbar-btn:hover,
+html.dark .db-mode-btn:hover:not(.active) {
+  background: #1E293B;
+  color: var(--text-dark);
+}
+
+html.dark .db-stat-chip,
+html.dark .db-activity-row {
+  background: var(--bg-white);
+  border-color: var(--border);
+}
+
+html.dark .db-modal-overlay {
+  background: rgba(2, 6, 23, 0.72);
+}
+
+html.dark .db-toast {
+  box-shadow: 0 10px 28px rgba(2, 6, 23, 0.55);
+}
+
+html.dark select option {
+  background: #0F172A;
+  color: #E2E8F0;
+}
+
+/* App-wide dark mode support for pages that still carry inline neutral colors */
+html.dark .ww-card,
+html.dark .pw-card,
+html.dark .pj-card,
+html.dark .pj-modal,
+html.dark .pj-suggest-card,
+html.dark .confirm-bar {
+  background: var(--bg-white) !important;
+  border-color: var(--border) !important;
+}
+
+html.dark .pw-filter-btn,
+html.dark .pj-filter-btn,
+html.dark .pe-mode-btn,
+html.dark .pj-btn-secondary,
+html.dark .pj-type-option,
+html.dark .pj-input {
+  background: var(--surface-muted) !important;
+  border-color: var(--border) !important;
+  color: var(--text-dark) !important;
+}
+
+html.dark .pw-filter-btn:hover:not(.active),
+html.dark .pj-filter-btn:hover:not(.active),
+html.dark .pj-btn-secondary:hover {
+  background: var(--surface-soft) !important;
+  border-color: #64748B !important;
+  color: var(--text-dark) !important;
+}
+
+html.dark .pw-hist-row {
+  border-bottom-color: var(--border) !important;
+}
+
+html.dark .pj-header-card,
+html.dark .pw-header-card {
+  background: linear-gradient(135deg, #111827, #0F172A) !important;
+  border-color: var(--border) !important;
+}
+
+html.dark .pj-stat-card,
+html.dark .pw-stat-card,
+html.dark .pw-history-card {
+  background: var(--bg-white) !important;
+  border-color: var(--border) !important;
+}
+
+html.dark .pj-editor-ta,
+html.dark .pj-editor-ta.transparent-text,
+html.dark .pj-mirror,
+html.dark .pe-textarea,
+html.dark .pe-mirror {
+  color: var(--text-dark) !important;
+  caret-color: var(--text-dark) !important;
+}
+
+html.dark .pj-editor-ta::placeholder,
+html.dark .pe-textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+html.dark .db-content [style*="background: '#fff'"],
+html.dark .db-content [style*="background:'#fff'"],
+html.dark .db-content [style*="background: '#FFFFFF'"],
+html.dark .db-content [style*="background:'#FFFFFF'"],
+html.dark .db-content [style*="background: rgb(255, 255, 255)"],
+html.dark .db-content [style*="background:rgb(255, 255, 255)"],
+html.dark .db-content [style*="background: rgb(255,255,255)"],
+html.dark .db-content [style*="background:rgb(255,255,255)"] {
+  background: var(--bg-white) !important;
+}
+
+html.dark .db-content [style*="background: '#F8FAFC'"],
+html.dark .db-content [style*="background:'#F8FAFC'"],
+html.dark .db-content [style*="background: '#F9FAFB'"],
+html.dark .db-content [style*="background:'#F9FAFB'"],
+html.dark .db-content [style*="background: rgb(248, 250, 252)"],
+html.dark .db-content [style*="background:rgb(248, 250, 252)"],
+html.dark .db-content [style*="background: rgb(249, 250, 251)"],
+html.dark .db-content [style*="background:rgb(249, 250, 251)"] {
+  background: var(--surface-soft) !important;
+}
+
+html.dark .db-content [style*="background: '#EFF6FF'"],
+html.dark .db-content [style*="background:'#EFF6FF'"],
+html.dark .db-content [style*="background: rgb(239, 246, 255)"],
+html.dark .db-content [style*="background:rgb(239, 246, 255)"] {
+  background: var(--surface-soft) !important;
+}
+
+html.dark .db-content [style*="background: '#F1F5F9'"],
+html.dark .db-content [style*="background:'#F1F5F9'"],
+html.dark .db-content [style*="background: '#F3F4F6'"],
+html.dark .db-content [style*="background:'#F3F4F6'"],
+html.dark .db-content [style*="background: rgb(241, 245, 249)"],
+html.dark .db-content [style*="background:rgb(241, 245, 249)"],
+html.dark .db-content [style*="background: rgb(243, 244, 246)"],
+html.dark .db-content [style*="background:rgb(243, 244, 246)"] {
+  background: var(--surface-muted) !important;
+}
+
+html.dark .db-content [style*="color: '#111827'"],
+html.dark .db-content [style*="color:'#111827'"],
+html.dark .db-content [style*="color: '#1F2937'"],
+html.dark .db-content [style*="color:'#1F2937'"],
+html.dark .db-content [style*="color: '#1E293B'"],
+html.dark .db-content [style*="color:'#1E293B'"],
+html.dark .db-content [style*="color: rgb(17, 24, 39)"],
+html.dark .db-content [style*="color: rgb(31, 41, 55)"],
+html.dark .db-content [style*="color: rgb(30, 41, 59)"] {
+  color: var(--text-dark) !important;
+}
+
+html.dark .db-content [style*="color: '#64748B'"],
+html.dark .db-content [style*="color:'#64748B'"],
+html.dark .db-content [style*="color: '#6B7280'"],
+html.dark .db-content [style*="color:'#6B7280'"],
+html.dark .db-content [style*="color: '#94A3B8'"],
+html.dark .db-content [style*="color:'#94A3B8'"],
+html.dark .db-content [style*="color: '#475569'"],
+html.dark .db-content [style*="color:'#475569'"],
+html.dark .db-content [style*="color: rgb(100, 116, 139)"],
+html.dark .db-content [style*="color: rgb(107, 114, 128)"],
+html.dark .db-content [style*="color: rgb(148, 163, 184)"],
+html.dark .db-content [style*="color: rgb(71, 85, 105)"] {
+  color: var(--text-muted) !important;
+}
+
+html.dark .db-content [style*="#E2E8F0"],
+html.dark .db-content [style*="#E5E7EB"],
+html.dark .db-content [style*="#CBD5E1"],
+html.dark .db-content [style*="#DBEAFE"],
+html.dark .db-content [style*="#BFDBFE"],
+html.dark .db-content [style*="rgb(226, 232, 240)"],
+html.dark .db-content [style*="rgb(229, 231, 235)"],
+html.dark .db-content [style*="rgb(203, 213, 225)"],
+html.dark .db-content [style*="rgb(219, 234, 254)"],
+html.dark .db-content [style*="rgb(191, 219, 254)"] {
+  border-color: var(--border) !important;
+}
+
+html.dark .db-content [style*="linear-gradient(135deg,#F8FAFC,#EFF6FF)"],
+html.dark .db-content [style*="linear-gradient(135deg, #F8FAFC, #EFF6FF)"],
+html.dark .db-content [style*="linear-gradient(135deg,#EFF6FF,#F0FDF4)"],
+html.dark .db-content [style*="linear-gradient(135deg, #EFF6FF, #F0FDF4)"] {
+  background: linear-gradient(135deg, #111827, #0F172A) !important;
+  border-color: var(--border) !important;
 }
 
 /* =============================================

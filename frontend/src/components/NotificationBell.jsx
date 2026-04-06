@@ -5,6 +5,7 @@ import {
   markAllNotificationsRead,
   markNotificationsRead,
 } from '../services/dataService';
+import { useTheme } from '../context/ThemeContext';
 
 const TYPE_ICON = {
   badge_earned: 'fa-solid fa-award',
@@ -13,7 +14,34 @@ const TYPE_ICON = {
   credit_milestone: 'fa-solid fa-coins',
   system: 'fa-solid fa-bullhorn',
   practice_reminder: 'fa-solid fa-pen-nib',
+  achievement: 'fa-solid fa-trophy',
+  reminder: 'fa-solid fa-bell',
+  badge: 'fa-solid fa-award',
+  learning: 'fa-solid fa-graduation-cap',
 };
+
+function isFontAwesomeClass(iconValue) {
+  return typeof iconValue === 'string' && iconValue.includes('fa-');
+}
+
+function resolveIcon(raw) {
+  const type = raw?.type || 'system';
+  const typeIcon = TYPE_ICON[type] || TYPE_ICON.system;
+  const rawIcon = raw?.icon;
+
+  if (isFontAwesomeClass(rawIcon)) {
+    if (rawIcon.includes('fa-solid') || rawIcon.includes('fa-regular') || rawIcon.includes('fa-brands')) {
+      return { iconClass: rawIcon, iconText: null };
+    }
+    return { iconClass: `fa-solid ${rawIcon}`.trim(), iconText: null };
+  }
+
+  if (typeof rawIcon === 'string' && rawIcon.trim()) {
+    return { iconClass: typeIcon, iconText: rawIcon.trim() };
+  }
+
+  return { iconClass: typeIcon, iconText: null };
+}
 
 function formatRelativeTime(createdAt) {
   if (!createdAt) return 'Just now';
@@ -39,12 +67,15 @@ function formatRelativeTime(createdAt) {
 }
 
 function normalizeNotification(raw) {
+  const { iconClass, iconText } = resolveIcon(raw);
+
   return {
     id: raw.id,
     type: raw.type || 'system',
     title: raw.title || 'Notification',
     message: raw.message || '',
-    icon: raw.icon || TYPE_ICON[raw.type] || 'fa-solid fa-bell',
+    icon: iconClass || 'fa-solid fa-bell',
+    icon_text: iconText,
     read: Boolean(raw.read),
     action_url: raw.action_url || '/dashboard',
     created_at: raw.created_at,
@@ -53,14 +84,33 @@ function normalizeNotification(raw) {
 }
 
 function NotificationBell({ isOpen, onToggle, onNavigate }) {
+  const { theme } = useTheme();
+  const isDark = theme === 'dark';
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [showAll, setShowAll] = useState(false);
+
+  const palette = {
+    panelBg: isDark ? '#0F172A' : '#FFFFFF',
+    panelBorder: isDark ? '#334155' : '#E5E7EB',
+    panelShadow: isDark ? '0 18px 44px rgba(2, 6, 23, 0.55)' : '0 18px 44px rgba(15, 23, 42, 0.16)',
+    headerBg: isDark ? '#0F172A' : '#FFFFFF',
+    textStrong: isDark ? '#E2E8F0' : '#111827',
+    textMuted: isDark ? '#94A3B8' : '#6B7280',
+    action: isDark ? '#93C5FD' : '#2563EB',
+    actionHover: isDark ? '#BFDBFE' : '#1D4ED8',
+    divider: isDark ? '#334155' : '#E5E7EB',
+    emptyIcon: isDark ? '#60A5FA' : '#93C5FD',
+    badgeBg: '#EF4444',
+    badgeText: '#FFFFFF',
+  };
 
   const refresh = async () => {
     try {
       setLoading(true);
-      const res = await getNotifications();
+      const limit = showAll ? 200 : 10;
+      const res = await getNotifications(limit);
       const items = (res?.notifications || []).map(normalizeNotification);
       setNotifications(items);
       setUnreadCount(Number(res?.unread_count || 0));
@@ -79,10 +129,13 @@ function NotificationBell({ isOpen, onToggle, onNavigate }) {
     if (isOpen) {
       refresh();
     }
-  }, [isOpen]);
+    if (!isOpen && showAll) {
+      setShowAll(false);
+    }
+  }, [isOpen, showAll]);
 
   const visibleUnreadIds = useMemo(
-    () => notifications.filter((n) => !n.read).slice(0, 10).map((n) => n.id),
+    () => notifications.filter((n) => !n.read).map((n) => n.id),
     [notifications]
   );
 
@@ -118,8 +171,12 @@ function NotificationBell({ isOpen, onToggle, onNavigate }) {
     onNavigate(notification.action_url);
   };
 
+  const handleToggleShowAll = () => {
+    setShowAll((prev) => !prev);
+  };
+
   return (
-    <div className="relative">
+    <div style={{ position: 'relative' }}>
       <button
         type="button"
         onClick={onToggle}
@@ -129,37 +186,86 @@ function NotificationBell({ isOpen, onToggle, onNavigate }) {
       >
         <i className="fa-regular fa-bell" />
         {unreadCount > 0 ? (
-          <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+          <span style={{
+            position: 'absolute',
+            top: -4,
+            right: -4,
+            background: palette.badgeBg,
+            color: palette.badgeText,
+            fontSize: '0.68rem',
+            borderRadius: '50%',
+            width: 20,
+            height: 20,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontWeight: 700,
+          }}>
             {unreadCount > 9 ? '9+' : unreadCount}
           </span>
         ) : null}
       </button>
 
       {isOpen ? (
-        <div className="absolute right-0 top-full mt-2 w-96 max-h-[500px] overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-xl z-50">
-          <div className="flex justify-between items-center p-4 border-b border-gray-200 sticky top-0 bg-white">
-            <h3 className="font-semibold text-gray-900 flex items-center gap-2">
-              <i className="fa-regular fa-bell text-blue-600" />
+        <div style={{
+          position: 'absolute',
+          right: 0,
+          top: 'calc(100% + 8px)',
+          width: 384,
+          maxHeight: 500,
+          overflowY: 'auto',
+          background: palette.panelBg,
+          border: `1px solid ${palette.panelBorder}`,
+          borderRadius: 12,
+          boxShadow: palette.panelShadow,
+          zIndex: 50,
+        }}>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: '1rem',
+            borderBottom: `1px solid ${palette.divider}`,
+            position: 'sticky',
+            top: 0,
+            background: palette.headerBg,
+          }}>
+            <h3 style={{ fontWeight: 700, color: palette.textStrong, display: 'flex', alignItems: 'center', gap: 8, margin: 0, fontSize: '0.95rem' }}>
+              <i className="fa-regular fa-bell" style={{ color: palette.action }} />
               Notifications
             </h3>
             <button
               type="button"
               onClick={handleMarkAllRead}
-              className="text-sm text-blue-600 hover:text-blue-800"
+              style={{
+                border: 'none',
+                background: 'transparent',
+                fontSize: '0.82rem',
+                color: palette.action,
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontFamily: 'inherit',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = palette.actionHover;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = palette.action;
+              }}
             >
               Mark all read
             </button>
           </div>
 
           {loading ? (
-            <div className="p-6 text-sm text-gray-500">Loading notifications...</div>
+            <div style={{ padding: '1.5rem', fontSize: '0.85rem', color: palette.textMuted }}>Loading notifications...</div>
           ) : notifications.length === 0 ? (
-            <div className="p-8 text-center text-gray-500">
-              <div className="text-3xl mb-2 text-blue-300">
+            <div style={{ padding: '2rem', textAlign: 'center', color: palette.textMuted }}>
+              <div style={{ fontSize: '1.9rem', marginBottom: 8, color: palette.emptyIcon }}>
                 <i className="fa-regular fa-bell-slash" />
               </div>
-              <p className="font-medium">No notifications yet!</p>
-              <p className="text-sm mt-1">Complete lessons and practice tasks to earn achievements.</p>
+              <p style={{ fontWeight: 600, margin: 0, color: palette.textStrong }}>No notifications yet!</p>
+              <p style={{ fontSize: '0.82rem', marginTop: 4 }}>Complete lessons and practice tasks to earn achievements.</p>
             </div>
           ) : (
             notifications.map((notification) => (
@@ -167,18 +273,41 @@ function NotificationBell({ isOpen, onToggle, onNavigate }) {
                 key={notification.id}
                 notification={notification}
                 onView={handleView}
+                isDark={isDark}
               />
             ))
           )}
 
-          <div className="p-3 border-t border-gray-200 text-center text-sm text-gray-500 space-y-1">
-            <div>Showing latest {notifications.length} notifications</div>
+          <div style={{
+            padding: '0.75rem',
+            borderTop: `1px solid ${palette.divider}`,
+            textAlign: 'center',
+            fontSize: '0.82rem',
+            color: palette.textMuted,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 4,
+          }}>
+            <div>{showAll ? `Showing ${notifications.length} notifications` : `Showing latest ${notifications.length} notifications`}</div>
             <button
               type="button"
-              className="text-blue-600 hover:text-blue-800"
-              onClick={() => onNavigate('/notifications')}
+              style={{
+                border: 'none',
+                background: 'transparent',
+                color: palette.action,
+                cursor: 'pointer',
+                fontWeight: 600,
+                fontFamily: 'inherit',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = palette.actionHover;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = palette.action;
+              }}
+              onClick={handleToggleShowAll}
             >
-              View All Notifications
+              {showAll ? 'Show Latest Only' : 'View All Notifications'}
             </button>
           </div>
         </div>

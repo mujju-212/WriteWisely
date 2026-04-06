@@ -8,11 +8,11 @@ import { buildHighlightSegments, errorUnderlineStyle } from '../utils/errorHighl
 
 /* ─── Constants ─────────────────────────────────────────────── */
 const DOC_TYPES = [
-  { value: 'journal',  label: 'Journal',  icon: '📓', color: '#06B6D4', bg: '#ECFEFF' },
-  { value: 'research', label: 'Research', icon: '🔬', color: '#8B5CF6', bg: '#F5F3FF' },
-  { value: 'letter',   label: 'Letter',   icon: '📄', color: '#3B82F6', bg: '#EFF6FF' },
-  { value: 'email',    label: 'Email',    icon: '📧', color: '#1D4ED8', bg: '#EFF6FF' },
-  { value: 'other',    label: 'Other',    icon: '📝', color: '#64748B', bg: '#F8FAFC' },
+  { value: 'journal',  label: 'Journal',  iconClass: 'fa-solid fa-book-open', color: '#06B6D4', bg: '#ECFEFF' },
+  { value: 'research', label: 'Research', iconClass: 'fa-solid fa-flask', color: '#8B5CF6', bg: '#F5F3FF' },
+  { value: 'letter',   label: 'Letter',   iconClass: 'fa-solid fa-file-lines', color: '#3B82F6', bg: '#EFF6FF' },
+  { value: 'email',    label: 'Email',    iconClass: 'fa-solid fa-envelope', color: '#1D4ED8', bg: '#EFF6FF' },
+  { value: 'other',    label: 'Other',    iconClass: 'fa-solid fa-file-pen', color: '#64748B', bg: '#F8FAFC' },
 ];
 
 const TYPE_MAP = Object.fromEntries(DOC_TYPES.map(t => [t.value, t]));
@@ -319,7 +319,7 @@ function ProjectList({
     : projects.filter(p => p.doc_type === filter);
 
   return (
-    <div style={{ maxWidth: 1320, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem', animation: 'fadeInUp 0.4s ease' }}>
+    <div className="pj-root" style={{ maxWidth: 1320, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem', animation: 'fadeInUp 0.4s ease' }}>
       <style>{`
         @keyframes fadeInUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
         @keyframes modalIn{from{opacity:0;transform:scale(0.94)}to{opacity:1;transform:scale(1)}}
@@ -342,18 +342,21 @@ function ProjectList({
       `}</style>
 
       {/* Header */}
-      <div style={{ background: 'linear-gradient(135deg,#F8FAFC,#EFF6FF)', borderRadius: 18, padding: '1.5rem 2rem', border: '1px solid #DBEAFE' }}>
+      <div className="pj-header-card" style={{ background: 'linear-gradient(135deg,#F8FAFC,#EFF6FF)', borderRadius: 18, padding: '1.5rem 2rem', border: '1px solid #DBEAFE' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: '#1E293B' }}>📁 Project Workspace</h1>
+            <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 800, color: '#1E293B', display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+              <i className="fa-solid fa-folder-tree" style={{ color: '#2563EB' }}></i>
+              Project Workspace
+            </h1>
             <p style={{ margin: '4px 0 0', color: '#64748B', fontSize: '0.9rem' }}>Create, edit, and manage your writing projects</p>
           </div>
           <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-            <div style={{ background: '#fff', borderRadius: 12, padding: '0.75rem 1.25rem', border: '1px solid #E2E8F0', textAlign: 'center' }}>
+            <div className="pj-stat-card" style={{ background: '#fff', borderRadius: 12, padding: '0.75rem 1.25rem', border: '1px solid #E2E8F0', textAlign: 'center' }}>
               <p style={{ margin: 0, fontSize: '0.7rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>Total Projects</p>
               <p style={{ margin: 0, fontWeight: 800, color: '#1E293B', fontSize: '1.1rem' }}>{projects.length}</p>
             </div>
-            <div style={{ background: '#fff', borderRadius: 12, padding: '0.75rem 1.25rem', border: '1px solid #E2E8F0', textAlign: 'center' }}>
+            <div className="pj-stat-card" style={{ background: '#fff', borderRadius: 12, padding: '0.75rem 1.25rem', border: '1px solid #E2E8F0', textAlign: 'center' }}>
               <p style={{ margin: 0, fontSize: '0.7rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>Total Words</p>
               <p style={{ margin: 0, fontWeight: 800, color: '#1E293B', fontSize: '1.1rem' }}>
                 {projects.reduce((s, p) => s + (p.word_count || 0), 0).toLocaleString()}
@@ -373,7 +376,7 @@ function ProjectList({
         </button>
         {DOC_TYPES.map(t => (
           <button key={t.value} className={`pj-filter-btn${filter === t.value ? ' active' : ''}`} onClick={() => setFilter(t.value)}>
-            {t.icon} {t.label}
+            <i className={t.iconClass} style={{ marginRight: 6 }}></i>{t.label}
           </button>
         ))}
       </div>
@@ -387,7 +390,7 @@ function ProjectList({
         </div>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '4rem 2rem', background: '#fff', borderRadius: 16, border: '2px dashed #E2E8F0' }}>
-          <p style={{ fontSize: '2.5rem', marginBottom: '0.75rem' }}>📂</p>
+          <p style={{ fontSize: '2.3rem', marginBottom: '0.75rem', color: '#64748B' }}><i className="fa-regular fa-folder-open"></i></p>
           <p style={{ fontWeight: 700, color: '#1E293B', fontSize: '1.1rem', marginBottom: '0.5rem' }}>
             {filter === 'all' ? 'No projects yet' : `No ${filter} projects`}
           </p>
@@ -409,7 +412,7 @@ function ProjectList({
                 <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ width: 42, height: 42, borderRadius: 10, background: t.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.3rem' }}>
-                      {t.icon}
+                      <i className={t.iconClass} style={{ color: t.color }}></i>
                     </div>
                     <div>
                       <p style={{ margin: 0, fontSize: '0.68rem', fontWeight: 700, color: t.color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{t.label}</p>
@@ -426,7 +429,7 @@ function ProjectList({
                     onMouseLeave={e => e.currentTarget.style.color = '#CBD5E1'}
                     title="Delete project"
                   >
-                    🗑
+                    <i className="fa-regular fa-trash-can"></i>
                   </button>
                 </div>
 
@@ -478,8 +481,13 @@ function ProjectList({
         <div className="pj-modal-overlay" onClick={onCloseModal}>
           <div className="pj-modal" onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-              <h2 style={{ margin: 0, fontWeight: 800, color: '#1E293B', fontSize: '1.3rem' }}>📁 New Project</h2>
-              <button onClick={onCloseModal} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.3rem', color: '#94A3B8' }}>✕</button>
+              <h2 style={{ margin: 0, fontWeight: 800, color: '#1E293B', fontSize: '1.3rem', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <i className="fa-solid fa-folder-plus" style={{ color: '#2563EB' }}></i>
+                New Project
+              </h2>
+              <button onClick={onCloseModal} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: '1.1rem', color: '#94A3B8' }}>
+                <i className="fa-solid fa-xmark"></i>
+              </button>
             </div>
             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '0.4rem', textTransform: 'uppercase' }}>
               Project Title
@@ -502,7 +510,7 @@ function ProjectList({
                   onClick={() => onNewTypeChange(t.value)}
                   style={{ borderColor: newType === t.value ? t.color : '#E2E8F0', color: newType === t.value ? t.color : '#475569', background: newType === t.value ? t.bg : '#fff' }}
                 >
-                  {t.icon} {t.label}
+                  <i className={t.iconClass}></i> {t.label}
                 </button>
               ))}
             </div>
@@ -541,7 +549,7 @@ function ProjectEditor({
   const t = TYPE_MAP[project.doc_type] || TYPE_MAP.other;
 
   const saveColor = saveStatus === 'saved' ? '#16A34A' : saveStatus === 'saving' ? '#D97706' : '#EF4444';
-  const saveLabel = saveStatus === 'saved' ? '\u2713 Saved' : saveStatus === 'saving' ? '\uD83D\uDCBE Saving...' : '\u25CF Unsaved';
+  const saveLabel = saveStatus === 'saved' ? 'Saved' : saveStatus === 'saving' ? 'Saving...' : 'Unsaved';
 
   // Live check: debounced for project suggestions.
   const runCheck = useCallback((val) => {
@@ -642,11 +650,11 @@ function ProjectEditor({
       {/* Top toolbar */}
       <div style={{ background: '#fff', borderBottom: '1px solid #E2E8F0', padding: '0.875rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap', flexShrink: 0 }}>
         <button onClick={onBack} style={{ background: '#F1F5F9', border: '1px solid #E2E8F0', borderRadius: 10, padding: '7px 14px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', fontFamily: 'inherit', color: '#475569', display: 'flex', alignItems: 'center', gap: 6 }}>
-          ← Back
+          <i className="fa-solid fa-arrow-left"></i> Back
         </button>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: t.bg, border: `1px solid ${t.color}30`, borderRadius: 8, padding: '5px 10px' }}>
-          <span>{t.icon}</span>
+          <span><i className={t.iconClass} style={{ color: t.color }}></i></span>
           <span style={{ fontSize: '0.78rem', fontWeight: 700, color: t.color }}>{t.label}</span>
         </div>
 
@@ -659,13 +667,18 @@ function ProjectEditor({
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginLeft: 'auto', flexShrink: 0 }}>
           {checking && <span style={{ fontSize: '0.72rem', color: '#94A3B8' }}>Checking...</span>}
-          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: saveColor }}>{saveLabel}</span>
+          <span style={{ fontSize: '0.78rem', fontWeight: 700, color: saveColor, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            {saveStatus === 'saved' && <i className="fa-solid fa-circle-check"></i>}
+            {saveStatus === 'saving' && <i className="fa-solid fa-floppy-disk"></i>}
+            {saveStatus === 'unsaved' && <i className="fa-solid fa-circle"></i>}
+            {saveLabel}
+          </span>
           <button onClick={onSave} disabled={saveStatus === 'saved'}
             style={{ background: '#2563EB', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 16px', fontWeight: 700, cursor: saveStatus === 'saved' ? 'not-allowed' : 'pointer', opacity: saveStatus === 'saved' ? 0.5 : 1, fontSize: '0.83rem', fontFamily: 'inherit' }}>
-            💾 Save
+            <i className="fa-solid fa-floppy-disk" style={{ marginRight: 6 }}></i>Save
           </button>
           <button onClick={onDelete} style={{ background: '#FEF2F2', color: '#DC2626', border: '1px solid #FECACA', borderRadius: 10, padding: '8px 14px', fontWeight: 600, cursor: 'pointer', fontSize: '0.83rem', fontFamily: 'inherit' }}>
-            🗑 Delete
+            <i className="fa-regular fa-trash-can" style={{ marginRight: 6 }}></i>Delete
           </button>
         </div>
       </div>
@@ -673,7 +686,10 @@ function ProjectEditor({
       {/* Delete confirm */}
       {confirmDelete && (
         <div className="confirm-bar" style={{ margin: '0.75rem 1.5rem 0' }}>
-          <p style={{ margin: 0, fontWeight: 600, color: '#DC2626', fontSize: '0.9rem' }}>⚠️ Delete this project permanently?</p>
+          <p style={{ margin: 0, fontWeight: 600, color: '#DC2626', fontSize: '0.9rem', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+            <i className="fa-solid fa-triangle-exclamation"></i>
+            Delete this project permanently?
+          </p>
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={onConfirmDelete} style={{ background: '#EF4444', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.85rem' }}>Yes, Delete</button>
             <button onClick={onCancelDelete} style={{ background: '#F1F5F9', color: '#1E293B', border: 'none', borderRadius: 8, padding: '8px 16px', fontWeight: 600, cursor: 'pointer', fontFamily: 'inherit', fontSize: '0.85rem' }}>Cancel</button>
@@ -685,7 +701,7 @@ function ProjectEditor({
       <div style={{ flex: 1, background: '#fff', marginTop: '0.75rem', borderTop: '1px solid #F1F5F9', overflow: 'hidden' }}>
         {loading ? (
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 1, color: '#94A3B8', flexDirection: 'column', gap: '0.75rem' }}>
-            <span style={{ fontSize: '2rem' }}>📄</span>
+            <span style={{ fontSize: '2rem' }}><i className="fa-regular fa-file-lines"></i></span>
             <p style={{ fontWeight: 600 }}>Loading document...</p>
           </div>
         ) : (
@@ -710,20 +726,25 @@ function ProjectEditor({
               </div>
             </div>
             <div style={{ background: '#F8FAFC', padding: '1rem', overflowY: 'auto' }}>
-              <p style={{ margin: '0 0 0.6rem', fontSize: '0.8rem', fontWeight: 800, color: '#1E293B' }}>💡 Live Suggestions</p>
+              <p style={{ margin: '0 0 0.6rem', fontSize: '0.8rem', fontWeight: 800, color: '#1E293B', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <i className="fa-regular fa-lightbulb" style={{ color: '#D97706' }}></i>
+                Live Suggestions
+              </p>
               <p style={{ margin: '0 0 0.9rem', fontSize: '0.72rem', color: '#64748B', lineHeight: 1.5 }}>
                 Suggestions update while you type. Click Apply to fix quickly.
               </p>
 
               {checking && (
                 <div className="pj-suggest-card" style={{ fontSize: '0.78rem', color: '#64748B', marginBottom: '0.6rem' }}>
-                  ⏳ Checking your text...
+                  <i className="fa-solid fa-hourglass-half" style={{ marginRight: 6 }}></i>
+                  Checking your text...
                 </div>
               )}
 
               {checkError && !checking && (
                 <div className="pj-suggest-card" style={{ fontSize: '0.78rem', color: '#B91C1C', background: '#FEF2F2', border: '1px solid #FECACA', marginBottom: '0.6rem' }}>
-                  ⚠️ {checkError}
+                  <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: 6 }}></i>
+                  {checkError}
                 </div>
               )}
 
@@ -741,7 +762,8 @@ function ProjectEditor({
                 return (
                   <div key={`${err.original || err.word || 'issue'}-${idx}`} className="pj-suggest-card" style={{ marginBottom: '0.55rem' }}>
                     <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: 800, color: labelColor }}>
-                      {isSpelling ? '🔴 Spelling' : '🟡 Grammar'}
+                      <i className={isSpelling ? 'fa-solid fa-circle' : 'fa-solid fa-circle-dot'} style={{ marginRight: 6 }}></i>
+                      {isSpelling ? 'Spelling' : 'Grammar'}
                     </p>
                     <p style={{ margin: '4px 0 2px', fontSize: '0.78rem', color: '#1E293B', fontWeight: 700 }}>
                       {err.original || err.word || 'Issue detected'}
@@ -769,22 +791,25 @@ function ProjectEditor({
       {/* Status bar */}
       <div style={{ background: '#F8FAFC', borderTop: '1px solid #E2E8F0', padding: '0.5rem 1.5rem', display: 'flex', alignItems: 'center', gap: '1.5rem', flexShrink: 0 }}>
         <span style={{ fontSize: '0.75rem', color: '#64748B', fontWeight: 600 }}>
-          📝 {wordCount.toLocaleString()} words
+          <i className="fa-solid fa-file-pen" style={{ marginRight: 6 }}></i>
+          {wordCount.toLocaleString()} words
         </span>
         <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
-          🔤 {charCount.toLocaleString()} chars
+          <i className="fa-solid fa-font" style={{ marginRight: 6 }}></i>
+          {charCount.toLocaleString()} chars
         </span>
         <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>
-          ⏱️ ~{readTime} min read
+          <i className="fa-regular fa-clock" style={{ marginRight: 6 }}></i>
+          ~{readTime} min read
         </span>
         {(errCount.spelling + errCount.grammar) > 0 && (
           <span style={{ fontSize: '0.75rem', marginLeft: 'auto', display: 'flex', gap: '0.75rem' }}>
-            {errCount.spelling > 0 && <span style={{ color: '#EF4444', fontWeight: 700 }}>🔴 {errCount.spelling} spelling</span>}
-            {errCount.grammar  > 0 && <span style={{ color: '#CA8A04', fontWeight: 700 }}>🟡 {errCount.grammar} grammar</span>}
+            {errCount.spelling > 0 && <span style={{ color: '#EF4444', fontWeight: 700 }}><i className="fa-solid fa-circle" style={{ marginRight: 6 }}></i>{errCount.spelling} spelling</span>}
+            {errCount.grammar  > 0 && <span style={{ color: '#CA8A04', fontWeight: 700 }}><i className="fa-solid fa-circle-dot" style={{ marginRight: 6 }}></i>{errCount.grammar} grammar</span>}
           </span>
         )}
         <span style={{ fontSize: '0.75rem', color: '#94A3B8', marginLeft: (errCount.spelling + errCount.grammar) > 0 ? 0 : 'auto' }}>
-          Auto-saves every 1.5s • {saveLabel}
+          Auto-saves every 1.5s - {saveLabel}
         </span>
       </div>
     </div>

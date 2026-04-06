@@ -39,14 +39,15 @@ const ALL_LEVELS = [
 ];
 
 const CAT_CONFIG = {
-  beginner:     { emoji: '🟢', label: 'Beginner',     range: '1–10',  accent: '#16A34A', bg: '#F0FDF4', border: '#86EFAC', textColor: '#15803D' },
-  intermediate: { emoji: '🟡', label: 'Intermediate', range: '11–20', accent: '#D97706', bg: '#FEFCE8', border: '#FCD34D', textColor: '#B45309' },
-  advanced:     { emoji: '🔴', label: 'Advanced',     range: '21–30', accent: '#DC2626', bg: '#FFF1F2', border: '#FCA5A5', textColor: '#B91C1C' },
+  beginner:     { iconClass: 'fa-solid fa-seedling', label: 'Beginner',     range: '1-10',  accent: '#16A34A', bg: '#F0FDF4', border: '#86EFAC', textColor: '#15803D' },
+  intermediate: { iconClass: 'fa-solid fa-layer-group', label: 'Intermediate', range: '11-20', accent: '#D97706', bg: '#FEFCE8', border: '#FCD34D', textColor: '#B45309' },
+  advanced:     { iconClass: 'fa-solid fa-trophy', label: 'Advanced',     range: '21-30', accent: '#DC2626', bg: '#FFF1F2', border: '#FCA5A5', textColor: '#B91C1C' },
 };
 
 function LevelCard({ level, title, category, status, quizScore, quizTotal, creditsEarned, onClick }) {
   const cat = CAT_CONFIG[category] || CAT_CONFIG.beginner;
   const isComingSoon = status === 'coming_soon';
+  const isLocked = status === 'locked' || isComingSoon;
   const isCompleted = status === 'completed';
   const isInProgress = status === 'in_progress';
   const isAvailable = status === 'available';
@@ -55,8 +56,8 @@ function LevelCard({ level, title, category, status, quizScore, quizTotal, credi
     background: '#fff',
     borderRadius: 16,
     padding: '1.1rem 1.25rem',
-    cursor: isComingSoon ? 'default' : 'pointer',
-    opacity: isComingSoon ? 0.6 : 1,
+    cursor: isLocked ? 'default' : 'pointer',
+    opacity: isLocked ? 0.6 : 1,
     border: `1.5px solid ${isCompleted ? cat.border : isInProgress ? '#A5B4FC' : isAvailable ? '#E5E7EB' : '#E5E7EB'}`,
     transition: 'all 0.2s ease',
     position: 'relative',
@@ -66,8 +67,8 @@ function LevelCard({ level, title, category, status, quizScore, quizTotal, credi
   return (
     <div
       style={cardStyle}
-      onClick={isComingSoon ? undefined : onClick}
-      onMouseEnter={(e) => { if (!isComingSoon) { e.currentTarget.style.boxShadow = '0 6px 20px rgba(91,95,222,0.12)'; e.currentTarget.style.transform = 'translateY(-2px)'; } }}
+      onClick={isLocked ? undefined : onClick}
+      onMouseEnter={(e) => { if (!isLocked) { e.currentTarget.style.boxShadow = '0 6px 20px rgba(91,95,222,0.12)'; e.currentTarget.style.transform = 'translateY(-2px)'; } }}
       onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'none'; }}
     >
       {/* Top row */}
@@ -91,12 +92,16 @@ function LevelCard({ level, title, category, status, quizScore, quizTotal, credi
       {isCompleted && (
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           {quizScore !== undefined && <span style={{ fontSize: '0.72rem', color: cat.textColor, fontWeight: 600 }}>Score: {quizScore}/{quizTotal}</span>}
-          {creditsEarned > 0 && <span style={{ fontSize: '0.72rem', color: '#D97706', fontWeight: 700 }}>⭐ {creditsEarned} cr</span>}
+          {creditsEarned > 0 && (
+            <span style={{ fontSize: '0.72rem', color: '#D97706', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+              <Star style={{ width: 12, height: 12 }} /> {creditsEarned} cr
+            </span>
+          )}
         </div>
       )}
-      {isInProgress && <p style={{ fontSize: '0.75rem', color: '#5B5FDE', fontWeight: 600 }}>Continue →</p>}
-      {isAvailable && <p style={{ fontSize: '0.75rem', color: '#9CA3AF', fontWeight: 500 }}>Start →</p>}
-      {isComingSoon && <p style={{ fontSize: '0.72rem', color: '#9CA3AF', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Coming Soon</p>}
+      {isInProgress && <p style={{ fontSize: '0.75rem', color: '#5B5FDE', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>Continue <ChevronRight style={{ width: 12, height: 12 }} /></p>}
+      {isAvailable && <p style={{ fontSize: '0.75rem', color: '#9CA3AF', fontWeight: 500, display: 'inline-flex', alignItems: 'center', gap: 4 }}>Start <ChevronRight style={{ width: 12, height: 12 }} /></p>}
+      {isLocked && <p style={{ fontSize: '0.72rem', color: '#9CA3AF', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{isComingSoon ? 'Coming Soon' : 'Locked'}</p>}
     </div>
   );
 }
@@ -116,14 +121,27 @@ export default function LearningHome({ onNavigateToLesson }) {
         apiLevels.forEach((l) => { apiMap[l.level_id || l.level] = l; });
         const merged = ALL_LEVELS.map((def) => {
           const api = apiMap[def.level];
-          if (!api) return { ...def, status: def.level <= 5 ? 'available' : 'coming_soon', available: def.level <= 5 };
-          return { ...def, ...api, available: def.level <= 5 };
+          if (!api) {
+            const status = def.level <= 5 ? 'available' : 'coming_soon';
+            return { ...def, status, available: status === 'available', has_content: def.level <= 5 };
+          }
+
+          const hasContent = Boolean(api.has_content);
+          const status = hasContent ? (api.status || (def.level <= 5 ? 'available' : 'locked')) : 'coming_soon';
+
+          return {
+            ...def,
+            ...api,
+            has_content: hasContent,
+            status,
+            available: ['available', 'in_progress', 'completed'].includes(status),
+          };
         });
         setLevels(merged);
       })
       .catch(() => {
         // Fallback: use static definitions for coming soon
-        const fallback = ALL_LEVELS.map((d) => ({ ...d, status: d.level === 1 ? 'available' : d.level <= 5 ? 'locked' : 'coming_soon', available: d.level <= 5 }));
+        const fallback = ALL_LEVELS.map((d) => ({ ...d, status: d.level <= 5 ? 'available' : 'coming_soon', available: d.level <= 5, has_content: d.level <= 5 }));
         if (!cancelled) { setLevels(fallback); setError('Could not load progress from server'); }
       })
       .finally(() => { if (!cancelled) setLoading(false); });
@@ -150,7 +168,7 @@ export default function LearningHome({ onNavigateToLesson }) {
             <BookOpen style={{ width: 22, height: 22, color: 'rgba(255,255,255,0.85)' }} />
             <h1 style={{ fontSize: '1.6rem', fontWeight: 800, margin: 0 }}>Learning Path</h1>
           </div>
-          <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.9rem', margin: 0 }}>Your journey to grammar mastery — 30 structured levels</p>
+          <p style={{ color: 'rgba(255,255,255,0.75)', fontSize: '0.9rem', margin: 0 }}>Your journey to grammar mastery - 30 structured levels</p>
         </div>
         <div style={{ textAlign: 'right' }}>
           <p style={{ fontSize: '2.2rem', fontWeight: 900, lineHeight: 1, marginBottom: 2 }}>{completedCount}<span style={{ fontSize: '1rem', fontWeight: 600, color: 'rgba(255,255,255,0.7)' }}>/30</span></p>
@@ -175,7 +193,7 @@ export default function LearningHome({ onNavigateToLesson }) {
       {loading ? (
         <div style={{ textAlign: 'center', padding: '3rem', color: '#6B7280' }}>
           <Loader2 style={{ width: 32, height: 32, margin: '0 auto 12px', animation: 'spin 0.8s linear infinite' }} />
-          <p>Loading your learning path…</p>
+          <p>Loading your learning path...</p>
           <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
         </div>
       ) : (
@@ -184,7 +202,9 @@ export default function LearningHome({ onNavigateToLesson }) {
           return (
             <div key={key} style={{ marginBottom: 32 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                <span style={{ fontSize: '1.2rem' }}>{cat.emoji}</span>
+                <span style={{ width: 26, height: 26, borderRadius: 8, background: cat.bg, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: cat.textColor }}>
+                  <i className={cat.iconClass} style={{ fontSize: '0.78rem' }} />
+                </span>
                 <div>
                   <h2 style={{ fontSize: '1.05rem', fontWeight: 800, color: '#1F2937', margin: 0 }}>{cat.label}</h2>
                   <p style={{ fontSize: '0.76rem', color: '#6B7280', margin: 0 }}>Levels {cat.range}</p>

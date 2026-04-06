@@ -1,12 +1,12 @@
 import React from 'react';
 
 const AVATAR_COLORS = [
-  'bg-blue-500',
-  'bg-purple-500',
-  'bg-green-500',
-  'bg-orange-500',
-  'bg-pink-500',
-  'bg-teal-500',
+  '#3B82F6',
+  '#8B5CF6',
+  '#10B981',
+  '#F59E0B',
+  '#EC4899',
+  '#14B8A6',
 ];
 
 function getInitials(name = '') {
@@ -35,53 +35,136 @@ function ProfileDropdown({
 }) {
   const initials = getInitials(user?.name);
   const avatarColor = getAvatarColor(user?.name);
+  const isDark = theme === 'dark';
+
+  const palette = {
+    panelBg: isDark ? '#0F172A' : '#FFFFFF',
+    panelBorder: isDark ? '#334155' : '#E5E7EB',
+    panelShadow: isDark ? '0 18px 44px rgba(2, 6, 23, 0.55)' : '0 18px 44px rgba(15, 23, 42, 0.16)',
+    textStrong: isDark ? '#E2E8F0' : '#111827',
+    textMuted: isDark ? '#94A3B8' : '#6B7280',
+    hoverBg: isDark ? '#1E293B' : '#F3F4F6',
+    statBg: isDark ? '#111827' : '#F8FAFC',
+    accent: isDark ? '#A5B4FC' : '#4F46E5',
+    switchOn: '#3B82F6',
+    switchOff: isDark ? '#334155' : '#D1D5DB',
+    danger: '#EF4444',
+  };
+
+  const menuButtonStyle = {
+    width: '100%',
+    border: 'none',
+    background: 'transparent',
+    color: palette.textStrong,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.7rem',
+    padding: '0.58rem 0.72rem',
+    borderRadius: 10,
+    fontSize: '0.88rem',
+    cursor: 'pointer',
+    textAlign: 'left',
+    fontFamily: 'inherit',
+  };
 
   return (
-    <div className="relative">
+    <div style={{ position: 'relative' }}>
       <button
         type="button"
         onClick={onToggle}
-        className="flex items-center gap-2 hover:bg-gray-100 rounded-lg px-2 py-1"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          border: 'none',
+          cursor: 'pointer',
+          background: isOpen ? palette.hoverBg : 'transparent',
+          borderRadius: 10,
+          padding: '0.25rem 0.45rem',
+          color: palette.textStrong,
+          fontFamily: 'inherit',
+        }}
         aria-expanded={isOpen}
       >
         {user?.profile_picture_url ? (
           <img
             src={user.profile_picture_url}
             alt="avatar"
-            className="w-9 h-9 rounded-full object-cover"
+            style={{ width: 36, height: 36, borderRadius: '50%', objectFit: 'cover' }}
           />
         ) : (
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center text-white font-semibold text-sm ${avatarColor}`}>
+          <div style={{
+            width: 36,
+            height: 36,
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: 'white',
+            fontWeight: 700,
+            fontSize: '0.78rem',
+            background: avatarColor,
+          }}>
             {initials}
           </div>
         )}
 
-        <span className="text-sm font-medium hidden sm:block text-gray-800">
+        <span style={{ fontSize: '0.88rem', fontWeight: 600, color: palette.textStrong }}>
           {user?.name || 'User'}
         </span>
 
-        <i className={`fa-solid fa-chevron-down text-xs text-gray-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        <i
+          className="fa-solid fa-chevron-down"
+          style={{
+            fontSize: '0.68rem',
+            color: palette.textMuted,
+            transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+            transition: 'transform 0.2s ease',
+          }}
+        />
       </button>
 
       {isOpen ? (
-        <div className="absolute right-0 top-full mt-2 w-72 bg-white border border-gray-200 rounded-xl shadow-xl z-50">
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center gap-3">
+        <div style={{
+          position: 'absolute',
+          right: 0,
+          top: 'calc(100% + 8px)',
+          width: 300,
+          background: palette.panelBg,
+          border: `1px solid ${palette.panelBorder}`,
+          borderRadius: 14,
+          boxShadow: palette.panelShadow,
+          zIndex: 60,
+          overflow: 'hidden',
+        }}>
+          <div style={{ padding: '0.95rem 1rem', borderBottom: `1px solid ${palette.panelBorder}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.72rem' }}>
               {user?.profile_picture_url ? (
                 <img
                   src={user.profile_picture_url}
                   alt="avatar"
-                  className="w-12 h-12 rounded-full object-cover"
+                  style={{ width: 46, height: 46, borderRadius: '50%', objectFit: 'cover' }}
                 />
               ) : (
-                <div className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg ${avatarColor}`}>
+                <div style={{
+                  width: 46,
+                  height: 46,
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'white',
+                  fontWeight: 700,
+                  fontSize: '1rem',
+                  background: avatarColor,
+                }}>
                   {initials}
                 </div>
               )}
               <div>
-                <p className="font-semibold text-gray-900">{user?.name || 'User'}</p>
-                <p className="text-xs text-gray-500">{user?.email || 'No email'}</p>
-                <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
+                <p style={{ margin: 0, fontWeight: 700, color: palette.textStrong, fontSize: '0.92rem' }}>{user?.name || 'User'}</p>
+                <p style={{ margin: '2px 0 0', fontSize: '0.76rem', color: palette.textMuted }}>{user?.email || 'No email'}</p>
+                <p style={{ margin: '3px 0 0', fontSize: '0.76rem', color: palette.textMuted, display: 'flex', alignItems: 'center', gap: 5 }}>
                   <i className="fa-solid fa-user-graduate" />
                   {user?.role || 'student'}
                 </p>
@@ -89,32 +172,32 @@ function ProfileDropdown({
             </div>
           </div>
 
-          <div className="p-3 border-b border-gray-200">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-gray-50 rounded-lg p-2 text-center">
-                <p className="text-xs text-gray-500">Level</p>
-                <p className="font-bold text-sm text-gray-900"><i className="fa-solid fa-chart-line mr-1 text-blue-600" />{stats.level}/30</p>
+          <div style={{ padding: '0.82rem', borderBottom: `1px solid ${palette.panelBorder}` }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+              <div style={{ background: palette.statBg, borderRadius: 10, padding: '0.5rem', textAlign: 'center', border: `1px solid ${palette.panelBorder}` }}>
+                <p style={{ margin: 0, fontSize: '0.7rem', color: palette.textMuted }}>Level</p>
+                <p style={{ margin: '3px 0 0', fontSize: '0.82rem', fontWeight: 700, color: palette.textStrong }}><i className="fa-solid fa-chart-line" style={{ marginRight: 5, color: '#60A5FA' }} />{stats.level}/30</p>
               </div>
-              <div className="bg-gray-50 rounded-lg p-2 text-center">
-                <p className="text-xs text-gray-500">Credits</p>
-                <p className="font-bold text-sm text-gray-900"><i className="fa-solid fa-coins mr-1 text-amber-500" />{stats.credits}</p>
+              <div style={{ background: palette.statBg, borderRadius: 10, padding: '0.5rem', textAlign: 'center', border: `1px solid ${palette.panelBorder}` }}>
+                <p style={{ margin: 0, fontSize: '0.7rem', color: palette.textMuted }}>Credits</p>
+                <p style={{ margin: '3px 0 0', fontSize: '0.82rem', fontWeight: 700, color: palette.textStrong }}><i className="fa-solid fa-coins" style={{ marginRight: 5, color: '#F59E0B' }} />{stats.credits}</p>
               </div>
-              <div className="bg-gray-50 rounded-lg p-2 text-center">
-                <p className="text-xs text-gray-500">Streak</p>
-                <p className="font-bold text-sm text-gray-900"><i className="fa-solid fa-fire mr-1 text-orange-500" />{stats.streak} days</p>
+              <div style={{ background: palette.statBg, borderRadius: 10, padding: '0.5rem', textAlign: 'center', border: `1px solid ${palette.panelBorder}` }}>
+                <p style={{ margin: 0, fontSize: '0.7rem', color: palette.textMuted }}>Streak</p>
+                <p style={{ margin: '3px 0 0', fontSize: '0.82rem', fontWeight: 700, color: palette.textStrong }}><i className="fa-solid fa-fire" style={{ marginRight: 5, color: '#FB923C' }} />{stats.streak} days</p>
               </div>
-              <div className="bg-gray-50 rounded-lg p-2 text-center">
-                <p className="text-xs text-gray-500">Accuracy</p>
-                <p className="font-bold text-sm text-gray-900"><i className="fa-solid fa-bullseye mr-1 text-green-600" />{stats.accuracy}%</p>
+              <div style={{ background: palette.statBg, borderRadius: 10, padding: '0.5rem', textAlign: 'center', border: `1px solid ${palette.panelBorder}` }}>
+                <p style={{ margin: 0, fontSize: '0.7rem', color: palette.textMuted }}>Accuracy</p>
+                <p style={{ margin: '3px 0 0', fontSize: '0.82rem', fontWeight: 700, color: palette.textStrong }}><i className="fa-solid fa-bullseye" style={{ marginRight: 5, color: '#22C55E' }} />{stats.accuracy}%</p>
               </div>
             </div>
-            <p className="text-center text-xs text-indigo-600 mt-2 font-medium flex items-center justify-center gap-1">
+            <p style={{ textAlign: 'center', margin: '0.55rem 0 0', fontSize: '0.76rem', fontWeight: 700, color: palette.accent }}>
               <i className="fa-solid fa-award" />
-              {stats.rank}
+              <span style={{ marginLeft: 5 }}>{stats.rank}</span>
             </p>
           </div>
 
-          <div className="p-2 border-b border-gray-200">
+          <div style={{ padding: '0.48rem', borderBottom: `1px solid ${palette.panelBorder}` }}>
             {[
               { icon: 'fa-regular fa-user', label: 'My Profile', path: '/settings#profile' },
               { icon: 'fa-solid fa-chart-pie', label: 'My Analytics', path: '/analytics' },
@@ -125,41 +208,64 @@ function ProfileDropdown({
                 key={item.label}
                 type="button"
                 onClick={() => onNavigate(item.path)}
-                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-700 hover:bg-gray-100 transition-colors text-left"
+                style={menuButtonStyle}
               >
-                <span className="w-4 text-center text-gray-500"><i className={item.icon} /></span>
+                <span style={{ width: 18, textAlign: 'center', color: palette.textMuted }}><i className={item.icon} /></span>
                 <span>{item.label}</span>
               </button>
             ))}
           </div>
 
-          <div className="p-3 border-b border-gray-200">
-            <div className="flex items-center justify-between px-3">
-              <div className="flex items-center gap-2 text-sm text-gray-700">
-                <span className="w-4 text-center">
-                  <i className={theme === 'dark' ? 'fa-solid fa-moon text-indigo-600' : 'fa-solid fa-sun text-amber-500'} />
+          <div style={{ padding: '0.74rem 0.9rem', borderBottom: `1px solid ${palette.panelBorder}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.7rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: palette.textStrong, fontSize: '0.87rem', fontWeight: 600 }}>
+                <span style={{ width: 18, textAlign: 'center' }}>
+                  <i className={theme === 'dark' ? 'fa-solid fa-moon' : 'fa-solid fa-sun'} style={{ color: theme === 'dark' ? '#A5B4FC' : '#F59E0B' }} />
                 </span>
                 <span>{theme === 'dark' ? 'Dark Mode' : 'Light Mode'}</span>
               </div>
               <button
                 type="button"
                 onClick={toggleTheme}
-                className={`relative w-11 h-6 rounded-full transition-colors ${theme === 'dark' ? 'bg-blue-500' : 'bg-gray-300'}`}
+                style={{
+                  width: 44,
+                  height: 24,
+                  borderRadius: 999,
+                  border: 'none',
+                  cursor: 'pointer',
+                  background: theme === 'dark' ? palette.switchOn : palette.switchOff,
+                  position: 'relative',
+                  transition: 'background 0.2s ease',
+                }}
               >
-                <div
-                  className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${theme === 'dark' ? 'translate-x-6' : 'translate-x-1'}`}
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: 3,
+                    left: 3,
+                    width: 18,
+                    height: 18,
+                    borderRadius: '50%',
+                    background: '#FFFFFF',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.2)',
+                    transform: theme === 'dark' ? 'translateX(20px)' : 'translateX(0px)',
+                    transition: 'transform 0.2s ease',
+                  }}
                 />
               </button>
             </div>
           </div>
 
-          <div className="p-2">
+          <div style={{ padding: '0.5rem' }}>
             <button
               type="button"
               onClick={onLogout}
-              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-red-600 hover:bg-red-50 transition-colors text-left"
+              style={{
+                ...menuButtonStyle,
+                color: palette.danger,
+              }}
             >
-              <span className="w-4 text-center"><i className="fa-solid fa-right-from-bracket" /></span>
+              <span style={{ width: 18, textAlign: 'center' }}><i className="fa-solid fa-right-from-bracket" /></span>
               <span>Logout</span>
             </button>
           </div>

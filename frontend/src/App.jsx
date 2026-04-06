@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import AuthApp from './Auth'
 import Dashboard from './pages/Dashboard'
+import { ThemeProvider } from './context/ThemeContext'
 
 function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(() => Boolean(localStorage.getItem('ww_token')))
@@ -15,11 +16,15 @@ function App() {
     setIsAuthenticated(false)
   }
 
-  if (isAuthenticated) {
-    return <Dashboard onLogout={handleLogout} />
-  }
-
-  return <AuthApp onAuthenticated={handleAuthenticated} />
+  return (
+    <ThemeProvider>
+      {isAuthenticated ? (
+        <Dashboard onLogout={handleLogout} />
+      ) : (
+        <AuthApp onAuthenticated={handleAuthenticated} />
+      )}
+    </ThemeProvider>
+  )
 }
 
 export default App

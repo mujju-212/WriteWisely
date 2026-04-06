@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { fetchPracticeTemplates, fetchPracticeHistory } from '../services/api';
 
-const TYPE_ICONS = {
-  email: '📧', email_simple: '📧', email_professional: '📧',
-  letter: '📄', report: '📊', conversation: '💬',
-  article: '📰', essay: '📝', essay_argumentative: '📝',
-  journal: '📓', message: '💌', description: '✏️',
-  story: '📖', meeting_notes: '📋', cover_letter: '📄',
+const TYPE_ICON_CLASSES = {
+  email: 'fa-solid fa-envelope', email_simple: 'fa-solid fa-envelope', email_professional: 'fa-solid fa-envelope-open-text',
+  letter: 'fa-solid fa-file-lines', report: 'fa-solid fa-chart-column', conversation: 'fa-solid fa-comments',
+  article: 'fa-solid fa-newspaper', essay: 'fa-solid fa-pen-nib', essay_argumentative: 'fa-solid fa-pen-nib',
+  journal: 'fa-solid fa-book', message: 'fa-solid fa-comment-dots', description: 'fa-solid fa-pencil',
+  story: 'fa-solid fa-book-open', meeting_notes: 'fa-solid fa-clipboard-list', cover_letter: 'fa-solid fa-file-signature',
 };
 const TYPE_COLORS = {
   email: '#3B82F6', email_simple: '#3B82F6', email_professional: '#1D4ED8',
@@ -49,6 +49,8 @@ const FILTER_LABEL = (f) => {
   };
   return names[f] || f;
 };
+
+const getTypeIconClass = (type) => TYPE_ICON_CLASSES[type] || 'fa-solid fa-file-pen';
 
 export default function PracticeHome({ onNavigate }) {
   const [templates, setTemplates] = useState([]);
@@ -95,7 +97,7 @@ export default function PracticeHome({ onNavigate }) {
   const levelInfo = LEVEL_COLORS[userLevel] || LEVEL_COLORS.beginner;
 
   return (
-    <div style={{ maxWidth: 1320, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem', animation: 'fadeInUp 0.4s ease' }}>
+    <div className="pw-root" style={{ maxWidth: 1320, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.5rem', animation: 'fadeInUp 0.4s ease' }}>
       <style>{`
         @keyframes fadeInUp { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
         @keyframes popIn { from { opacity:0; transform:scale(0.92); } to { opacity:1; transform:scale(1); } }
@@ -113,22 +115,25 @@ export default function PracticeHome({ onNavigate }) {
       `}</style>
 
       {/* ── Header ── */}
-      <div style={{ background: 'linear-gradient(135deg,#EFF6FF,#F0FDF4)', borderRadius: 18, padding: '1.5rem 2rem', border: '1px solid #DBEAFE' }}>
+      <div className="pw-header-card" style={{ background: 'linear-gradient(135deg,#EFF6FF,#F0FDF4)', borderRadius: 18, padding: '1.5rem 2rem', border: '1px solid #DBEAFE' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#1E293B', margin: 0 }}>✍️ Practice Mode</h1>
+            <h1 style={{ fontSize: '1.75rem', fontWeight: 800, color: '#1E293B', margin: 0, display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+              <i className="fa-solid fa-pen-ruler" style={{ color: '#2563EB' }}></i>
+              Practice Mode
+            </h1>
             <p style={{ color: '#64748B', margin: '4px 0 0', fontSize: '0.9rem' }}>Improve your writing with real tasks</p>
           </div>
           <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
-            <div style={{ background: '#fff', borderRadius: 12, padding: '0.75rem 1.25rem', border: '1px solid #E2E8F0', textAlign: 'center' }}>
+            <div className="pw-stat-card" style={{ background: '#fff', borderRadius: 12, padding: '0.75rem 1.25rem', border: '1px solid #E2E8F0', textAlign: 'center' }}>
               <p style={{ margin: 0, fontSize: '0.7rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>Your Level</p>
               <p style={{ margin: 0, fontWeight: 700, color: levelInfo.color, fontSize: '0.9rem' }}>{levelInfo.label}</p>
             </div>
-            <div style={{ background: '#fff', borderRadius: 12, padding: '0.75rem 1.25rem', border: '1px solid #E2E8F0', textAlign: 'center' }}>
+            <div className="pw-stat-card" style={{ background: '#fff', borderRadius: 12, padding: '0.75rem 1.25rem', border: '1px solid #E2E8F0', textAlign: 'center' }}>
               <p style={{ margin: 0, fontSize: '0.7rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>Tasks Done</p>
               <p style={{ margin: 0, fontWeight: 700, color: '#1E293B', fontSize: '0.9rem' }}>{histLoading ? '—' : stats.total_done}</p>
             </div>
-            <div style={{ background: '#fff', borderRadius: 12, padding: '0.75rem 1.25rem', border: '1px solid #E2E8F0', textAlign: 'center' }}>
+            <div className="pw-stat-card" style={{ background: '#fff', borderRadius: 12, padding: '0.75rem 1.25rem', border: '1px solid #E2E8F0', textAlign: 'center' }}>
               <p style={{ margin: 0, fontSize: '0.7rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>Avg Score</p>
               <p style={{ margin: 0, fontWeight: 700, color: '#1E293B', fontSize: '0.9rem' }}>{histLoading ? '—' : `${stats.avg_score}/10`}</p>
             </div>
@@ -145,7 +150,14 @@ export default function PracticeHome({ onNavigate }) {
               className={`pw-filter-btn${filter === f ? ' active' : ''}`}
               onClick={() => setFilter(f)}
             >
-              {f === 'all' ? 'All Types' : `${TYPE_ICONS[f] || ''} ${FILTER_LABEL(f)}`}
+              {f === 'all' ? (
+                'All Types'
+              ) : (
+                <>
+                  <i className={getTypeIconClass(f)} style={{ marginRight: 6 }}></i>
+                  {FILTER_LABEL(f)}
+                </>
+              )}
             </button>
           ))}
         </div>
@@ -153,7 +165,8 @@ export default function PracticeHome({ onNavigate }) {
           onClick={handleRandom}
           style={{ background: 'linear-gradient(135deg,#7C3AED,#2563EB)', color: '#fff', border: 'none', borderRadius: 999, padding: '8px 20px', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'inherit' }}
         >
-          🔀 Random Task
+          <i className="fa-solid fa-shuffle"></i>
+          Random Task
         </button>
       </div>
 
@@ -166,7 +179,7 @@ export default function PracticeHome({ onNavigate }) {
         </div>
       ) : filtered.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '3rem', color: '#94A3B8' }}>
-          <p style={{ fontSize: '2rem' }}>📭</p>
+          <p style={{ fontSize: '2rem' }}><i className="fa-regular fa-folder-open"></i></p>
           <p style={{ fontWeight: 600 }}>No tasks found for this filter</p>
         </div>
       ) : (
@@ -182,24 +195,27 @@ export default function PracticeHome({ onNavigate }) {
       )}
 
       {/* ── Recent History ── */}
-      <div style={{ background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0', padding: '1.5rem' }}>
-        <h2 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 700, color: '#1E293B' }}>📋 Recent Practice</h2>
+      <div className="pw-history-card" style={{ background: '#fff', borderRadius: 16, border: '1px solid #E2E8F0', padding: '1.5rem' }}>
+        <h2 style={{ margin: '0 0 1rem', fontSize: '1rem', fontWeight: 700, color: '#1E293B', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+          <i className="fa-solid fa-clock-rotate-left" style={{ color: '#2563EB' }}></i>
+          Recent Practice
+        </h2>
         {histLoading ? (
           <p style={{ color: '#94A3B8', fontSize: '0.85rem' }}>Loading history...</p>
         ) : history.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '1.5rem', color: '#94A3B8' }}>
-            <p style={{ fontSize: '1.5rem' }}>🌱</p>
-            <p style={{ fontWeight: 600, fontSize: '0.9rem' }}>No practice yet — start your first task above!</p>
+            <p style={{ fontSize: '1.5rem' }}><i className="fa-solid fa-seedling"></i></p>
+            <p style={{ fontWeight: 600, fontSize: '0.9rem' }}>No practice yet - start your first task above!</p>
           </div>
         ) : (
           history.map((item, i) => (
             <div key={i} className="pw-hist-row">
               <div style={{ width: 38, height: 38, borderRadius: 10, background: TYPE_BG[item.task_type] || '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
-                {item.icon || TYPE_ICONS[item.task_type] || '📝'}
+                <i className={getTypeIconClass(item.task_type)} style={{ color: TYPE_COLORS[item.task_type] || '#64748B' }}></i>
               </div>
               <div style={{ flex: 1 }}>
                 <p style={{ margin: 0, fontWeight: 600, color: '#1E293B', fontSize: '0.875rem' }}>
-                  {item.task_type ? item.task_type.charAt(0).toUpperCase() + item.task_type.slice(1) : ''} — {item.task_title}
+                  {item.task_type ? item.task_type.charAt(0).toUpperCase() + item.task_type.slice(1) : ''} - {item.task_title}
                 </p>
                 <p style={{ margin: 0, color: '#94A3B8', fontSize: '0.75rem' }}>
                   {item.submitted_at ? new Date(item.submitted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : ''}
@@ -209,7 +225,10 @@ export default function PracticeHome({ onNavigate }) {
                 <p style={{ margin: 0, fontWeight: 800, color: item.overall_score >= 7 ? '#16A34A' : item.overall_score >= 5 ? '#D97706' : '#DC2626', fontSize: '0.95rem' }}>
                   {item.overall_score}/10
                 </p>
-                <p style={{ margin: 0, fontSize: '0.72rem', color: '#94A3B8' }}>⭐ +{item.credits_earned} pts</p>
+                <p style={{ margin: 0, fontSize: '0.72rem', color: '#94A3B8' }}>
+                  <i className="fa-solid fa-coins" style={{ marginRight: 4, color: '#D97706' }}></i>
+                  +{item.credits_earned} pts
+                </p>
               </div>
             </div>
           ))
@@ -222,7 +241,7 @@ export default function PracticeHome({ onNavigate }) {
 function TaskCard({ task, onStart }) {
   const typeColor = TYPE_COLORS[task.type] || '#2563EB';
   const typeBg = TYPE_BG[task.type] || '#EFF6FF';
-  const icon = task.icon || TYPE_ICONS[task.type] || '📝';
+  const iconClass = getTypeIconClass(task.type);
   const lvl = LEVEL_COLORS[task.level] || LEVEL_COLORS.beginner;
 
   return (
@@ -233,13 +252,13 @@ function TaskCard({ task, onStart }) {
     >
       {/* Done badge */}
       {task.times_done > 0 && !task.locked && (
-        <div className="pw-done-badge">✓ Done before</div>
+        <div className="pw-done-badge"><i className="fa-solid fa-circle-check" style={{ marginRight: 4 }}></i>Done before</div>
       )}
 
       {/* Icon + type */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
         <div style={{ width: 44, height: 44, borderRadius: 12, background: typeBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem' }}>
-          {icon}
+          <i className={iconClass} style={{ color: typeColor }}></i>
         </div>
         <div>
           <p style={{ margin: 0, fontSize: '0.68rem', fontWeight: 700, color: typeColor, textTransform: 'uppercase', letterSpacing: '0.08em' }}>
@@ -264,7 +283,7 @@ function TaskCard({ task, onStart }) {
 
       {/* Credits + last score */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-        <span className="pw-credit-badge">⭐ {task.credits} pts</span>
+        <span className="pw-credit-badge"><i className="fa-solid fa-coins"></i> {task.credits} pts</span>
         {task.last_score !== null && task.last_score !== undefined && (
           <span style={{ fontSize: '0.75rem', color: '#94A3B8', fontWeight: 600 }}>Last: {task.last_score}/10</span>
         )}
@@ -274,7 +293,8 @@ function TaskCard({ task, onStart }) {
       {task.locked ? (
         <div style={{ marginTop: 8, padding: '10px', background: '#F8FAFC', borderRadius: 10, textAlign: 'center' }}>
           <p style={{ margin: 0, color: '#94A3B8', fontSize: '0.8rem', fontWeight: 600 }}>
-            🔒 Requires {LEVEL_COLORS[task.level]?.label || 'higher'} level
+            <i className="fa-solid fa-lock" style={{ marginRight: 6 }}></i>
+            Requires {LEVEL_COLORS[task.level]?.label || 'higher'} level
           </p>
         </div>
       ) : (

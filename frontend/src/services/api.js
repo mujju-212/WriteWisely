@@ -36,7 +36,23 @@ export const login = (email, password) =>
 export const register = (data) =>
   api('/auth/register', { method: 'POST', body: JSON.stringify(data) });
 
-export const getMe = () => api('/auth/me');
+export const getMe = () => api('/auth/profile');
+export const fetchUserProfile = () => api('/auth/profile');
+export const updateUserProfile = (data) =>
+  api('/auth/profile', { method: 'PUT', body: JSON.stringify(data) });
+export const changeUserPassword = (currentPassword, newPassword) =>
+  api('/auth/change-password', {
+    method: 'PUT',
+    body: JSON.stringify({
+      current_password: currentPassword,
+      new_password: newPassword,
+    }),
+  });
+export const deleteUserAccount = (password) =>
+  api('/auth/delete-account', {
+    method: 'DELETE',
+    body: JSON.stringify({ password }),
+  });
 
 // ─── Analytics ────────────────────────────────────────────
 export const fetchDashboard = () => api('/analytics/dashboard');
@@ -79,14 +95,47 @@ export const deleteProject = (id) =>
   api(`/project/${id}`, { method: 'DELETE' });
 
 // ─── Chat ─────────────────────────────────────────────────
-export const fetchChatHistory = () => api('/chat/history');
-export const sendChatMessage = (message, documentIds = []) =>
+export const fetchChatConversations = () => api('/chat/conversations');
+export const createChatConversation = (data = {}) =>
+  api('/chat/conversations', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+export const updateChatConversation = (conversationId, data = {}) =>
+  api(`/chat/conversations/${conversationId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+export const deleteChatConversation = (conversationId) =>
+  api(`/chat/conversations/${conversationId}`, { method: 'DELETE' });
+
+export const fetchChatHistory = (conversationId = null) => {
+  if (!conversationId) return api('/chat/history');
+  return api(`/chat/history?conversation_id=${encodeURIComponent(conversationId)}`);
+};
+
+export const sendChatMessage = (
+  message,
+  documentIds = [],
+  conversationId = null,
+  referenceConversationIds = []
+) =>
   api('/chat/send', {
     method: 'POST',
-    body: JSON.stringify({ message, document_ids: documentIds }),
+    body: JSON.stringify({
+      message,
+      document_ids: documentIds,
+      conversation_id: conversationId,
+      reference_conversation_ids: referenceConversationIds,
+    }),
   });
 export const fetchChatDocuments = () => api('/chat/documents');
-export const clearChat = () => api('/chat/clear', { method: 'DELETE' });
+export const deleteChatDocument = (documentId) =>
+  api(`/chat/documents/${documentId}`, { method: 'DELETE' });
+export const clearChat = (conversationId = null) => {
+  if (!conversationId) return api('/chat/clear', { method: 'DELETE' });
+  return api(`/chat/clear?conversation_id=${encodeURIComponent(conversationId)}`, { method: 'DELETE' });
+};
 export async function uploadChatDocument(file, title = '') {
   const token = getToken();
   const form = new FormData();
@@ -124,5 +173,6 @@ export const markAllNotificationsRead = () =>
 // ─── Settings ─────────────────────────────────────────────
 export const updateSettings = (data) =>
   api('/analytics/settings', { method: 'PUT', body: JSON.stringify(data) });
+export const exportUserData = () => api('/analytics/export');
 
 export default api;
