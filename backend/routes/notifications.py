@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import List
 
 from bson import ObjectId
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
 
 from config import get_db
@@ -56,13 +56,16 @@ def _time_ago(created_at: datetime) -> str:
 
 
 @router.get("")
-async def get_notifications(user=Depends(get_current_user)):
+async def get_notifications(
+    limit: int = Query(default=10, ge=1, le=200),
+    user=Depends(get_current_user),
+):
     db = get_db()
     user_id = user["id"]
 
     base_query = {"user_id": _user_match(user_id)}
 
-    docs = await db.notifications.find(base_query).sort("created_at", -1).limit(10).to_list(length=10)
+    docs = await db.notifications.find(base_query).sort("created_at", -1).limit(limit).to_list(length=limit)
 
     unread_count = await db.notifications.count_documents({
         "user_id": _user_match(user_id),

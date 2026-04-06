@@ -31,7 +31,8 @@ export const submitAssignment = (levelId, text) =>
   });
 
 // ── Notifications ────────────────────────────────────────────
-export const getNotifications = () => api('/notifications');
+export const getNotifications = (limit = 10) =>
+  api(`/notifications?limit=${encodeURIComponent(limit)}`);
 
 export const markNotificationsRead = (ids = []) =>
   api('/notifications/mark-read', {

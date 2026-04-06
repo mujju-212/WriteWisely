@@ -45,8 +45,9 @@ function ProgressStepper({ step, completed }) {
 }
 
 const CreditBadge = ({ amount }) => (
-  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#D97706', background: '#FEF3C7', padding: '3px 10px', borderRadius: 999, whiteSpace: 'nowrap' }}>
-    +{amount} ⭐
+  <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#D97706', background: '#FEF3C7', padding: '3px 10px', borderRadius: 999, whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+    <i className="fa-solid fa-coins"></i>
+    +{amount}
   </span>
 );
 
@@ -138,7 +139,9 @@ function SectionBlock({ sec }) {
               <p key={j} style={{ fontSize: '0.78rem', color: '#374151', fontStyle: 'italic', margin: 0 }}>"{ex}"</p>
             ))}
             {g.memory_trick && (
-              <p style={{ fontSize: '0.75rem', color: '#D97706', fontWeight: 600, marginTop: 4, margin: '4px 0 0' }}>💡 {g.memory_trick}</p>
+              <p style={{ fontSize: '0.75rem', color: '#D97706', fontWeight: 600, marginTop: 4, margin: '4px 0 0', display: 'inline-flex', alignItems: 'center', gap: 5 }}>
+                <Lightbulb style={{ width: 13, height: 13 }} /> {g.memory_trick}
+              </p>
             )}
           </div>
         ))}
@@ -152,7 +155,7 @@ function SectionBlock({ sec }) {
       <div style={{ marginBottom: 20, background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 14, padding: '1.25rem 1.5rem' }}>
         <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#1F2937', marginBottom: 6 }}>{sec.heading}</h3>
         {sec.explanation && <p style={{ fontSize: '0.875rem', color: '#374151', marginBottom: 10, lineHeight: 1.6 }}>{sec.explanation}</p>}
-        {sec.rule_name && <div style={{ background: WW_LIGHT, borderRadius: 8, padding: '6px 12px', marginBottom: 10, fontSize: '0.85rem', fontWeight: 700, color: WW }}>📌 {sec.rule_name}: {sec.rule_description}</div>}
+        {sec.rule_name && <div style={{ background: WW_LIGHT, borderRadius: 8, padding: '6px 12px', marginBottom: 10, fontSize: '0.85rem', fontWeight: 700, color: WW, display: 'inline-flex', alignItems: 'center', gap: 6 }}><i className="fa-solid fa-thumbtack"></i>{sec.rule_name}: {sec.rule_description}</div>}
         {sec.examples_double && (
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
             {sec.examples_double.map((ex, i) => (
@@ -229,10 +232,10 @@ function LessonSection({ lesson, progress, levelId, onComplete, loading }) {
         onClick={alreadyRead ? undefined : onComplete}
       >
         {alreadyRead
-          ? <><CheckCircle style={{ width: 17, height: 17 }} /> Already Read — Go to Quiz →</>
+          ? <><CheckCircle style={{ width: 17, height: 17 }} /> Already Read - Go to Quiz →</>
           : loading
-            ? <><Loader2 style={{ width: 16, height: 16, animation: 'spin 0.7s linear infinite' }} /> Saving…</>
-            : <>I've read this — Go to Quiz → (+10 ⭐)</>}
+            ? <><Loader2 style={{ width: 16, height: 16, animation: 'spin 0.7s linear infinite' }} /> Saving...</>
+            : <><i className="fa-solid fa-coins"></i> I've read this - Go to Quiz → (+10)</>}
       </button>
     </div>
   );
@@ -260,7 +263,7 @@ function QuizSection({ questions, progress, levelId, onComplete }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <Brain style={{ width: 20, height: 20, color: WW }} />
-          <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1F2937', margin: 0 }}>Quiz — {questions.length} Questions</h2>
+          <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1F2937', margin: 0 }}>Quiz - {questions.length} Questions</h2>
         </div>
         <CreditBadge amount={15} />
       </div>
@@ -303,7 +306,8 @@ function QuizSection({ questions, progress, levelId, onComplete }) {
             </div>
             {result && fb?.explanation && (
               <div style={{ marginTop: 8, padding: '7px 12px', background: '#F8F7FF', borderRadius: 7, fontSize: '0.78rem', color: '#374151', fontStyle: 'italic' }}>
-                💡 {fb.explanation}
+                <Lightbulb style={{ width: 12, height: 12, marginRight: 5, verticalAlign: 'text-bottom' }} />
+                {fb.explanation}
               </div>
             )}
           </div>
@@ -314,10 +318,13 @@ function QuizSection({ questions, progress, levelId, onComplete }) {
         <div style={{ marginTop: 4 }}>
           <div style={{ background: result.passed ? '#F0FDF4' : '#FFF1F2', border: `1.5px solid ${result.passed ? '#86EFAC' : '#FCA5A5'}`, borderRadius: 12, padding: '1rem 1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
             <div>
-              <p style={{ fontWeight: 800, color: result.passed ? '#15803D' : '#DC2626', fontSize: '1rem', marginBottom: 2 }}>{result.passed ? '✅ Passed!' : '❌ Not quite!'}</p>
+              <p style={{ fontWeight: 800, color: result.passed ? '#15803D' : '#DC2626', fontSize: '1rem', marginBottom: 2 }}>
+                <i className={result.passed ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark'} style={{ marginRight: 6 }}></i>
+                {result.passed ? 'Passed!' : 'Not quite!'}
+              </p>
               <p style={{ fontSize: '0.82rem', color: '#6B7280' }}>Score: {result.score}/{result.total} ({result.percentage}%)</p>
             </div>
-            {result.credits_earned > 0 && <span style={{ fontSize: '1rem', fontWeight: 800, color: '#D97706' }}>+{result.credits_earned} ⭐</span>}
+            {result.credits_earned > 0 && <span style={{ fontSize: '1rem', fontWeight: 800, color: '#D97706' }}><i className="fa-solid fa-coins" style={{ marginRight: 5 }}></i>+{result.credits_earned}</span>}
           </div>
           {!result.passed && (
             <button onClick={() => { setAnswers({}); setResult(null); }}
@@ -329,7 +336,7 @@ function QuizSection({ questions, progress, levelId, onComplete }) {
       ) : (
         <button onClick={handleSubmit} disabled={!allAnswered || submitting}
           style={{ width: '100%', padding: '13px', background: allAnswered ? WW : '#E5E7EB', color: allAnswered ? '#fff' : '#9CA3AF', border: 'none', borderRadius: 12, fontSize: '0.9rem', fontWeight: 700, cursor: allAnswered && !submitting ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit', transition: 'all 0.2s', marginTop: 4 }}>
-          {submitting ? <><Loader2 style={{ width: 15, height: 15, animation: 'spin 0.7s linear infinite' }} /> Submitting…</> : allAnswered ? 'Submit Quiz →' : `Answer all ${questions.length} questions to submit`}
+          {submitting ? <><Loader2 style={{ width: 15, height: 15, animation: 'spin 0.7s linear infinite' }} /> Submitting...</> : allAnswered ? 'Submit Quiz →' : `Answer all ${questions.length} questions to submit`}
         </button>
       )}
     </div>
@@ -346,7 +353,7 @@ function AssignmentSection({ lesson, progress, levelId, onComplete, onLevelCompl
   // Build a prompt from the actual assignment structure
   const assignment = lesson?.assignment;
   const tasks = assignment?.tasks || [];
-  const promptText = tasks.map((t, i) => `Task ${t.task_number || i + 1}: ${t.instruction}${t.words ? ' — Words: ' + t.words.join(', ') : ''}${t.sentences ? '. Correct each sentence.' : ''}`).join('\n\n');
+  const promptText = tasks.map((t, i) => `Task ${t.task_number || i + 1}: ${t.instruction}${t.words ? ' - Words: ' + t.words.join(', ') : ''}${t.sentences ? '. Correct each sentence.' : ''}`).join('\n\n');
 
   const handleSubmit = async () => {
     if (text.trim().length < 20) return;
@@ -365,11 +372,11 @@ function AssignmentSection({ lesson, progress, levelId, onComplete, onLevelCompl
           <h2 style={{ fontSize: '1.1rem', fontWeight: 800, color: '#1F2937', margin: 0 }}>Assignment</h2>
         </div>
         <div style={{ background: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: 10, padding: '12px 16px', marginBottom: 14 }}>
-          <p style={{ fontWeight: 700, color: '#15803D' }}>✅ Assignment already submitted!</p>
+          <p style={{ fontWeight: 700, color: '#15803D' }}><i className="fa-solid fa-circle-check" style={{ marginRight: 6 }}></i>Assignment already submitted!</p>
           <p style={{ fontSize: '0.875rem', color: '#374151', marginTop: 4 }}>Score: {progress.assignment_score}/{progress.assignment_total}</p>
         </div>
         <button onClick={onLevelComplete} style={{ width: '100%', padding: '13px', background: '#16A34A', color: '#fff', border: 'none', borderRadius: 12, fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-          <Trophy style={{ width: 17, height: 17 }} /> Level Complete — Back to Levels
+          <Trophy style={{ width: 17, height: 17 }} /> Level Complete - Back to Levels
         </button>
       </div>
     );
@@ -387,7 +394,7 @@ function AssignmentSection({ lesson, progress, levelId, onComplete, onLevelCompl
 
       {tasks.length > 0 ? (
         <div style={{ background: '#F8F7FF', border: '1px solid #C7D2FE', borderRadius: 12, padding: '1rem 1.25rem', marginBottom: 14 }}>
-          <p style={{ fontSize: '0.78rem', fontWeight: 700, color: WW, marginBottom: 8 }}>📋 Your Tasks</p>
+          <p style={{ fontSize: '0.78rem', fontWeight: 700, color: WW, marginBottom: 8 }}><i className="fa-solid fa-list-check" style={{ marginRight: 6 }}></i>Your Tasks</p>
           {tasks.map((t, i) => (
             <div key={i} style={{ marginBottom: i < tasks.length - 1 ? 10 : 0 }}>
               <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151' }}>Task {t.task_number || i + 1}: {t.instruction}</p>
@@ -406,29 +413,30 @@ function AssignmentSection({ lesson, progress, levelId, onComplete, onLevelCompl
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Write your answers here…"
+            placeholder="Write your answers here..."
             rows={6}
             style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: `1.5px solid ${text.length >= 20 ? WW : '#E5E7EB'}`, fontSize: '0.875rem', fontFamily: 'inherit', color: '#1F2937', resize: 'vertical', outline: 'none', transition: 'border-color 0.2s', lineHeight: 1.7, boxSizing: 'border-box' }}
             onFocus={(e) => { e.target.style.borderColor = WW; e.target.style.boxShadow = `0 0 0 3px ${WW_LIGHT}`; }}
             onBlur={(e) => { e.target.style.boxShadow = 'none'; e.target.style.borderColor = text.length >= 20 ? WW : '#E5E7EB'; }}
           />
           <p style={{ fontSize: '0.72rem', color: text.length >= 20 ? '#16A34A' : '#9CA3AF', marginTop: 4, marginBottom: 12 }}>
-            {text.length} characters {text.length < 20 ? `(${20 - text.length} more needed)` : '✓ Ready to submit'}
+            {text.length} characters {text.length < 20 ? `(${20 - text.length} more needed)` : 'Ready to submit'}
           </p>
           <button onClick={handleSubmit} disabled={text.length < 20 || submitting}
             style={{ width: '100%', padding: '13px', background: text.length >= 20 ? WW : '#E5E7EB', color: text.length >= 20 ? '#fff' : '#9CA3AF', border: 'none', borderRadius: 12, fontSize: '0.9rem', fontWeight: 700, cursor: text.length >= 20 && !submitting ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, fontFamily: 'inherit', transition: 'all 0.2s' }}>
-            {submitting ? <><Loader2 style={{ width: 15, height: 15, animation: 'spin 0.7s linear infinite' }} /> Grading with AI…</> : 'Submit Assignment →'}
+            {submitting ? <><Loader2 style={{ width: 15, height: 15, animation: 'spin 0.7s linear infinite' }} /> Grading with AI...</> : 'Submit Assignment →'}
           </button>
         </>
       ) : (
         <div>
           {result?.review?.length > 0 && (
             <div style={{ background: '#F8F7FF', border: '1px solid #C7D2FE', borderRadius: 12, padding: '1.1rem 1.25rem', marginBottom: 12 }}>
-              <p style={{ fontSize: '0.78rem', fontWeight: 700, color: WW, marginBottom: 10 }}>📊 Review</p>
+              <p style={{ fontSize: '0.78rem', fontWeight: 700, color: WW, marginBottom: 10 }}><i className="fa-solid fa-chart-line" style={{ marginRight: 6 }}></i>Review</p>
               {result.review.map((s, i) => (
                 <div key={i} style={{ borderLeft: `3px solid ${s.correct !== false ? '#16A34A' : '#EF4444'}`, paddingLeft: 12, marginBottom: 12 }}>
                   <p style={{ fontSize: '0.875rem', color: '#1F2937', fontWeight: 500 }}>
-                    {s.correct !== false ? '✅' : '❌'} "{s.sentence || s.text}"
+                    <i className={s.correct !== false ? 'fa-solid fa-circle-check' : 'fa-solid fa-circle-xmark'} style={{ marginRight: 6 }}></i>
+                    "{s.sentence || s.text}"
                   </p>
                   {s.error && <p style={{ fontSize: '0.78rem', color: '#6B7280', marginTop: 3 }}>{s.error}: {s.explanation}</p>}
                   {s.errors?.map((err, j) => (
@@ -442,11 +450,11 @@ function AssignmentSection({ lesson, progress, levelId, onComplete, onLevelCompl
           )}
           <div style={{ background: '#F0FDF4', border: '1px solid #86EFAC', borderRadius: 10, padding: '10px 14px', marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontWeight: 700, color: '#15803D' }}>Score: {result.score}/{result.total}</span>
-            <span style={{ fontWeight: 800, color: '#D97706' }}>+{result.credits_earned} ⭐</span>
+            <span style={{ fontWeight: 800, color: '#D97706' }}><i className="fa-solid fa-coins" style={{ marginRight: 5 }}></i>+{result.credits_earned}</span>
           </div>
           <button onClick={onLevelComplete}
             style={{ width: '100%', padding: '13px', background: '#16A34A', color: '#fff', border: 'none', borderRadius: 12, fontSize: '0.9rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            <Trophy style={{ width: 17, height: 17 }} /> 🏆 Level Complete — Back to Levels
+            <Trophy style={{ width: 17, height: 17 }} /> Level Complete - Back to Levels
           </button>
         </div>
       )}
@@ -458,6 +466,7 @@ function AssignmentSection({ lesson, progress, levelId, onComplete, onLevelCompl
 export default function Lesson({ levelId, onBack }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [step, setStep] = useState(0);
   const [completed, setCompleted] = useState([]);
   const [saving, setSaving] = useState(false);
@@ -465,6 +474,7 @@ export default function Lesson({ levelId, onBack }) {
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
+    setLoadError('');
     getLesson(levelId)
       .then((res) => {
         if (cancelled) return;
@@ -480,7 +490,11 @@ export default function Lesson({ levelId, onBack }) {
         else if (prog.lesson_read) setStep(1);
         else setStep(0);
       })
-      .catch(() => {})
+      .catch((err) => {
+        if (cancelled) return;
+        setData(null);
+        setLoadError(err?.message || 'Could not load this lesson right now.');
+      })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [levelId]);
@@ -508,8 +522,26 @@ export default function Lesson({ levelId, onBack }) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 300, color: '#6B7280' }}>
         <Loader2 style={{ width: 36, height: 36, marginBottom: 12, animation: 'spin 0.7s linear infinite', color: WW }} />
-        <p style={{ fontSize: '0.875rem' }}>Loading lesson…</p>
+        <p style={{ fontSize: '0.875rem' }}>Loading lesson...</p>
         <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div style={{ background: '#fff', border: '1.5px solid #E5E7EB', borderRadius: 18, padding: '2rem', textAlign: 'center', maxWidth: 780, margin: '0 auto' }}>
+        <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#FFF7ED', color: '#EA580C', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
+          <i className="fa-solid fa-circle-info" style={{ fontSize: '1.1rem' }} />
+        </div>
+        <h2 style={{ margin: 0, color: '#1F2937', fontSize: '1.08rem', fontWeight: 800 }}>Lesson content unavailable</h2>
+        <p style={{ margin: '8px 0 18px', color: '#64748B', fontSize: '0.9rem' }}>{loadError}</p>
+        <button
+          onClick={onBack}
+          style={{ background: WW, color: '#fff', border: 'none', borderRadius: 10, padding: '10px 18px', fontSize: '0.86rem', fontWeight: 700, cursor: 'pointer', fontFamily: 'inherit' }}
+        >
+          Back to Learning Hub
+        </button>
       </div>
     );
   }

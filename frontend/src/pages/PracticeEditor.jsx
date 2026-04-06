@@ -3,10 +3,12 @@ import { getPracticeTask, checkLiveText, submitPractice } from '../services/api'
 import { buildHighlightSegments, errorUnderlineStyle } from '../utils/errorHighlight';
 
 /* ─── Constants ─────────────────────────────────────────────── */
-const TYPE_ICONS = {
-  email: '📧', letter: '📄', report: '📊',
-  conversation: '💬', article: '📰', essay: '📝',
+const TYPE_ICON_CLASSES = {
+  email: 'fa-solid fa-envelope', letter: 'fa-solid fa-file-lines', report: 'fa-solid fa-chart-column',
+  conversation: 'fa-solid fa-comments', article: 'fa-solid fa-newspaper', essay: 'fa-solid fa-pen-nib',
 };
+
+const getTypeIconClass = (type) => TYPE_ICON_CLASSES[type] || 'fa-solid fa-file-pen';
 
 function countWords(text) {
   return text.trim() ? text.trim().split(/\s+/).length : 0;
@@ -72,7 +74,8 @@ function renderHighlightedText(text, errors, activeTooltip, setActiveTooltip, te
                 ...tooltipPlacement,
               }}>
                 <span style={{ fontSize: '0.85rem', display: 'block', marginBottom: 2 }}>
-                  {isSpelling ? '🔴 Spelling Error' : '🟡 Grammar Issue'}
+                  <i className={isSpelling ? 'fa-solid fa-circle' : 'fa-solid fa-circle-dot'} style={{ marginRight: 6 }}></i>
+                  {isSpelling ? 'Spelling Error' : 'Grammar Issue'}
                 </span>
                 <span style={{ color: '#94A3B8' }}>
                   {seg.err.hint || 'Check this word'}
@@ -190,7 +193,7 @@ export default function PracticeEditor({ taskId, onBack, onNavigate }) {
   if (!task) return <div style={{ padding: '2rem', color: '#94A3B8' }}>Task not found.</div>;
 
   return (
-    <div style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem', animation: 'fadeInUp 0.4s ease' }}>
+    <div className="pe-root" style={{ maxWidth: 1000, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem', animation: 'fadeInUp 0.4s ease' }}>
       <style>{`
         @keyframes fadeInUp { from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);} }
         @keyframes countUp { from{opacity:0;transform:scale(0.8);}to{opacity:1;transform:scale(1);} }
@@ -212,21 +215,26 @@ export default function PracticeEditor({ taskId, onBack, onNavigate }) {
       {/* ── Top bar ── */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
         <button onClick={onBack} style={{ background: '#F1F5F9', border: '1px solid #E2E8F0', borderRadius: 10, padding: '8px 14px', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'inherit', color: '#475569' }}>
-          ← Back
+          <i className="fa-solid fa-arrow-left"></i> Back
         </button>
         <div style={{ flex: 1 }}>
           <h1 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: '#1E293B' }}>
-            {TYPE_ICONS[task.type] || '📝'} Practice: {task.title}
+            <i className={getTypeIconClass(task.type)} style={{ marginRight: 8, color: '#2563EB' }}></i>
+            Practice: {task.title}
           </h1>
         </div>
         <span style={{ background: '#FEF9C3', color: '#B45309', borderRadius: 999, padding: '4px 12px', fontWeight: 700, fontSize: '0.82rem' }}>
-          ⭐ Up to {task.credits} pts
+          <i className="fa-solid fa-coins" style={{ marginRight: 6 }}></i>
+          Up to {task.credits} pts
         </span>
       </div>
 
       {/* ── Task prompt ── */}
       <div style={{ background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: 14, padding: '1.25rem 1.5rem' }}>
-        <p style={{ margin: '0 0 6px', fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em' }}>📋 Your Task</p>
+        <p style={{ margin: '0 0 6px', fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.08em', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <i className="fa-solid fa-clipboard-list"></i>
+          Your Task
+        </p>
         <p style={{ margin: 0, color: '#374151', fontSize: '0.95rem', lineHeight: 1.6 }}>{task.prompt}</p>
       </div>
 
@@ -236,14 +244,16 @@ export default function PracticeEditor({ taskId, onBack, onNavigate }) {
           className={`pe-mode-btn${mode === 'live' ? ' active-live' : ''}`}
           onClick={() => { setMode('live'); setResults(null); }}
         >
-          🔴 Live Suggestions
+          <i className="fa-solid fa-circle"></i>
+          Live Suggestions
           <span style={{ fontSize: '0.72rem', fontWeight: 500, color: 'inherit', opacity: 0.8 }}>hints as you type</span>
         </button>
         <button
           className={`pe-mode-btn${mode === 'after' ? ' active-after' : ''}`}
           onClick={() => { setMode('after'); setResults(null); setLiveErrors([]); }}
         >
-          🔵 Submit & Analyze
+          <i className="fa-solid fa-circle-dot"></i>
+          Submit & Analyze
           <span style={{ fontSize: '0.72rem', fontWeight: 500, color: 'inherit', opacity: 0.8 }}>full review after</span>
         </button>
       </div>
@@ -280,7 +290,8 @@ export default function PracticeEditor({ taskId, onBack, onNavigate }) {
       {/* ── Submit error ── */}
       {submitError && (
         <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '0.875rem 1rem', color: '#DC2626', fontSize: '0.875rem' }}>
-          ⚠️ {submitError}
+          <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: 6 }}></i>
+          {submitError}
         </div>
       )}
 
@@ -311,7 +322,10 @@ function LiveEditor({ text, onTextChange, onScroll, liveErrors, errorCount, live
         <div style={{ background: '#fff', border: '2px solid #E2E8F0', borderRadius: 14, overflow: 'visible' }}>
           <div style={{ borderBottom: '1px solid #F1F5F9', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#EF4444' }} />
-            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94A3B8' }}>🔴 Live Mode — hints shown as you type</span>
+            <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94A3B8' }}>
+              <i className="fa-solid fa-circle" style={{ marginRight: 6, color: '#EF4444' }}></i>
+              Live Mode - hints shown as you type
+            </span>
             {liveChecking && <span style={{ fontSize: '0.72rem', color: '#94A3B8', marginLeft: 'auto' }}>Checking...</span>}
           </div>
           {/* Mirror + textarea container */}
@@ -349,7 +363,7 @@ function LiveEditor({ text, onTextChange, onScroll, liveErrors, errorCount, live
               disabled={!canSubmit}
               style={{ background: canSubmit ? '#2563EB' : '#94A3B8', color: '#fff', padding: '8px 20px', fontSize: '0.85rem' }}
             >
-              {submitting ? '⏳ Analyzing...' : 'Submit for Full Analysis →'}
+              {submitting ? <><i className="fa-solid fa-hourglass-half"></i>Analyzing...</> : 'Submit for Full Analysis →'}
             </button>
           </div>
         </div>
@@ -357,14 +371,17 @@ function LiveEditor({ text, onTextChange, onScroll, liveErrors, errorCount, live
 
       {/* Right: hint panel */}
       <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14, padding: '1.25rem', position: 'sticky', top: '1rem' }}>
-        <p style={{ margin: '0 0 0.75rem', fontWeight: 700, color: '#1E293B', fontSize: '0.875rem' }}>📋 Error Summary</p>
+        <p style={{ margin: '0 0 0.75rem', fontWeight: 700, color: '#1E293B', fontSize: '0.875rem', display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+          <i className="fa-solid fa-list-check"></i>
+          Error Summary
+        </p>
         <div style={{ borderBottom: '1px solid #F1F5F9', paddingBottom: '0.75rem', marginBottom: '0.75rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-            <span style={{ fontSize: '0.8rem', color: '#64748B' }}>🔴 Spelling</span>
+            <span style={{ fontSize: '0.8rem', color: '#64748B' }}><i className="fa-solid fa-circle" style={{ marginRight: 6, color: '#EF4444' }}></i>Spelling</span>
             <span style={{ fontWeight: 700, color: errorCount.spelling > 0 ? '#EF4444' : '#94A3B8', fontSize: '0.8rem' }}>{errorCount.spelling}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: '0.8rem', color: '#64748B' }}>🟡 Grammar</span>
+            <span style={{ fontSize: '0.8rem', color: '#64748B' }}><i className="fa-solid fa-circle-dot" style={{ marginRight: 6, color: '#EAB308' }}></i>Grammar</span>
             <span style={{ fontWeight: 700, color: errorCount.grammar > 0 ? '#EAB308' : '#94A3B8', fontSize: '0.8rem' }}>{errorCount.grammar}</span>
           </div>
         </div>
@@ -372,14 +389,14 @@ function LiveEditor({ text, onTextChange, onScroll, liveErrors, errorCount, live
           Hover over any underlined word to see a hint!
         </p>
         <div style={{ background: '#F8FAFC', borderRadius: 10, padding: '0.75rem', fontSize: '0.75rem', color: '#64748B', lineHeight: 1.6 }}>
-          💡 <strong>Tip:</strong><br />
-          🔴 RED = Spelling error<br />
-          🟡 YELLOW = Grammar issue
+          <i className="fa-regular fa-lightbulb" style={{ marginRight: 6 }}></i><strong>Tip:</strong><br />
+          <i className="fa-solid fa-circle" style={{ marginRight: 6, color: '#EF4444' }}></i>RED = Spelling error<br />
+          <i className="fa-solid fa-circle-dot" style={{ marginRight: 6, color: '#EAB308' }}></i>YELLOW = Grammar issue
         </div>
 
         {liveSuggestions.length > 0 ? (
           <div style={{ marginTop: '0.8rem', borderTop: '1px solid #F1F5F9', paddingTop: '0.75rem' }}>
-            <p style={{ margin: '0 0 0.5rem', fontSize: '0.72rem', fontWeight: 700, color: '#1E293B' }}>🤖 AI Suggestions</p>
+            <p style={{ margin: '0 0 0.5rem', fontSize: '0.72rem', fontWeight: 700, color: '#1E293B' }}><i className="fa-solid fa-wand-magic-sparkles" style={{ marginRight: 6 }}></i>AI Suggestions</p>
             {liveSuggestions.map((err, idx) => (
               <div key={`${err.word}-${idx}`} style={{ marginBottom: '0.45rem', fontSize: '0.75rem', lineHeight: 1.45 }}>
                 <span style={{ color: err.color === 'red' ? '#DC2626' : '#CA8A04', fontWeight: 700 }}>{err.word}</span>
@@ -405,7 +422,10 @@ function AfterEditor({ text, onTextChange, wordCount, onSubmit, submitting, canS
     <div style={{ background: '#fff', border: '2px solid #E2E8F0', borderRadius: 14, overflow: 'hidden' }}>
       <div style={{ borderBottom: '1px solid #F1F5F9', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: 8 }}>
         <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3B82F6' }} />
-        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94A3B8' }}>🔵 Submit & Analyze — write freely, full review after submit</span>
+        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#94A3B8' }}>
+          <i className="fa-solid fa-circle-dot" style={{ marginRight: 6, color: '#3B82F6' }}></i>
+          Submit & Analyze - write freely, full review after submit
+        </span>
       </div>
       <textarea
         className="pe-textarea"
@@ -418,7 +438,8 @@ function AfterEditor({ text, onTextChange, wordCount, onSubmit, submitting, canS
       />
       <div style={{ borderTop: '1px solid #F1F5F9', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#F8FAFC' }}>
         <span style={{ fontSize: '0.78rem', color: '#94A3B8', fontWeight: 600 }}>
-          📝 Words: {wordCount}
+          <i className="fa-solid fa-file-pen" style={{ marginRight: 6 }}></i>
+          Words: {wordCount}
         </span>
         <button
           className="pe-submit-btn"
@@ -427,7 +448,7 @@ function AfterEditor({ text, onTextChange, wordCount, onSubmit, submitting, canS
           style={{ background: canSubmit ? '#2563EB' : '#94A3B8', color: '#fff' }}
         >
           {submitting ? (
-            <><span style={{ animation: 'spin 1s linear infinite', display: 'inline-block' }}>⏳</span> Analyzing your writing...</>
+            <><i className="fa-solid fa-hourglass-half"></i>Analyzing your writing...</>
           ) : 'Submit & Analyze →'}
         </button>
       </div>
@@ -452,7 +473,10 @@ function ResultsView({ results, task, originalText, onRetry, onNewTask, onPatter
     <div id="pw-results" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', animation: 'fadeInUp 0.5s ease' }}>
       {/* ── Header ── */}
       <div style={{ background: 'linear-gradient(135deg,#1E293B,#334155)', borderRadius: 16, padding: '1.5rem', color: '#fff' }}>
-        <p style={{ margin: '0 0 4px', fontSize: '0.75rem', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>📊 Practice Results</p>
+        <p style={{ margin: '0 0 4px', fontSize: '0.75rem', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+          <i className="fa-solid fa-chart-column" style={{ marginRight: 6 }}></i>
+          Practice Results
+        </p>
         <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>{task.title}</h2>
       </div>
 
@@ -496,14 +520,15 @@ function ResultsView({ results, task, originalText, onRetry, onNewTask, onPatter
             <p style={{ margin: 0, fontSize: '2.5rem', fontWeight: 900, color: '#D97706', animation: 'countUp 0.5s ease forwards' }}>+{credits}</p>
             {Object.entries(breakdown).filter(([k, v]) => k !== 'base' && k !== 'total' && v > 0).map(([key, val]) => (
               <p key={key} style={{ margin: '2px 0 0', fontSize: '0.72rem', color: '#92400E' }}>
-                +{val} {key.replace(/_/g, ' ')} 🎁
+                <i className="fa-solid fa-gift" style={{ marginRight: 5 }}></i>
+                +{val} {key.replace(/_/g, ' ')}
               </p>
             ))}
           </div>
 
           {/* Streak */}
           <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 14, padding: '1rem', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: '1.75rem' }}>🔥</span>
+            <i className="fa-solid fa-fire" style={{ fontSize: '1.5rem', color: '#EA580C' }}></i>
             <div>
               <p style={{ margin: 0, fontWeight: 800, color: '#F97316', fontSize: '1.1rem' }}>{streak}-day streak!</p>
               <p style={{ margin: 0, fontSize: '0.75rem', color: '#FB923C' }}>Keep it going!</p>
@@ -513,10 +538,10 @@ function ResultsView({ results, task, originalText, onRetry, onNewTask, onPatter
           {/* New badges */}
           {badges.length > 0 && (
             <div style={{ background: '#F5F3FF', border: '1px solid #DDD6FE', borderRadius: 14, padding: '1rem' }}>
-              <p style={{ margin: '0 0 8px', fontWeight: 700, color: '#7C3AED', fontSize: '0.8rem' }}>🏅 New Badges!</p>
+              <p style={{ margin: '0 0 8px', fontWeight: 700, color: '#7C3AED', fontSize: '0.8rem' }}><i className="fa-solid fa-award" style={{ marginRight: 6 }}></i>New Badges!</p>
               {badges.map((b, i) => (
                 <div key={i} className="badge-pop" style={{ animationDelay: `${i * 0.15}s`, background: '#fff', borderRadius: 10, padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-                  <span style={{ fontSize: '1.2rem' }}>🏅</span>
+                  <span style={{ fontSize: '1.2rem' }}><i className="fa-solid fa-award" style={{ color: '#7C3AED' }}></i></span>
                   <span style={{ fontWeight: 700, color: '#5B21B6', fontSize: '0.82rem' }}>{b.badge_name || b.badge_id}</span>
                 </div>
               ))}
@@ -528,9 +553,9 @@ function ResultsView({ results, task, originalText, onRetry, onNewTask, onPatter
       {/* ── Strengths ── */}
       {results.strengths?.length > 0 && (
         <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 14, padding: '1.25rem' }}>
-          <p style={{ margin: '0 0 10px', fontWeight: 700, color: '#15803D', fontSize: '0.9rem' }}>✅ What You Did Well</p>
+          <p style={{ margin: '0 0 10px', fontWeight: 700, color: '#15803D', fontSize: '0.9rem' }}><i className="fa-solid fa-circle-check" style={{ marginRight: 6 }}></i>What You Did Well</p>
           {results.strengths.map((s, i) => (
-            <p key={i} style={{ margin: '0 0 4px', color: '#166534', fontSize: '0.875rem' }}>✓ {s}</p>
+            <p key={i} style={{ margin: '0 0 4px', color: '#166534', fontSize: '0.875rem' }}><i className="fa-solid fa-check" style={{ marginRight: 6 }}></i>{s}</p>
           ))}
         </div>
       )}
@@ -538,7 +563,7 @@ function ResultsView({ results, task, originalText, onRetry, onNewTask, onPatter
       {/* ── Errors ── */}
       {errors.length > 0 && (
         <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14, padding: '1.5rem' }}>
-          <p style={{ margin: '0 0 1rem', fontWeight: 700, color: '#1E293B', fontSize: '0.9rem' }}>🔍 Errors Found ({errors.length})</p>
+          <p style={{ margin: '0 0 1rem', fontWeight: 700, color: '#1E293B', fontSize: '0.9rem' }}><i className="fa-solid fa-magnifying-glass" style={{ marginRight: 6 }}></i>Errors Found ({errors.length})</p>
           {errors.map((err, i) => {
             const isSpelling = err.type === 'spelling' || err.color === 'red';
             return (
@@ -548,7 +573,7 @@ function ResultsView({ results, task, originalText, onRetry, onNewTask, onPatter
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
                   <span style={{ fontWeight: 700, fontSize: '0.8rem', color: isSpelling ? '#DC2626' : '#CA8A04' }}>
-                    Error {i + 1} — {isSpelling ? '🔴 Spelling' : '🟡 ' + (err.type || 'Grammar').charAt(0).toUpperCase() + (err.type || 'grammar').slice(1)}
+                    Error {i + 1} - {isSpelling ? 'Spelling' : (err.type || 'Grammar').charAt(0).toUpperCase() + (err.type || 'grammar').slice(1)}
                   </span>
                   {err.severity && (
                     <span style={{ fontSize: '0.68rem', background: err.severity === 'major' ? '#FEE2E2' : '#F1F5F9', color: err.severity === 'major' ? '#DC2626' : '#64748B', borderRadius: 6, padding: '2px 6px', fontWeight: 600 }}>
@@ -569,7 +594,8 @@ function ResultsView({ results, task, originalText, onRetry, onNewTask, onPatter
                 </div>
                 {err.explanation && (
                   <p style={{ margin: 0, fontSize: '0.82rem', color: '#374151', lineHeight: 1.6, background: '#fff', borderRadius: 8, padding: '8px 10px' }}>
-                    📖 {err.explanation}
+                    <i className="fa-solid fa-book-open" style={{ marginRight: 6, color: '#2563EB' }}></i>
+                    {err.explanation}
                   </p>
                 )}
               </div>
@@ -581,7 +607,7 @@ function ResultsView({ results, task, originalText, onRetry, onNewTask, onPatter
       {/* ── Areas to improve ── */}
       {results.areas_to_improve?.length > 0 && (
         <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 14, padding: '1.25rem' }}>
-          <p style={{ margin: '0 0 10px', fontWeight: 700, color: '#C2410C', fontSize: '0.9rem' }}>📈 Areas to Improve</p>
+          <p style={{ margin: '0 0 10px', fontWeight: 700, color: '#C2410C', fontSize: '0.9rem' }}><i className="fa-solid fa-arrow-trend-up" style={{ marginRight: 6 }}></i>Areas to Improve</p>
           {results.areas_to_improve.map((a, i) => (
             <p key={i} style={{ margin: '0 0 4px', color: '#9A3412', fontSize: '0.875rem' }}>• {a}</p>
           ))}
@@ -591,7 +617,7 @@ function ResultsView({ results, task, originalText, onRetry, onNewTask, onPatter
       {/* ── Improved version ── */}
       {results.improved_version && (
         <div style={{ background: '#fff', border: '1px solid #E2E8F0', borderRadius: 14, padding: '1.5rem' }}>
-          <p style={{ margin: '0 0 1rem', fontWeight: 700, color: '#1E293B', fontSize: '0.9rem' }}>✨ Improved Version</p>
+          <p style={{ margin: '0 0 1rem', fontWeight: 700, color: '#1E293B', fontSize: '0.9rem' }}><i className="fa-solid fa-wand-magic-sparkles" style={{ marginRight: 6 }}></i>Improved Version</p>
           <div style={{ background: '#F0FDF4', borderRadius: 10, padding: '1rem 1.25rem', borderLeft: '4px solid #16A34A' }}>
             <p style={{ margin: 0, fontSize: '0.9rem', lineHeight: 1.75, color: '#1E293B', whiteSpace: 'pre-wrap' }}>
               <ImprovedTextDiff original={originalText} improved={results.improved_version} />
@@ -603,13 +629,16 @@ function ResultsView({ results, task, originalText, onRetry, onNewTask, onPatter
       {/* ── Action buttons ── */}
       <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap', padding: '0.5rem 0 1.5rem' }}>
         <button onClick={onRetry} style={{ background: '#2563EB', color: '#fff', border: 'none', borderRadius: 12, padding: '12px 24px', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem', fontFamily: 'inherit' }}>
-          🔄 Retry Same Task
+          <i className="fa-solid fa-rotate-right" style={{ marginRight: 6 }}></i>
+          Retry Same Task
         </button>
         <button onClick={onNewTask} style={{ background: '#F1F5F9', color: '#1E293B', border: '1px solid #E2E8F0', borderRadius: 12, padding: '12px 24px', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem', fontFamily: 'inherit' }}>
-          📝 New Task
+          <i className="fa-solid fa-file-pen" style={{ marginRight: 6 }}></i>
+          New Task
         </button>
         <button onClick={onPatterns} style={{ background: '#F1F5F9', color: '#1E293B', border: '1px solid #E2E8F0', borderRadius: 12, padding: '12px 24px', fontWeight: 700, cursor: 'pointer', fontSize: '0.9rem', fontFamily: 'inherit' }}>
-          📊 View My Patterns
+          <i className="fa-solid fa-chart-line" style={{ marginRight: 6 }}></i>
+          View My Patterns
         </button>
       </div>
     </div>

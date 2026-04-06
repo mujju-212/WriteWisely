@@ -8,15 +8,27 @@ import PracticeEditor from './PracticeEditor';
 import Projects from './Projects';
 import Analytics from './Analytics';
 import {
+  fetchChatConversations,
+  createChatConversation,
+  updateChatConversation,
+  deleteChatConversation,
   fetchChatHistory,
   fetchChatDocuments,
+  deleteChatDocument,
   sendChatMessage,
   uploadChatDocument,
   fetchDashboard as fetchDashboardData,
+  fetchUserProfile,
+  updateUserProfile,
+  changeUserPassword,
+  updateSettings,
+  exportUserData,
+  deleteUserAccount,
 } from '../services/api';
 import NotificationBell from '../components/NotificationBell';
 import ProfileDropdown from '../components/ProfileDropdown';
 import authService from '../services/authService';
+import { useTheme } from '../context/ThemeContext';
 
 // ──────────────────────────────────────────────────────────────────────────────
 // DASHBOARD VIEW — wired to real backend data via useDashboard()
@@ -37,25 +49,25 @@ function Skel({ w = '100%', h = 18, r = 8 }) {
 
 /* Badge colour map */
 const BADGE_COLORS = {
-  first_steps:   { bg: '#FEF9C3', color: '#CA8A04', icon: '🏅' },
-  bookworm:      { bg: '#DBEAFE', color: '#2563EB', icon: '📖' },
-  writer:        { bg: '#F3E8FF', color: '#9333EA', icon: '✍️' },
-  on_fire:       { bg: '#FFEDD5', color: '#EA580C', icon: '🔥' },
-  sharpshooter:  { bg: '#DCFCE7', color: '#16A34A', icon: '🎯' },
-  scholar:       { bg: '#DBEAFE', color: '#1D4ED8', icon: '📚' },
-  perfectionist: { bg: '#FEF9C3', color: '#B45309', icon: '✨' },
-  champion:      { bg: '#FFEDD5', color: '#C2410C', icon: '🏆' },
-  master:        { bg: '#EDE9FE', color: '#7C3AED', icon: '🎓' },
-  legend:        { bg: '#FEF9C3', color: '#92400E', icon: '👑' },
+  first_steps:   { bg: '#FEF9C3', color: '#CA8A04', iconClass: 'fa-solid fa-award' },
+  bookworm:      { bg: '#DBEAFE', color: '#2563EB', iconClass: 'fa-solid fa-book-open' },
+  writer:        { bg: '#F3E8FF', color: '#9333EA', iconClass: 'fa-solid fa-pen-nib' },
+  on_fire:       { bg: '#FFEDD5', color: '#EA580C', iconClass: 'fa-solid fa-fire' },
+  sharpshooter:  { bg: '#DCFCE7', color: '#16A34A', iconClass: 'fa-solid fa-bullseye' },
+  scholar:       { bg: '#DBEAFE', color: '#1D4ED8', iconClass: 'fa-solid fa-graduation-cap' },
+  perfectionist: { bg: '#FEF9C3', color: '#B45309', iconClass: 'fa-solid fa-gem' },
+  champion:      { bg: '#FFEDD5', color: '#C2410C', iconClass: 'fa-solid fa-trophy' },
+  master:        { bg: '#EDE9FE', color: '#7C3AED', iconClass: 'fa-solid fa-medal' },
+  legend:        { bg: '#FEF9C3', color: '#92400E', iconClass: 'fa-solid fa-crown' },
 };
 
 /* Activity type colour + icon map */
 const ACTIVITY_MAP = {
-  success:  { bg: '#DCFCE7', icon: '✅', color: '#16A34A' },
-  practice: { bg: '#DBEAFE', icon: '✍️', color: '#2563EB' },
-  project:  { bg: '#F3E8FF', icon: '📄', color: '#9333EA' },
-  badge:    { bg: '#FEF9C3', icon: '🏅', color: '#CA8A04' },
-  info:     { bg: '#F1F5F9', icon: 'ℹ️', color: '#64748B' },
+  success:  { bg: '#DCFCE7', iconClass: 'fa-solid fa-circle-check', color: '#16A34A' },
+  practice: { bg: '#DBEAFE', iconClass: 'fa-solid fa-pen-nib', color: '#2563EB' },
+  project:  { bg: '#F3E8FF', iconClass: 'fa-solid fa-file-lines', color: '#9333EA' },
+  badge:    { bg: '#FEF9C3', iconClass: 'fa-solid fa-award', color: '#CA8A04' },
+  info:     { bg: '#F1F5F9', iconClass: 'fa-solid fa-circle-info', color: '#64748B' },
 };
 
 function DashboardViewComp({ setCurrentTab }) {
@@ -80,20 +92,42 @@ function DashboardViewComp({ setCurrentTab }) {
 
   /* ── Keyframe injection (once) ── */
   useEffect(() => {
-    if (document.getElementById('ww-dash-styles')) return;
-    const s = document.createElement('style');
-    s.id = 'ww-dash-styles';
+    let s = document.getElementById('ww-dash-styles');
+    if (!s) {
+      s = document.createElement('style');
+      s.id = 'ww-dash-styles';
+      document.head.appendChild(s);
+    }
     s.textContent = `
       @keyframes ww-pulse {
         0%,100% { background-position: 200% 0 }
         50%      { background-position: -200% 0 }
       }
       .ww-card {
-        background:#fff; border-radius:16px;
-        border:1px solid #E2E8F0; box-shadow:0 1px 4px rgba(0,0,0,0.05);
+        background:var(--bg-white); border-radius:16px;
+        border:1px solid var(--border); box-shadow:0 1px 4px rgba(0,0,0,0.05);
         transition: box-shadow 0.2s;
       }
+      .ww-stat-icon {
+        width:38px; height:38px; border-radius:10px;
+        background:var(--surface-soft); border:1px solid var(--border);
+        display:flex; align-items:center; justify-content:center; font-size:1.1rem;
+      }
+      html.dark .ww-stat-icon {
+        background:var(--surface-muted);
+        border-color:rgba(148,163,184,0.25);
+      }
+      .ww-activity-icon {
+        width:36px; height:36px; border-radius:10px;
+        display:flex; align-items:center; justify-content:center;
+        font-size:1rem; flex-shrink:0;
+      }
+      html.dark .ww-activity-icon {
+        background:var(--surface-muted) !important;
+        border:1px solid rgba(148,163,184,0.25);
+      }
       .ww-card:hover { box-shadow:0 4px 16px rgba(0,0,0,0.08); }
+      html.dark .ww-card:hover { box-shadow:0 8px 24px rgba(2,6,23,0.45); }
       .ww-btn-primary {
         background:var(--primary); color:#fff; border:none;
         border-radius:10px; padding:9px 18px; font-weight:600;
@@ -101,23 +135,25 @@ function DashboardViewComp({ setCurrentTab }) {
         align-items:center; gap:6px; transition:background 0.2s;
         font-family:inherit;
       }
-      .ww-btn-primary:hover { background:#1D4ED8; }
+      .ww-btn-primary:hover { background:var(--primary-hover); }
       .ww-btn-secondary {
-        background:#F1F5F9; color:var(--text-dark); border:1px solid #E2E8F0;
+        background:var(--primary-light); color:var(--text-dark); border:1px solid var(--border);
         border-radius:10px; padding:9px 18px; font-weight:600;
         font-size:0.875rem; cursor:pointer; display:inline-flex;
         align-items:center; gap:6px; transition:background 0.2s;
         font-family:inherit;
       }
-      .ww-btn-secondary:hover { background:#E2E8F0; }
+      .ww-btn-secondary:hover { background:rgba(148, 163, 184, 0.2); }
       .ww-pill-green { background:#F0FDF4; color:#16A34A; border-radius:8px;
         font-size:0.7rem; font-weight:700; padding:3px 8px; display:inline-flex; align-items:center; gap:3px; }
       .ww-pill-orange { background:#FFF7ED; color:#EA580C; border-radius:8px;
         font-size:0.7rem; font-weight:700; padding:3px 8px; display:inline-flex; align-items:center; gap:3px; }
       .ww-pill-muted  { background:#F1F5F9; color:#64748B; border-radius:8px;
         font-size:0.7rem; font-weight:700; padding:3px 8px; }
+      html.dark .ww-pill-green { background:rgba(22,163,74,0.2); color:#86efac; }
+      html.dark .ww-pill-orange { background:rgba(234,88,12,0.22); color:#fdba74; }
+      html.dark .ww-pill-muted  { background:#1e293b; color:#94a3b8; }
     `;
-    document.head.appendChild(s);
   }, []);
 
   /* ══════════ SECTION 1 — GREETING ══════════ */
@@ -129,7 +165,7 @@ function DashboardViewComp({ setCurrentTab }) {
         </p>
         {loading ? <Skel w={220} h={28} /> : (
           <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-dark)', margin: 0 }}>
-            Good {getTimeOfDay()}, {g.name}! 👋
+            Good {getTimeOfDay()}, {g.name}
           </h1>
         )}
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: 6 }}>
@@ -143,7 +179,7 @@ function DashboardViewComp({ setCurrentTab }) {
         </p>
       </div>
       <div style={{ background: '#FFF7ED', border: '1px solid #FED7AA', borderRadius: 14, padding: '1rem 1.25rem', display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-        <span style={{ fontSize: '1.75rem' }}>🔥</span>
+        <i className="fa-solid fa-fire" style={{ fontSize: '1.4rem', color: '#EA580C' }}></i>
         <div>
           <p style={{ fontSize: '1.75rem', fontWeight: 800, color: '#F97316', lineHeight: 1, margin: 0 }}>
             {loading ? '—' : g.streak}
@@ -157,40 +193,40 @@ function DashboardViewComp({ setCurrentTab }) {
   /* ══════════ SECTION 2 — STAT CARDS ══════════ */
   const statCards = [
     {
-      iconBg: '#DBEAFE', icon: '📊', label: 'Current Level',
+      iconBg: '#DBEAFE', iconClass: 'fa-solid fa-chart-line', label: 'Current Level',
       value: loading ? null : `${level.current} / 30`,
       pill: 'green', pillLabel: level.change || 'Learning',
       sub: loading ? null : `Level ${level.current} · Keep going!`
     },
     {
-      iconBg: '#FEF9C3', icon: '⭐', label: 'Total Credits',
+      iconBg: '#FEF9C3', iconClass: 'fa-solid fa-coins', label: 'Total Credits',
       value: loading ? null : (typeof credits.total === 'number' ? credits.total.toLocaleString() : credits.total),
       pill: 'green', pillLabel: credits.change || '+0 this week',
       sub: loading ? null : (credits.rank || 'Beginner Writer')
     },
     {
-      iconBg: '#DCFCE7', icon: '🎯', label: 'Overall Accuracy',
+      iconBg: '#DCFCE7', iconClass: 'fa-solid fa-bullseye', label: 'Overall Accuracy',
       value: loading ? null : `${acc.percentage}%`,
       pill: 'green', pillLabel: acc.percentage >= 70 ? 'Great!' : 'Improving',
       sub: loading ? null : (acc.percentage >= 80 ? 'Excellent work!' : 'Keep practicing!')
     },
     {
-      iconBg: '#FFEDD5', icon: '🔥', label: 'Current Streak',
+      iconBg: '#FFEDD5', iconClass: 'fa-solid fa-fire', label: 'Current Streak',
       value: loading ? null : `${streak.current} days`,
-      pill: 'orange', pillLabel: '🔥 Active',
+      pill: 'orange', pillLabel: 'Active',
       sub: loading ? null : `Best: ${streak.best} days`
     },
     {
-      iconBg: '#F3E8FF', icon: '📝', label: 'Words Written',
+      iconBg: '#F3E8FF', iconClass: 'fa-solid fa-file-pen', label: 'Words Written',
       value: loading ? null : words.total.toLocaleString(),
       pill: 'muted', pillLabel: 'Total',
       sub: loading ? null : 'Across all activities'
     },
     {
-      iconBg: '#CCFBF1', icon: '⏱️', label: 'Time Today',
+      iconBg: '#CCFBF1', iconClass: 'fa-solid fa-clock', label: 'Time Today',
       value: loading ? null : `${time.total} min`,
       pill: 'muted', pillLabel: 'Today',
-      sub: loading ? null : `📚 ${time.learning}m · ✍️ ${time.practice}m · 📄 ${time.project}m`
+      sub: loading ? null : `Learning ${time.learning}m · Practice ${time.practice}m · Project ${time.project}m`
     },
   ];
 
@@ -199,8 +235,8 @@ function DashboardViewComp({ setCurrentTab }) {
       {statCards.map((c, i) => (
         <div key={i} className="ww-card" style={{ padding: '1.1rem 1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-            <div style={{ width: 38, height: 38, borderRadius: 10, background: c.iconBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem' }}>
-              {c.icon}
+              <div className="ww-stat-icon">
+                <i className={c.iconClass} style={{ color: 'var(--text-dark)' }}></i>
             </div>
             <span className={`ww-pill-${c.pill}`}>↑ {c.pillLabel}</span>
           </div>
@@ -208,7 +244,7 @@ function DashboardViewComp({ setCurrentTab }) {
             <p style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-dark)', margin: 0 }}>{c.value}</p>
           )}
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 10px' }}>{c.label}</p>
-          <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: 8 }}>
+          <div style={{ borderTop: '1px solid var(--border)', paddingTop: 8 }}>
             {loading ? <Skel w="70%" h={12} r={4} /> : (
               <p style={{ fontSize: '0.75rem', color: '#94A3B8', margin: 0 }}>{c.sub}</p>
             )}
@@ -252,7 +288,7 @@ function DashboardViewComp({ setCurrentTab }) {
               <span style={{ color: 'var(--text-muted)' }}>Progress</span>
               <span style={{ fontWeight: 700, color: 'var(--primary)' }}>{cl?.progress ?? 0}%</span>
             </div>
-            <div style={{ width: '100%', height: 7, background: '#F1F5F9', borderRadius: 999, marginBottom: 18 }}>
+            <div style={{ width: '100%', height: 7, background: 'var(--surface-muted)', borderRadius: 999, marginBottom: 18 }}>
               <div style={{ height: 7, borderRadius: 999, background: 'var(--primary)', width: `${cl?.progress ?? 0}%`, transition: 'width 0.6s ease' }} />
             </div>
           </>
@@ -261,9 +297,9 @@ function DashboardViewComp({ setCurrentTab }) {
           {cl ? 'Continue Learning →' : 'Start Learning →'}
         </button>
       </div>
-      <div style={{ background: '#EFF6FF', borderRadius: 14, padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, minWidth: 140 }}>
-        <span style={{ fontSize: '3rem' }}>📖</span>
-        <p style={{ fontSize: '0.75rem', color: '#94A3B8', marginTop: 8, textAlign: 'center' }}>
+      <div style={{ background: 'var(--surface-soft)', borderRadius: 14, padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0, minWidth: 140, border: '1px solid var(--border)' }}>
+        <i className="fa-solid fa-book-open" style={{ fontSize: '2.2rem', color: 'var(--primary)' }}></i>
+        <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: 8, textAlign: 'center' }}>
           {cl ? `Level ${cl.level} of 30` : 'Start your path'}
         </p>
       </div>
@@ -283,7 +319,7 @@ function DashboardViewComp({ setCurrentTab }) {
         </div>
       ) : activity.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-muted)' }}>
-          <p style={{ fontSize: '1.5rem' }}>🌅</p>
+          <p style={{ fontSize: '1.3rem' }}><i className="fa-regular fa-clock"></i></p>
           <p style={{ fontSize: '0.9rem', fontWeight: 600 }}>No activity yet today</p>
           <p style={{ fontSize: '0.8rem' }}>Start a lesson or practice task!</p>
         </div>
@@ -292,10 +328,10 @@ function DashboardViewComp({ setCurrentTab }) {
         return (
           <div key={i} style={{
             display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0',
-            borderBottom: i < activity.length - 1 ? '1px solid #F8FAFC' : 'none'
+            borderBottom: i < activity.length - 1 ? '1px solid var(--border)' : 'none'
           }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: map.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem', flexShrink: 0 }}>
-              {map.icon}
+            <div className="ww-activity-icon" style={{ background: map.bg }}>
+              <i className={map.iconClass} style={{ color: map.color }}></i>
             </div>
             <p style={{ flex: 1, fontSize: '0.85rem', fontWeight: 500, color: 'var(--text-dark)', margin: 0 }}>{item.text}</p>
             {item.time && <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', flexShrink: 0 }}>{item.time}</span>}
@@ -307,22 +343,22 @@ function DashboardViewComp({ setCurrentTab }) {
 
   /* ══════════ SECTION 5a — THIS WEEK ══════════ */
   const weekRows = [
-    { icon: '📖', label: 'Lessons', val: week.lessons ?? '—' },
-    { icon: '🎯', label: 'Quizzes Passed', val: week.quizzes ?? '—' },
-    { icon: '✍️', label: 'Practice Tasks', val: week.practice ?? '—' },
-    { icon: '🔧', label: 'Errors Tracked', val: week.errors_fixed ?? '—' },
-    { icon: '📝', label: 'Words Written', val: typeof week.words === 'number' ? week.words.toLocaleString() : '—' },
-    { icon: '⭐', label: 'Credits Earned', val: week.credits ?? '—' },
+    { iconClass: 'fa-solid fa-book-open', label: 'Lessons', val: week.lessons ?? '—' },
+    { iconClass: 'fa-solid fa-bullseye', label: 'Quizzes Passed', val: week.quizzes ?? '—' },
+    { iconClass: 'fa-solid fa-pen-nib', label: 'Practice Tasks', val: week.practice ?? '—' },
+    { iconClass: 'fa-solid fa-screwdriver-wrench', label: 'Errors Tracked', val: week.errors_fixed ?? '—' },
+    { iconClass: 'fa-solid fa-file-lines', label: 'Words Written', val: typeof week.words === 'number' ? week.words.toLocaleString() : '—' },
+    { iconClass: 'fa-solid fa-coins', label: 'Credits Earned', val: week.credits ?? '—' },
   ];
 
   const renderThisWeek = () => (
     <div className="ww-card" style={{ padding: '1.5rem' }}>
       <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-dark)', margin: '0 0 16px' }}>This Week</h2>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {weekRows.map(({ icon, label, val }) => (
+        {weekRows.map(({ iconClass, label, val }) => (
           <div key={label} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: '0.9rem' }}>{icon}</span>
+              <span style={{ width: 14, textAlign: 'center', color: 'var(--text-muted)' }}><i className={iconClass}></i></span>
               <span style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>{label}</span>
             </div>
             {loading ? <Skel w={40} h={16} r={4} /> : (
@@ -331,7 +367,7 @@ function DashboardViewComp({ setCurrentTab }) {
           </div>
         ))}
       </div>
-      <div style={{ borderTop: '1px solid #F1F5F9', marginTop: 14, paddingTop: 12 }}>
+      <div style={{ borderTop: '1px solid var(--border)', marginTop: 14, paddingTop: 12 }}>
         <button className="ww-btn-secondary" style={{ fontSize: '0.78rem', padding: '6px 12px' }} onClick={() => setCurrentTab('analytics')}>
           View Full Analytics →
         </button>
@@ -344,7 +380,7 @@ function DashboardViewComp({ setCurrentTab }) {
     <div className="ww-card" style={{ padding: '1.5rem' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
         <h2 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-dark)', margin: 0 }}>Weak Areas</h2>
-        <span style={{ fontSize: '1.1rem' }}>⚠️</span>
+        <span style={{ color: '#EA580C' }}><i className="fa-solid fa-triangle-exclamation"></i></span>
       </div>
       {loading ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -352,7 +388,7 @@ function DashboardViewComp({ setCurrentTab }) {
         </div>
       ) : weak.length === 0 ? (
         <div style={{ textAlign: 'center', padding: '1.5rem', background: '#F0FDF4', borderRadius: 12 }}>
-          <p style={{ fontSize: '1.5rem' }}>🎉</p>
+          <p style={{ fontSize: '1.3rem', color: '#16A34A' }}><i className="fa-solid fa-circle-check"></i></p>
           <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#16A34A' }}>No weak areas!</p>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Keep up the great work</p>
         </div>
@@ -370,7 +406,7 @@ function DashboardViewComp({ setCurrentTab }) {
             }}>{area.count} errors</span>
           </div>
           <p style={{ fontSize: '0.78rem', color: 'var(--primary)', fontWeight: 500, margin: '0 0 8px' }}>
-            💡 {area.suggestion}
+            <i className="fa-regular fa-lightbulb" style={{ marginRight: 4 }}></i>{area.suggestion}
           </p>
           <button className="ww-btn-primary" style={{ fontSize: '0.75rem', padding: '5px 12px' }} onClick={() => setCurrentTab('practice')}>
             Practice Now →
@@ -390,7 +426,7 @@ function DashboardViewComp({ setCurrentTab }) {
           <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>Last 7 days</p>
         </div>
         {!loading && acc.percentage > 0 && (
-          <span className="ww-pill-green">📈 Improving</span>
+          <span className="ww-pill-green"><i className="fa-solid fa-arrow-trend-up" style={{ marginRight: 4 }}></i>Improving</span>
         )}
       </div>
       {loading ? <Skel h={140} r={10} /> : (
@@ -431,16 +467,16 @@ function DashboardViewComp({ setCurrentTab }) {
             </div>
           ) : badges.recent.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '1rem', color: 'var(--text-muted)', background: '#F8FAFC', borderRadius: 10 }}>
-              <p style={{ fontSize: '1.2rem' }}>🏁</p>
+              <p style={{ fontSize: '1.2rem' }}><i className="fa-solid fa-flag-checkered"></i></p>
               <p style={{ fontSize: '0.82rem', fontWeight: 600 }}>No badges yet</p>
               <p style={{ fontSize: '0.75rem' }}>Complete lessons to earn them!</p>
             </div>
           ) : badges.recent.map((b, i) => {
-            const bc = BADGE_COLORS[b.badge_id] || { bg: '#F1F5F9', color: '#64748B', icon: '🏅' };
+            const bc = BADGE_COLORS[b.badge_id] || { bg: '#F1F5F9', color: '#64748B', iconClass: 'fa-solid fa-award' };
             return (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                 <div style={{ width: 38, height: 38, borderRadius: 10, background: bc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.1rem', flexShrink: 0 }}>
-                  {bc.icon}
+                  <i className={bc.iconClass} style={{ color: bc.color }}></i>
                 </div>
                 <div style={{ flex: 1 }}>
                   <p style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-dark)', margin: '0 0 1px' }}>{b.name}</p>
@@ -448,7 +484,7 @@ function DashboardViewComp({ setCurrentTab }) {
                     {b.earned ? `Earned ${new Date(b.earned).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : 'Earned'}
                   </p>
                 </div>
-                <span style={{ color: '#22C55E', fontSize: '1rem' }}>✅</span>
+                <span style={{ color: '#22C55E', fontSize: '1rem' }}><i className="fa-solid fa-circle-check"></i></span>
               </div>
             );
           })}
@@ -460,7 +496,7 @@ function DashboardViewComp({ setCurrentTab }) {
           {loading ? <Skel h={160} r={12} /> : badges.next ? (
             <div style={{ background: 'linear-gradient(135deg,#FFF7ED,#FEFCE8)', border: '1px solid #FED7AA', borderRadius: 14, padding: '1.25rem', textAlign: 'center' }}>
               <div style={{ width: 52, height: 52, borderRadius: '50%', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px', boxShadow: '0 1px 6px rgba(0,0,0,0.1)', fontSize: '1.5rem' }}>
-                {BADGE_COLORS[badges.next.badge_id || 'on_fire']?.icon || '🔥'}
+                <i className={BADGE_COLORS[badges.next.badge_id || 'on_fire']?.iconClass || 'fa-solid fa-fire'} style={{ color: '#EA580C' }}></i>
               </div>
               <p style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-dark)', margin: '0 0 4px' }}>{badges.next.name}</p>
               <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '0 0 14px' }}>{badges.next.description}</p>
@@ -472,14 +508,15 @@ function DashboardViewComp({ setCurrentTab }) {
                 <div style={{ height: 7, borderRadius: 999, background: '#FB923C', width: `${badges.next.percentage}%` }} />
               </div>
               <p style={{ fontSize: '0.78rem', fontWeight: 700, color: '#EA580C', margin: 0 }}>
-                {badges.next.required - badges.next.current} more to unlock! 🔥
+                <i className="fa-solid fa-fire" style={{ marginRight: 4 }}></i>
+                {badges.next.required - badges.next.current} more to unlock
               </p>
             </div>
           ) : (
             <div style={{ textAlign: 'center', padding: '1.5rem', background: '#F0FDF4', borderRadius: 12 }}>
-              <p style={{ fontSize: '1.5rem' }}>🎓</p>
+              <p style={{ fontSize: '1.5rem' }}><i className="fa-solid fa-graduation-cap"></i></p>
               <p style={{ fontSize: '0.9rem', fontWeight: 700, color: '#16A34A' }}>All badges earned!</p>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>You're a legend 👑</p>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>You are a legend</p>
             </div>
           )}
         </div>
@@ -528,7 +565,9 @@ function LearningViewComp({ setCurrentTab, completedModules, handleOpenModule, h
                 <span className="db-badge db-badge-primary" style={{marginBottom:'0.75rem',display:'inline-block'}}>BEGINNER CONTENT</span>
                 <p style={{fontWeight:700,color:'var(--text-dark)',marginBottom:'1rem'}}>{title}</p>
                 <button className="db-btn-primary" style={{width:'100%',justifyContent:'center'}} onClick={()=>handleOpenModule(title)}>
-                  {completedModules.includes(title)?'✅ Continue Reading':'Start Reading'}
+                  {completedModules.includes(title)
+                    ? <><i className="fa-solid fa-book-open-reader" style={{marginRight:6}}></i>Continue Reading</>
+                    : <><i className="fa-solid fa-play" style={{marginRight:6}}></i>Start Reading</>}
                 </button>
               </div>
             ))}
@@ -560,12 +599,12 @@ function LearningViewComp({ setCurrentTab, completedModules, handleOpenModule, h
                 spellCheck="false"
               />
               <div style={{display:'flex',gap:'1rem',padding:'0.5rem 1rem',fontSize:'0.75rem',color:'var(--text-muted)',borderTop:'1px solid var(--border)',background:'#F9FAFB'}}>
-                <span>📄 <strong style={{color:'var(--text-dark)'}}>{practiceText.split(/\s+/).filter(w=>w).length}</strong> Words</span>
-                <span>🔤 <strong style={{color:'var(--text-dark)'}}>{practiceText.length}</strong> Chars</span>
+                <span><i className="fa-solid fa-file-lines" style={{marginRight:6}}></i><strong style={{color:'var(--text-dark)'}}>{practiceText.split(/\s+/).filter(w=>w).length}</strong> Words</span>
+                <span><i className="fa-solid fa-font" style={{marginRight:6}}></i><strong style={{color:'var(--text-dark)'}}>{practiceText.length}</strong> Chars</span>
               </div>
               {showSuggestions && suggestions.length>0 && (
                 <div style={{padding:'0.75rem 1rem',background:'#EEF2FF',borderTop:'1px solid #C7D2FE'}}>
-                  <p style={{fontSize:'0.8rem',fontWeight:700,color:'var(--primary)',marginBottom:'0.35rem'}}>💡 Suggestions:</p>
+                  <p style={{fontSize:'0.8rem',fontWeight:700,color:'var(--primary)',marginBottom:'0.35rem'}}><i className="fa-regular fa-lightbulb" style={{marginRight:6}}></i>Suggestions:</p>
                   {suggestions.slice(0,2).map((s,i)=>(
                     <p key={i} style={{fontSize:'0.8rem',color:'var(--text-muted)'}}><code style={{color:'#DC2626'}}>{s.text}</code> → <code style={{color:'#059669'}}>{s.suggestion}</code></p>
                   ))}
@@ -590,9 +629,9 @@ function LearningViewComp({ setCurrentTab, completedModules, handleOpenModule, h
             </div>
           </div>
           <div className="db-card db-card-p" style={{background:'#EEF2FF',border:'1.5px solid #C7D2FE'}}>
-            <p style={{fontSize:'0.75rem',fontWeight:700,color:'var(--primary)',marginBottom:'0.5rem'}}>📚 ADVANCED PATH</p>
+            <p style={{fontSize:'0.75rem',fontWeight:700,color:'var(--primary)',marginBottom:'0.5rem'}}><i className="fa-solid fa-book-open" style={{marginRight:6}}></i>ADVANCED PATH</p>
             <p style={{fontSize:'0.875rem',fontWeight:600,color:'var(--text-dark)',marginBottom:'1rem'}}>Master 30 Comprehensive Lessons</p>
-            <button className="db-btn-primary" style={{width:'100%',justifyContent:'center'}} onClick={()=>setShowLearningPath(true)}>📚 View All 30 Levels</button>
+            <button className="db-btn-primary" style={{width:'100%',justifyContent:'center'}} onClick={()=>setShowLearningPath(true)}><i className="fa-solid fa-list-check" style={{marginRight:6}}></i>View All 30 Levels</button>
           </div>
         </div>
       </div>
@@ -613,7 +652,7 @@ function AllLevelsViewComp({ setShowLearningPath, addPoints }) {
     {id:7,title:'Articles (a, an, the)',difficulty:'Beginner',credits:20,topic:'Grammar'},
     {id:8,title:'Basic Tenses',difficulty:'Beginner',credits:35,topic:'Grammar'},
     {id:9,title:'Common Homophones',difficulty:'Beginner',credits:30,topic:'Homophones'},
-    {id:10,title:'🏆 Beginner Assessment',difficulty:'Beginner',credits:50,topic:'Assessment'},
+    {id:10,title:'Beginner Assessment',difficulty:'Beginner',credits:50,topic:'Assessment'},
     {id:11,title:'Advanced Punctuation',difficulty:'Intermediate',credits:40,topic:'Punctuation'},
     {id:12,title:'Complex Sentences',difficulty:'Intermediate',credits:35,topic:'Grammar'},
     {id:13,title:'Active vs Passive Voice',difficulty:'Intermediate',credits:40,topic:'Grammar'},
@@ -623,7 +662,7 @@ function AllLevelsViewComp({ setShowLearningPath, addPoints }) {
     {id:17,title:'Advanced Tenses',difficulty:'Intermediate',credits:45,topic:'Grammar'},
     {id:18,title:'Prepositions',difficulty:'Intermediate',credits:40,topic:'Grammar'},
     {id:19,title:'Formal vs Informal Writing',difficulty:'Intermediate',credits:50,topic:'Writing'},
-    {id:20,title:'🏆 Intermediate Assessment',difficulty:'Intermediate',credits:75,topic:'Assessment'},
+    {id:20,title:'Intermediate Assessment',difficulty:'Intermediate',credits:75,topic:'Assessment'},
     {id:21,title:'Style & Tone',difficulty:'Advanced',credits:60,topic:'Writing'},
     {id:22,title:'Conciseness',difficulty:'Advanced',credits:55,topic:'Writing'},
     {id:23,title:'Advanced Punctuation (Em dash)',difficulty:'Advanced',credits:50,topic:'Punctuation'},
@@ -633,7 +672,7 @@ function AllLevelsViewComp({ setShowLearningPath, addPoints }) {
     {id:27,title:'Business Writing',difficulty:'Advanced',credits:70,topic:'Writing'},
     {id:28,title:'Creative Writing Techniques',difficulty:'Advanced',credits:65,topic:'Writing'},
     {id:29,title:'Editing & Proofreading',difficulty:'Advanced',credits:65,topic:'Writing'},
-    {id:30,title:'🏆 Final Master Assessment',difficulty:'Advanced',credits:100,topic:'Assessment'},
+    {id:30,title:'Final Master Assessment',difficulty:'Advanced',credits:100,topic:'Assessment'},
   ];
   const getStatus = id => completedLevels.includes(id)?'completed':id<=currentLevel?'available':'locked';
   const diffColor = {Beginner:'#ECFDF5',Intermediate:'#FFFBEB',Advanced:'#FEF2F2'};
@@ -648,7 +687,7 @@ function AllLevelsViewComp({ setShowLearningPath, addPoints }) {
     if(!completedLevels.includes(id)){
       setCompletedLevels(p=>[...p,id]);
       const l=levels.find(x=>x.id===id);
-      alert('🎉 Lesson completed! +'+l.credits+' credits!');
+      alert('Lesson completed! +'+l.credits+' credits!');
       if(id===currentLevel) setCurrentLevel(id+1);
     }
   };
@@ -659,17 +698,23 @@ function AllLevelsViewComp({ setShowLearningPath, addPoints }) {
         return (
           <div key={level.id} className="db-level-card" style={{opacity:st==='locked'?0.55:1}}>
             <div style={{display:'flex',alignItems:'center',gap:'0.5rem',marginBottom:'0.5rem'}}>
-              <span>{st==='completed'?'✅':st==='available'?'▶️':'🔒'}</span>
+              <span>
+                <i className={st==='completed' ? 'fa-solid fa-circle-check' : st==='available' ? 'fa-solid fa-play' : 'fa-solid fa-lock'}></i>
+              </span>
               <span style={{fontSize:'0.7rem',fontWeight:700,padding:'2px 8px',borderRadius:999,background:diffColor[level.difficulty],color:diffText[level.difficulty]}}>L{level.id}</span>
             </div>
             <h3 style={{fontWeight:700,color:'var(--text-dark)',fontSize:'0.875rem',marginBottom:'0.25rem'}}>{level.title}</h3>
-            <p style={{fontSize:'0.75rem',color:'var(--text-muted)',marginBottom:'0.75rem'}}>📚 {level.topic} • ⭐ +{level.credits} Cr</p>
+            <p style={{fontSize:'0.75rem',color:'var(--text-muted)',marginBottom:'0.75rem'}}>
+              <i className="fa-solid fa-book-open" style={{marginRight:6}}></i>{level.topic}
+              {' '}•{' '}
+              <i className="fa-solid fa-coins" style={{marginRight:4}}></i>+{level.credits} Cr
+            </p>
             <div className="db-progress-track" style={{height:6,marginBottom:'0.75rem'}}>
               <div className={'db-progress-fill'+(st==='completed'?' db-progress-fill-success':st==='locked'?' db-progress-fill-muted':'')} style={{width:st==='completed'?'100%':st==='available'?'50%':'0%',height:'100%'}}></div>
             </div>
             <div style={{display:'flex',gap:'0.5rem'}}>
-              {st==='locked'?<button disabled className="db-btn-secondary" style={{flex:1,opacity:0.5,cursor:'not-allowed'}}>🔒 Locked</button>
-              :st==='completed'?<button onClick={()=>handleStart(level.id)} className="db-btn-secondary" style={{flex:1}}>✅ Review</button>
+              {st==='locked'?<button disabled className="db-btn-secondary" style={{flex:1,opacity:0.5,cursor:'not-allowed'}}><i className="fa-solid fa-lock" style={{marginRight:6}}></i>Locked</button>
+              :st==='completed'?<button onClick={()=>handleStart(level.id)} className="db-btn-secondary" style={{flex:1}}><i className="fa-solid fa-circle-check" style={{marginRight:6}}></i>Review</button>
               :<><button onClick={()=>handleStart(level.id)} className="db-btn-primary" style={{flex:1}}>Start</button><button onClick={()=>handleComplete(level.id)} className="db-btn-secondary" style={{flex:1,background:'#ECFDF5',color:'#059669',border:'1px solid #A7F3D0'}}>Complete</button></>}
             </div>
           </div>
@@ -684,7 +729,7 @@ function AllLevelsViewComp({ setShowLearningPath, addPoints }) {
           <h1 className="db-page-title">30-Level <span>Learning Path</span></h1>
           <p className="db-page-sub">Master writing skills with comprehensive lessons organized by difficulty.</p>
         </div>
-        <button className="db-btn-secondary" onClick={()=>setShowLearningPath(false)}>← Back</button>
+        <button className="db-btn-secondary" onClick={()=>setShowLearningPath(false)}><i className="fa-solid fa-arrow-left" style={{marginRight:6}}></i>Back</button>
       </div>
       <div className="db-card db-card-p">
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'0.75rem'}}>
@@ -696,12 +741,12 @@ function AllLevelsViewComp({ setShowLearningPath, addPoints }) {
         </div>
         <p style={{fontSize:'0.75rem',color:'var(--text-muted)',marginTop:'0.5rem'}}>{Math.round(completedLevels.length/30*100)}% Complete</p>
       </div>
-      {[{emoji:'🟢',label:'Beginner Level (1-10)',sub:'Master the fundamentals',diff:'Beginner'},
-        {emoji:'🟡',label:'Intermediate Level (11-20)',sub:'Advance with complex techniques',diff:'Intermediate'},
-        {emoji:'🔴',label:'Advanced Level (21-30)',sub:'Perfect your craft',diff:'Advanced'}].map(sec=>(
+      {[{iconClass:'fa-solid fa-seedling',label:'Beginner Level (1-10)',sub:'Master the fundamentals',diff:'Beginner',color:'#16A34A'},
+        {iconClass:'fa-solid fa-layer-group',label:'Intermediate Level (11-20)',sub:'Advance with complex techniques',diff:'Intermediate',color:'#D97706'},
+        {iconClass:'fa-solid fa-trophy',label:'Advanced Level (21-30)',sub:'Perfect your craft',diff:'Advanced',color:'#DC2626'}].map(sec=>(
         <div key={sec.diff}>
           <div style={{display:'flex',alignItems:'center',gap:'0.75rem',marginBottom:'1rem'}}>
-            <span style={{fontSize:'1.5rem'}}>{sec.emoji}</span>
+            <span style={{fontSize:'1.3rem',color:sec.color}}><i className={sec.iconClass}></i></span>
             <div><h2 style={{fontWeight:700,color:'var(--text-dark)',fontSize:'1.1rem'}}>{sec.label}</h2><p style={{fontSize:'0.8rem',color:'var(--text-muted)'}}>{sec.sub}</p></div>
           </div>
           {renderCards(levels.filter(l=>l.difficulty===sec.diff))}
@@ -711,7 +756,40 @@ function AllLevelsViewComp({ setShowLearningPath, addPoints }) {
   );
 }
 
-function ChatViewComp({messages,chatInput,setChatInput,sendMessage,handleFileUpload,showHistory,setShowHistory,chatBoxRef,isChatSending,historyItems,chatDocumentNames}) {
+function ChatViewComp({
+  messages,
+  chatInput,
+  setChatInput,
+  sendMessage,
+  handleFileUpload,
+  openFilePicker,
+  fileInputRef,
+  showHistory,
+  setShowHistory,
+  chatBoxRef,
+  isChatSending,
+  conversations,
+  activeConversationId,
+  onCreateConversation,
+  onSwitchConversation,
+  onRenameConversation,
+  onDeleteConversation,
+  referenceConversationIds,
+  onToggleReferenceConversation,
+  chatDocuments,
+  selectedDocumentIds,
+  onToggleDocumentSelection,
+  onDeleteDocument,
+}) {
+  const formatWhen = (iso) => {
+    if (!iso) return '';
+    const dt = new Date(iso);
+    if (Number.isNaN(dt.getTime())) return '';
+    return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const selectedDocs = chatDocuments.filter((doc) => selectedDocumentIds.includes(doc.id));
+
   return (
     <div className="db-chat-root" style={{height:'100%',minHeight:500}}>
       <div className="db-chat-main">
@@ -720,12 +798,31 @@ function ChatViewComp({messages,chatInput,setChatInput,sendMessage,handleFileUpl
             <div style={{width:36,height:36,background:'var(--primary)',borderRadius:8,display:'flex',alignItems:'center',justifyContent:'center',color:'white'}}><i className="fa-solid fa-robot"></i></div>
             <span style={{fontWeight:600,color:'var(--text-dark)'}}>AI Assistant</span>
           </div>
-          <button className="db-btn-secondary" style={{fontSize:'0.8rem'}} onClick={()=>setShowHistory(!showHistory)}>Show History</button>
+          <div style={{display:'flex',alignItems:'center',gap:'0.5rem'}}>
+            <button className="db-btn-primary" style={{fontSize:'0.78rem',padding:'7px 12px'}} onClick={onCreateConversation}>
+              <i className="fa-solid fa-plus" style={{marginRight:6}}></i>
+              New Chat
+            </button>
+            <button className="db-btn-secondary" style={{fontSize:'0.8rem'}} onClick={()=>setShowHistory(!showHistory)}>
+              {showHistory ? 'Hide Panel' : 'Show Panel'}
+            </button>
+          </div>
         </div>
-        {chatDocumentNames.length > 0 && (
-          <div style={{padding:'0.5rem 0.875rem',borderBottom:'1px solid var(--border)',background:'#F8FAFC',fontSize:'0.78rem',color:'var(--text-muted)'}}>
-            Using uploaded docs: {chatDocumentNames.slice(0, 3).join(', ')}
-            {chatDocumentNames.length > 3 ? ` +${chatDocumentNames.length - 3} more` : ''}
+        {(referenceConversationIds.length > 0 || selectedDocs.length > 0) && (
+          <div style={{padding:'0.5rem 0.875rem',borderBottom:'1px solid var(--border)',background:'var(--surface-soft)',fontSize:'0.78rem',color:'var(--text-muted)',display:'flex',flexDirection:'column',gap:3}}>
+            {referenceConversationIds.length > 0 && (
+              <span>
+                <i className="fa-solid fa-diagram-project" style={{marginRight:6}}></i>
+                Referencing {referenceConversationIds.length} past chat{referenceConversationIds.length > 1 ? 's' : ''}
+              </span>
+            )}
+            {selectedDocs.length > 0 && (
+              <span>
+                <i className="fa-solid fa-paperclip" style={{marginRight:6}}></i>
+                Using documents: {selectedDocs.slice(0, 2).map((doc) => doc.title || doc.filename || 'Document').join(', ')}
+                {selectedDocs.length > 2 ? ` +${selectedDocs.length - 2} more` : ''}
+              </span>
+            )}
           </div>
         )}
         <div ref={chatBoxRef} className="db-chat-messages">
@@ -743,26 +840,111 @@ function ChatViewComp({messages,chatInput,setChatInput,sendMessage,handleFileUpl
           )}
         </div>
         <div className="db-chat-input-bar">
-          <input type="file" id="fileUpload" style={{display:'none'}} onChange={handleFileUpload}/>
-          <button className="db-chat-attach-btn" onClick={()=>document.getElementById('fileUpload').click()} title="Upload File"><i className="fa-solid fa-paperclip"></i></button>
+          <input ref={fileInputRef} type="file" style={{display:'none'}} onChange={handleFileUpload}/>
+          <button className="db-chat-attach-btn" onClick={openFilePicker} title="Upload File"><i className="fa-solid fa-paperclip"></i></button>
           <input type="text" className="db-chat-input" placeholder="Type here..." value={chatInput} onChange={(e)=>setChatInput(e.target.value)} onKeyDown={(e)=>e.key==='Enter'&&sendMessage()} />
           <button className="db-chat-send-btn" onClick={sendMessage} disabled={isChatSending}><i className="fa-solid fa-paper-plane"></i></button>
         </div>
       </div>
       <div className={'db-history-panel'+(showHistory?'':' db-history-hidden')}>
         <div style={{padding:'1rem',borderBottom:'1px solid var(--border)',display:'flex',justifyContent:'space-between',alignItems:'center',background:'var(--bg-white)'}}>
-          <span style={{fontSize:'0.75rem',fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.08em'}}>History</span>
+          <span style={{fontSize:'0.75rem',fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.08em'}}>Chat Manager</span>
           <button className="db-icon-btn" onClick={()=>setShowHistory(false)}><i className="fa-solid fa-xmark"></i></button>
         </div>
-        <div style={{padding:'0.75rem',display:'flex',flexDirection:'column',gap:'0.5rem'}}>
-          {historyItems.length > 0 ? historyItems.map((item, idx) => (
-            <div key={idx} className="db-history-item">
-              <p style={{fontSize:'0.75rem',fontWeight:700,color:'var(--primary)',marginBottom:'0.2rem'}}>{item.day}</p>
-              <p style={{fontSize:'0.875rem',color:'var(--text-dark)',fontWeight:500}}>{item.preview}</p>
+        <div style={{padding:'0.75rem',display:'flex',flexDirection:'column',gap:'0.75rem',overflowY:'auto'}}>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0 0.2rem'}}>
+            <span style={{fontSize:'0.72rem',fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.08em'}}>Chats</span>
+            <button className="db-btn-secondary" style={{fontSize:'0.72rem',padding:'5px 9px'}} onClick={onCreateConversation}>+ New</button>
+          </div>
+
+          {conversations.length > 0 ? conversations.map((conv) => {
+            const isActive = conv.id === activeConversationId;
+            const isReference = referenceConversationIds.includes(conv.id);
+            return (
+              <div
+                key={conv.id}
+                className="db-history-item"
+                onClick={() => onSwitchConversation(conv.id)}
+                style={{
+                  borderColor: isActive ? 'var(--primary)' : 'var(--border)',
+                  background: isActive ? 'var(--primary-light)' : 'var(--bg-white)',
+                  padding: '0.72rem',
+                }}
+              >
+                <p style={{fontSize:'0.82rem',fontWeight:700,color:'var(--text-dark)',margin:'0 0 2px'}}>{conv.title || 'New Chat'}</p>
+                <p style={{fontSize:'0.75rem',color:'var(--text-muted)',margin:'0 0 7px'}}>{conv.preview || 'No messages yet'}</p>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',fontSize:'0.7rem',color:'var(--text-muted)',marginBottom:6}}>
+                  <span>{conv.message_count || 0} msgs</span>
+                  <span>{formatWhen(conv.updated_at)}</span>
+                </div>
+                <div style={{display:'flex',gap:6,alignItems:'center'}}>
+                  <button
+                    className="db-btn-secondary"
+                    style={{fontSize:'0.68rem',padding:'4px 8px',flex:1,opacity:isActive ? 0.65 : 1}}
+                    disabled={isActive}
+                    onClick={(e)=>{e.stopPropagation(); if (!isActive) onToggleReferenceConversation(conv.id);}}
+                    title={isActive ? 'Active chat cannot reference itself' : 'Toggle as reference context'}
+                  >
+                    {isReference ? 'Ref On' : 'Use Ref'}
+                  </button>
+                  <button
+                    className="db-icon-btn"
+                    style={{width:28,height:28}}
+                    onClick={(e)=>{e.stopPropagation(); onRenameConversation(conv.id, conv.title || 'New Chat');}}
+                    title="Rename chat"
+                  >
+                    <i className="fa-regular fa-pen-to-square"></i>
+                  </button>
+                  <button
+                    className="db-icon-btn"
+                    style={{width:28,height:28,color:'#EF4444'}}
+                    onClick={(e)=>{e.stopPropagation(); onDeleteConversation(conv.id, conv.title || 'New Chat');}}
+                    title="Delete chat"
+                  >
+                    <i className="fa-regular fa-trash-can"></i>
+                  </button>
+                </div>
+              </div>
+            );
+          }) : (
+            <div className="db-history-item" style={{padding:'0.8rem'}}>
+              <p style={{fontSize:'0.8rem',color:'var(--text-muted)',margin:0}}>No chats yet. Start a new chat.</p>
+            </div>
+          )}
+
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'0.35rem 0.2rem 0'}}>
+            <span style={{fontSize:'0.72rem',fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.08em'}}>Uploaded Files</span>
+            <span style={{fontSize:'0.72rem',color:'var(--text-muted)'}}>{selectedDocumentIds.length}/{chatDocuments.length} selected</span>
+          </div>
+
+          {chatDocuments.length > 0 ? chatDocuments.map((doc) => (
+            <div key={doc.id} className="db-history-item" style={{padding:'0.62rem 0.72rem'}}>
+              <div style={{display:'flex',alignItems:'flex-start',gap:8}}>
+                <input
+                  type="checkbox"
+                  checked={selectedDocumentIds.includes(doc.id)}
+                  onChange={() => onToggleDocumentSelection(doc.id)}
+                  style={{marginTop:3,accentColor:'var(--primary)'}}
+                />
+                <div style={{flex:1,minWidth:0}}>
+                  <p style={{fontSize:'0.8rem',fontWeight:700,color:'var(--text-dark)',margin:'0 0 2px',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>
+                    {doc.title || doc.filename || 'Document'}
+                  </p>
+                  <p style={{fontSize:'0.72rem',color:'var(--text-muted)',margin:0}}>{doc.word_count || 0} words</p>
+                </div>
+                <button
+                  className="db-icon-btn"
+                  style={{width:26,height:26,color:'#EF4444'}}
+                  onClick={() => onDeleteDocument(doc.id, doc.title || doc.filename || 'Document')}
+                  title="Delete uploaded file"
+                >
+                  <i className="fa-regular fa-trash-can"></i>
+                </button>
+              </div>
             </div>
           )) : (
-            <div className="db-history-item">
-              <p style={{fontSize:'0.875rem',color:'var(--text-muted)'}}>No chat history yet.</p>
+            <div className="db-history-item" style={{padding:'0.75rem'}}>
+              <p style={{fontSize:'0.78rem',color:'var(--text-muted)',margin:0}}>No uploaded files yet.</p>
             </div>
           )}
         </div>
@@ -777,7 +959,7 @@ function PracticeViewComp({practiceText,handlePracticeTextChange,handlePracticeK
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-end'}}>
         <div><h1 className="db-page-title">Practice <span>Panel</span></h1><p className="db-page-sub">Enhance your writing with real-time AI assistance.</p></div>
         <div style={{textAlign:'right'}}>
-          <p style={{fontSize:'0.8rem',color:'var(--text-muted)',marginBottom:'0.35rem'}}>⭐ Daily Goal: 350 / 500 Words</p>
+          <p style={{fontSize:'0.8rem',color:'var(--text-muted)',marginBottom:'0.35rem'}}><i className="fa-solid fa-coins" style={{marginRight:6}}></i>Daily Goal: 350 / 500 Words</p>
           <div className="db-progress-track" style={{width:200,height:7}}><div className="db-progress-fill" style={{width:'70%',height:'100%'}}></div></div>
         </div>
       </div>
@@ -814,9 +996,9 @@ function PracticeViewComp({practiceText,handlePracticeTextChange,handlePracticeK
           autoCapitalize="off"
         />
         <div className="db-stats-bar">
-          <div className="db-stat-chip">📄 <strong>{practiceText.split(/\s+/).filter(w=>w).length}</strong> Words</div>
-          <div className="db-stat-chip">�� <strong>{practiceText.length}</strong> Chars</div>
-          <div className="db-stat-chip">⏱️ <strong>{Math.max(1,Math.ceil(practiceText.split(/\s+/).filter(w=>w).length/200))}</strong> min</div>
+          <div className="db-stat-chip"><i className="fa-solid fa-file-lines" style={{marginRight:6}}></i><strong>{practiceText.split(/\s+/).filter(w=>w).length}</strong> Words</div>
+          <div className="db-stat-chip"><i className="fa-solid fa-font" style={{marginRight:6}}></i><strong>{practiceText.length}</strong> Chars</div>
+          <div className="db-stat-chip"><i className="fa-regular fa-clock" style={{marginRight:6}}></i><strong>{Math.max(1,Math.ceil(practiceText.split(/\s+/).filter(w=>w).length/200))}</strong> min</div>
           <div className="db-stat-chip" style={{marginLeft:'auto',borderColor:'rgba(239, 68, 68, 0.3)',background:'rgba(239, 68, 68, 0.15)'}}>
             <i className="fa-solid fa-circle-exclamation" style={{color:'#EF4444'}}></i>
             <strong style={{color:'#EF4444'}}>{errors.length}</strong>
@@ -825,14 +1007,14 @@ function PracticeViewComp({practiceText,handlePracticeTextChange,handlePracticeK
         </div>
         {isAnalyzing && suggestions.length>0 && (
           <div style={{margin:'0 1rem',marginBottom:'0.75rem',padding:'0.875rem',borderRadius:12,border:'1px solid rgba(167, 139, 250, 0.3)',background:'rgba(167, 139, 250, 0.1)'}}>
-            <p style={{fontWeight:700,color:'var(--primary)',marginBottom:'0.5rem',fontSize:'0.875rem'}}>⚠️ Analysis — {suggestions.length} Issues Found</p>
+            <p style={{fontWeight:700,color:'var(--primary)',marginBottom:'0.5rem',fontSize:'0.875rem'}}><i className="fa-solid fa-triangle-exclamation" style={{marginRight:6}}></i>Analysis - {suggestions.length} Issues Found</p>
             <div style={{display:'flex',flexDirection:'column',gap:'0.5rem',maxHeight:160,overflowY:'auto'}}>
               {suggestions.map((s,i)=>(
                 <div key={i} style={{padding:'0.5rem 0.75rem',background:'#E5E7EB',border:'1px solid var(--border)',borderRadius:8,fontSize:'0.825rem'}}>
-                  <strong style={{color:'var(--primary)'}}>{s.type.toUpperCase()}</strong>{' — '}
+                  <strong style={{color:'var(--primary)'}}>{s.type.toUpperCase()}</strong>{' - '}
                   <code style={{background:'#FEE2E2',color:'#DC2626',padding:'0 4px',borderRadius:4}}>{s.text}</code>{' → '}
                   <code style={{background:'#D1FAE5',color:'#059669',padding:'0 4px',borderRadius:4}}>{s.suggestion}</code>
-                  <p style={{color:'var(--text-muted)',marginTop:'0.2rem',fontStyle:'italic',fontSize:'0.8rem'}}>💡 {s.hint}</p>
+                  <p style={{color:'var(--text-muted)',marginTop:'0.2rem',fontStyle:'italic',fontSize:'0.8rem'}}><i className="fa-regular fa-lightbulb" style={{marginRight:6}}></i>{s.hint}</p>
                 </div>
               ))}
             </div>
@@ -840,7 +1022,7 @@ function PracticeViewComp({practiceText,handlePracticeTextChange,handlePracticeK
         )}
         {showSuggestions && suggestions.length>0 && !isAnalyzing && (
           <div style={{margin:'0 1rem',marginBottom:'0.75rem',padding:'0.875rem',borderRadius:12,border:'1px solid rgba(59, 130, 246, 0.3)',background:'rgba(59, 130, 246, 0.1)'}}>
-            <p style={{fontWeight:700,color:'#1D4ED8',marginBottom:'0.35rem',fontSize:'0.875rem'}}>💡 Real-time Suggestions</p>
+            <p style={{fontWeight:700,color:'#1D4ED8',marginBottom:'0.35rem',fontSize:'0.875rem'}}><i className="fa-regular fa-lightbulb" style={{marginRight:6}}></i>Real-time Suggestions</p>
             {suggestions.slice(0,2).map((s,i)=>(
               <p key={i} style={{fontSize:'0.825rem',color:'var(--text-muted)'}}>
                 <code style={{color:'#DC2626'}}>{s.text}</code>{' → '}<code style={{color:'#059669'}}>{s.suggestion}</code>
@@ -869,19 +1051,19 @@ function ProjectsViewComp({currentProjects,selectedProject,setSelectedProject,is
       <div className="db-animate" style={{display:'flex',flexDirection:'column',gap:'1rem',height:'100%'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:'1rem'}}>
           <div style={{display:'flex',alignItems:'center',gap:'0.75rem',flex:1}}>
-            <button className="db-btn-secondary" onClick={()=>{setIsEditingProject(false);setSelectedProject(null);}}>← Back</button>
+            <button className="db-btn-secondary" onClick={()=>{setIsEditingProject(false);setSelectedProject(null);}}><i className="fa-solid fa-arrow-left" style={{marginRight:6}}></i>Back</button>
             <input type="text" className="db-input" style={{fontSize:'1.1rem',fontWeight:700,flex:1}} value={projectTitle} onChange={(e)=>setProjectTitle(e.target.value)} placeholder="Project Title"/>
           </div>
-          <button className="db-btn-primary" onClick={handleSaveProject}>💾 Save Project</button>
+          <button className="db-btn-primary" onClick={handleSaveProject}><i className="fa-solid fa-floppy-disk" style={{marginRight:6}}></i>Save Project</button>
         </div>
         <textarea className="db-textarea" style={{flex:1,minHeight:360,fontFamily:'monospace',fontSize:'0.95rem',lineHeight:1.7}} value={projectContent} onChange={(e)=>setProjectContent(e.target.value)} placeholder="Start writing your story, document, or notes here..." spellCheck="false"/>
         <div className="db-card db-card-p" style={{borderRadius:12,display:'flex',alignItems:'center',justifyContent:'space-between'}}>
           <div style={{display:'flex',gap:'1.5rem',fontSize:'0.875rem',fontWeight:600,color:'var(--text-muted)'}}>
-            <span>📝 {projectContent.split(/\s+/).filter(w=>w).length} words</span>
-            <span>🔤 {projectContent.length} chars</span>
-            <span>⏱️ {Math.max(1,Math.ceil(projectContent.split(/\s+/).filter(w=>w).length/200))} min</span>
+            <span><i className="fa-solid fa-file-pen" style={{marginRight:6}}></i>{projectContent.split(/\s+/).filter(w=>w).length} words</span>
+            <span><i className="fa-solid fa-font" style={{marginRight:6}}></i>{projectContent.length} chars</span>
+            <span><i className="fa-regular fa-clock" style={{marginRight:6}}></i>{Math.max(1,Math.ceil(projectContent.split(/\s+/).filter(w=>w).length/200))} min</span>
           </div>
-          <button className="db-btn-danger" style={{fontSize:'0.8rem',padding:'0.5rem'}} onClick={()=>{if(window.confirm('Delete this project?')){handleDeleteProject(selectedProject);setProjectContent('');setProjectTitle('');}}}>🗑️ Delete</button>
+          <button className="db-btn-danger" style={{fontSize:'0.8rem',padding:'0.5rem'}} onClick={()=>{if(window.confirm('Delete this project?')){handleDeleteProject(selectedProject);setProjectContent('');setProjectTitle('');}}}><i className="fa-regular fa-trash-can" style={{marginRight:6}}></i>Delete</button>
         </div>
       </div>
     );
@@ -895,20 +1077,20 @@ function ProjectsViewComp({currentProjects,selectedProject,setSelectedProject,is
       <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'1rem'}}>
         {currentProjects.length===0?(
           <div style={{gridColumn:'1/-1',display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'3rem',border:'2px dashed var(--border)',borderRadius:16,color:'var(--text-muted)',gap:'0.5rem'}}>
-            <span style={{fontSize:'2rem'}}>📝</span>
+            <span style={{fontSize:'2rem'}}><i className="fa-regular fa-folder-open"></i></span>
             <p style={{fontWeight:600,color:'var(--text-dark)'}}>No projects yet</p>
             <p style={{fontSize:'0.875rem'}}>Create a new project to get started</p>
           </div>
         ):currentProjects.map(p=>(
           <div key={p.id} className="db-card" style={{padding:'1.25rem',cursor:'pointer'}} onClick={()=>{setSelectedProject(p.id);setProjectTitle(p.title);setProjectContent(p.content);setIsEditingProject(true);}}>
             <div style={{display:'flex',alignItems:'flex-start',justifyContent:'space-between',marginBottom:'0.75rem'}}>
-              <div style={{width:44,height:44,background:'rgba(167, 139, 250, 0.15)',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.2rem'}}>📖</div>
+              <div style={{width:44,height:44,background:'rgba(167, 139, 250, 0.15)',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'1.2rem'}}><i className="fa-solid fa-book-open"></i></div>
               <span className="db-badge db-badge-muted">{p.type}</span>
             </div>
             <h3 style={{fontWeight:700,color:'var(--text-dark)',marginBottom:'0.35rem',fontSize:'0.95rem'}}>{p.title}</h3>
             <p style={{fontSize:'0.8rem',color:'var(--text-muted)',marginBottom:'0.75rem'}}>{p.content||'No content yet'}</p>
             <div style={{fontSize:'0.75rem',color:'var(--text-muted)',display:'flex',justifyContent:'space-between'}}>
-              <span>📊 {p.words} words</span><span>{p.lastEdited}</span>
+              <span><i className="fa-solid fa-chart-column" style={{marginRight:6}}></i>{p.words} words</span><span>{p.lastEdited}</span>
             </div>
           </div>
         ))}
@@ -926,14 +1108,14 @@ function AnalyticsViewComp({analyticsPeriod,setAnalyticsPeriod,showResults,setSh
           <select className="db-input" style={{width:'auto',padding:'0.5rem 0.875rem',cursor:'pointer'}} value={analyticsPeriod} onChange={(e)=>setAnalyticsPeriod(e.target.value)}>
             <option value="weekly">Weekly</option><option value="monthly">Monthly</option>
           </select>
-          <button className="db-btn-primary" onClick={()=>setShowResults(!showResults)}>📊 Results</button>
+          <button className="db-btn-primary" onClick={()=>setShowResults(!showResults)}><i className="fa-solid fa-chart-line" style={{marginRight:6}}></i>Results</button>
         </div>
       </div>
       {showResults && (
         <div className="db-card db-card-p" style={{border:'1px solid #A7F3D0',background:'#F0FDF4'}}>
           <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1rem'}}>
             <h2 style={{fontWeight:700,color:'var(--text-dark)',fontSize:'1.1rem'}}>Achievement Summary</h2>
-            <button onClick={()=>setShowResults(false)} style={{background:'none',border:'none',fontSize:'1.2rem',cursor:'pointer',color:'var(--text-muted)'}}>✕</button>
+            <button onClick={()=>setShowResults(false)} style={{background:'none',border:'none',fontSize:'1.2rem',cursor:'pointer',color:'var(--text-muted)'}}><i className="fa-solid fa-xmark"></i></button>
           </div>
           <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'1rem'}}>
             {[{label:'Quizzes Completed',value:'12',sub:'3,600 Credits'},{label:'Levels Completed',value:'8',sub:'2,400 Credits'},{label:'Session Credits',value:'750',sub:'+750 Cr'}].map((m,i)=>(
@@ -989,35 +1171,174 @@ function AnalyticsViewComp({analyticsPeriod,setAnalyticsPeriod,showResults,setSh
   );
 }
 
-function SettingsViewComp({isDarkMode,setIsDarkMode,setShowEditNameModal,setShowEditPasswordModal}) {
+function SettingsViewComp({
+  profileForm,
+  setProfileForm,
+  settingsForm,
+  setSettingsForm,
+  passwordForm,
+  setPasswordForm,
+  dangerPassword,
+  setDangerPassword,
+  deleteConfirm,
+  setDeleteConfirm,
+  isSavingProfile,
+  isSavingSettings,
+  isChangingPassword,
+  isExportingData,
+  isDeletingAccount,
+  onSaveProfile,
+  onSaveSettings,
+  onChangePassword,
+  onExportData,
+  onDeleteAccount,
+  onLogout,
+}) {
   return (
-    <div className="db-animate" style={{maxWidth:1100,width:'100%',margin:'0 auto',display:'flex',flexDirection:'column',gap:'1.5rem'}}>
-      <div><h1 className="db-page-title">Settings <span>&amp; Preferences</span></h1><p className="db-page-sub">Manage your account and appearance.</p></div>
-      <div style={{display:'flex',flexDirection:'column',gap:'0.75rem'}}>
-        {[
-          {icon:'fa-palette',label:'Theme',sub:'Switch between dark and light mode',action:<button className="db-btn-secondary" onClick={()=>setIsDarkMode(!isDarkMode)}>{isDarkMode?'🌙 Dark':'☀️ Light'}</button>},
-          {icon:'fa-user-pen',label:'Change Name',sub:'Update your display name',action:<button className="db-btn-primary" onClick={()=>setShowEditNameModal(true)}>Edit</button>},
-          {icon:'fa-lock',label:'Change Password',sub:'Secure your account',action:<button className="db-btn-primary" onClick={()=>setShowEditPasswordModal(true)}>Edit</button>},
-          {icon:'fa-language',label:'Language',sub:'Choose preferred language',action:<select className="db-input" style={{width:'auto',padding:'0.5rem 0.875rem',cursor:'pointer'}}><option value="en">English</option><option value="hi">हिंदी</option><option value="es">Español</option><option value="fr">Français</option></select>}
-        ].map((item,i)=>(
-          <div key={i} className="db-card db-card-p" style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:'1rem'}}>
-            <div style={{display:'flex',alignItems:'center',gap:'0.875rem'}}>
-              <div style={{width:44,height:44,background:'rgba(167, 139, 250, 0.15)',borderRadius:10,display:'flex',alignItems:'center',justifyContent:'center',color:'var(--primary)',flexShrink:0}}>
-                <i className={'fa-solid '+item.icon}></i>
-              </div>
-              <div>
-                <p style={{fontWeight:600,color:'var(--text-dark)',fontSize:'0.95rem',marginBottom:'0.1rem'}}>{item.label}</p>
-                <p style={{fontSize:'0.8rem',color:'var(--text-muted)'}}>{item.sub}</p>
-              </div>
-            </div>
-            {item.action}
-          </div>
-        ))}
+    <div className="db-animate" style={{ maxWidth: 1100, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+      <div>
+        <h1 className="db-page-title">Settings <span>&amp; Preferences</span></h1>
+        <p className="db-page-sub">Manage profile, preferences, security, and account data in one place.</p>
       </div>
-      <div className="db-card" style={{padding:'1rem 1.25rem',borderColor:'rgba(167, 139, 250, 0.3)',background:'rgba(167, 139, 250, 0.1)'}}>
-        <p style={{fontSize:'0.875rem',color:'var(--primary)',fontWeight:500,display:'flex',alignItems:'center',gap:'0.5rem'}}>
-          <i className="fa-solid fa-info-circle"></i> All changes are automatically saved to your account.
-        </p>
+
+      <div className="db-card db-card-p">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <h2 style={{ margin: 0, color: 'var(--text-dark)', fontSize: '1rem', fontWeight: 700 }}>
+            <i className="fa-solid fa-user-pen" style={{ color: 'var(--primary)', marginRight: 8 }}></i>
+            Profile
+          </h2>
+          <button className="db-btn-primary" onClick={onSaveProfile} disabled={isSavingProfile}>
+            {isSavingProfile ? 'Saving...' : 'Save Profile'}
+          </button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.9rem' }}>
+          <div>
+            <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Display Name</label>
+            <input className="db-input" value={profileForm.name} onChange={(e) => setProfileForm((prev) => ({ ...prev, name: e.target.value }))} placeholder="Your name" />
+          </div>
+          <div>
+            <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Email</label>
+            <input className="db-input" value={profileForm.email} disabled />
+          </div>
+          <div>
+            <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Phone</label>
+            <input className="db-input" value={profileForm.phone} onChange={(e) => setProfileForm((prev) => ({ ...prev, phone: e.target.value }))} placeholder="Optional phone" />
+          </div>
+          <div>
+            <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Role</label>
+            <select className="db-input" value={profileForm.role} onChange={(e) => setProfileForm((prev) => ({ ...prev, role: e.target.value }))}>
+              <option value="student">Student</option>
+              <option value="professional">Professional</option>
+              <option value="writer">Writer</option>
+              <option value="teacher">Teacher</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="db-card db-card-p">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <h2 style={{ margin: 0, color: 'var(--text-dark)', fontSize: '1rem', fontWeight: 700 }}>
+            <i className="fa-solid fa-sliders" style={{ color: 'var(--primary)', marginRight: 8 }}></i>
+            Preferences
+          </h2>
+          <button className="db-btn-primary" onClick={onSaveSettings} disabled={isSavingSettings}>
+            {isSavingSettings ? 'Saving...' : 'Save Preferences'}
+          </button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.9rem', marginBottom: '0.9rem' }}>
+          <div>
+            <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Theme</label>
+            <select className="db-input" value={settingsForm.theme} onChange={(e) => setSettingsForm((prev) => ({ ...prev, theme: e.target.value }))}>
+              <option value="light">Light</option>
+              <option value="dark">Dark</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Font Size</label>
+            <select className="db-input" value={settingsForm.font_size} onChange={(e) => setSettingsForm((prev) => ({ ...prev, font_size: e.target.value }))}>
+              <option value="small">Small</option>
+              <option value="medium">Medium</option>
+              <option value="large">Large</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Language</label>
+            <select className="db-input" value={settingsForm.language} onChange={(e) => setSettingsForm((prev) => ({ ...prev, language: e.target.value }))}>
+              <option value="en">English</option>
+              <option value="hi">Hindi</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+            </select>
+          </div>
+          <div>
+            <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Reminder Time</label>
+            <input type="time" className="db-input" value={settingsForm.reminder_time} onChange={(e) => setSettingsForm((prev) => ({ ...prev, reminder_time: e.target.value }))} />
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.9rem', color: 'var(--text-dark)', fontWeight: 600 }}>
+            <input type="checkbox" checked={Boolean(settingsForm.notifications_enabled)} onChange={(e) => setSettingsForm((prev) => ({ ...prev, notifications_enabled: e.target.checked }))} />
+            Enable Notifications
+          </label>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '0.9rem', color: 'var(--text-dark)', fontWeight: 600, opacity: settingsForm.notifications_enabled ? 1 : 0.6 }}>
+            <input type="checkbox" checked={Boolean(settingsForm.email_notifications)} disabled={!settingsForm.notifications_enabled} onChange={(e) => setSettingsForm((prev) => ({ ...prev, email_notifications: e.target.checked }))} />
+            Email Notifications
+          </label>
+        </div>
+      </div>
+
+      <div className="db-card db-card-p">
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <h2 style={{ margin: 0, color: 'var(--text-dark)', fontSize: '1rem', fontWeight: 700 }}>
+            <i className="fa-solid fa-lock" style={{ color: 'var(--primary)', marginRight: 8 }}></i>
+            Security
+          </h2>
+          <button className="db-btn-primary" onClick={onChangePassword} disabled={isChangingPassword}>
+            {isChangingPassword ? 'Updating...' : 'Change Password'}
+          </button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.9rem' }}>
+          <div>
+            <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Current Password</label>
+            <input type="password" className="db-input" value={passwordForm.currentPassword} onChange={(e) => setPasswordForm((prev) => ({ ...prev, currentPassword: e.target.value }))} />
+          </div>
+          <div>
+            <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>New Password</label>
+            <input type="password" className="db-input" value={passwordForm.newPassword} onChange={(e) => setPasswordForm((prev) => ({ ...prev, newPassword: e.target.value }))} />
+          </div>
+          <div>
+            <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: 600 }}>Confirm Password</label>
+            <input type="password" className="db-input" value={passwordForm.confirmPassword} onChange={(e) => setPasswordForm((prev) => ({ ...prev, confirmPassword: e.target.value }))} />
+          </div>
+        </div>
+      </div>
+
+      <div className="db-card db-card-p" style={{ borderColor: '#FECACA', background: '#FEF2F2' }}>
+        <h2 style={{ margin: '0 0 1rem', color: '#B91C1C', fontSize: '1rem', fontWeight: 700 }}>
+          <i className="fa-solid fa-triangle-exclamation" style={{ marginRight: 8 }}></i>
+          Data & Account
+        </h2>
+        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+          <button className="db-btn-secondary" onClick={onExportData} disabled={isExportingData}>
+            {isExportingData ? 'Exporting...' : 'Export My Data'}
+          </button>
+          <button className="db-btn-secondary" onClick={onLogout}>Sign Out</button>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '0.9rem', alignItems: 'end' }}>
+          <div>
+            <label style={{ fontSize: '0.78rem', color: '#991B1B', fontWeight: 700 }}>Confirm Password to Delete Account</label>
+            <input type="password" className="db-input" value={dangerPassword} onChange={(e) => setDangerPassword(e.target.value)} placeholder="Enter password" />
+          </div>
+          <button className="db-btn-danger" onClick={onDeleteAccount} disabled={isDeletingAccount}>
+            {isDeletingAccount ? 'Deleting...' : 'Delete Account'}
+          </button>
+        </div>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: '0.75rem', fontSize: '0.82rem', color: '#991B1B', fontWeight: 600 }}>
+          <input type="checkbox" checked={deleteConfirm} onChange={(e) => setDeleteConfirm(e.target.checked)} />
+          I understand this permanently deletes my account and progress.
+        </label>
       </div>
     </div>
   );
@@ -1034,11 +1355,64 @@ function _readStoredUser() {
   }
 }
 
+const SETTINGS_DEFAULTS = {
+  theme: 'light',
+  font_size: 'medium',
+  notifications_enabled: true,
+  email_notifications: true,
+  reminder_time: '09:00',
+  language: 'en',
+};
+
+const FONT_SIZE_MAP = {
+  small: '14px',
+  medium: '16px',
+  large: '18px',
+};
+
+const DASHBOARD_TABS = new Set([
+  'dashboard',
+  'learning',
+  'chat',
+  'practice',
+  'projects',
+  'analytics',
+  'settings',
+]);
+
+function normalizeSettings(rawSettings = {}, fallbackTheme = 'light') {
+  const theme = rawSettings?.theme === 'dark'
+    ? 'dark'
+    : rawSettings?.theme === 'light'
+      ? 'light'
+      : fallbackTheme;
+  const fontSize = ['small', 'medium', 'large'].includes(rawSettings?.font_size)
+    ? rawSettings.font_size
+    : SETTINGS_DEFAULTS.font_size;
+
+  return {
+    ...SETTINGS_DEFAULTS,
+    ...rawSettings,
+    theme,
+    font_size: fontSize,
+    reminder_time: rawSettings?.reminder_time || SETTINGS_DEFAULTS.reminder_time,
+    language: rawSettings?.language || SETTINGS_DEFAULTS.language,
+    notifications_enabled: rawSettings?.notifications_enabled ?? SETTINGS_DEFAULTS.notifications_enabled,
+    email_notifications: rawSettings?.email_notifications ?? SETTINGS_DEFAULTS.email_notifications,
+  };
+}
+
 function Dashboard({ onLogout }) {
+  const { theme, setTheme, toggleTheme } = useTheme();
   const storedUser = _readStoredUser();
   const storedProfile = storedUser?.profile || {};
+  const initialTheme = storedUser?.settings?.theme === 'dark' ? 'dark' : theme;
+  const initialSettings = normalizeSettings(storedUser?.settings, initialTheme);
 
-  const [currentTab, setCurrentTab] = useState('dashboard');
+  const [currentTab, setCurrentTab] = useState(() => {
+    const saved = localStorage.getItem('ww_active_tab') || 'dashboard';
+    return DASHBOARD_TABS.has(saved) ? saved : 'dashboard';
+  });
   const [credits, setCredits] = useState(() => Number(storedProfile.total_credits || storedUser.credits || 0));
   const [showLearningPath, setShowLearningPath] = useState(false);
   const [showQuiz, setShowQuiz] = useState(false);
@@ -1052,10 +1426,12 @@ function Dashboard({ onLogout }) {
   const [messages, setMessages] = useState([{type:'ai',text:'How can I help you refine your writing today?'}]);
   const [chatInput, setChatInput] = useState('');
   const [isChatSending, setIsChatSending] = useState(false);
-  const [historyItems, setHistoryItems] = useState([]);
   const [showHistory, setShowHistory] = useState(false);
-  const [chatDocumentIds, setChatDocumentIds] = useState([]);
-  const [chatDocumentNames, setChatDocumentNames] = useState([]);
+  const [chatConversations, setChatConversations] = useState([]);
+  const [activeConversationId, setActiveConversationId] = useState(null);
+  const [referenceConversationIds, setReferenceConversationIds] = useState([]);
+  const [chatDocuments, setChatDocuments] = useState([]);
+  const [selectedDocumentIds, setSelectedDocumentIds] = useState([]);
   const [practiceText, setPracticeText] = useState('The AI will actively highlight grammar errors and stylistic improvements as you type.\n\nFor example, it easily catches teh common typos. It can even suggest more better phrasing to elevate your professional tone.');
   const [practiceMode, setPracticeMode] = useState('realtime');
   const [isSessionActive, setIsSessionActive] = useState(false);
@@ -1069,7 +1445,6 @@ function Dashboard({ onLogout }) {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyticsPeriod, setAnalyticsPeriod] = useState('weekly');
   const [showResults, setShowResults] = useState(false);
-  const [theme, setTheme] = useState(() => localStorage.getItem('ww_theme') || 'light');
   const [openPanel, setOpenPanel] = useState(null); // null | notifications | profile
   const [toast, setToast] = useState(null);
   const [authUser, setAuthUser] = useState(storedUser);
@@ -1080,12 +1455,41 @@ function Dashboard({ onLogout }) {
     accuracy: Number(storedProfile.accuracy || storedUser.accuracy || 0),
     rank: storedProfile.rank || storedUser.rank || 'Beginner Writer',
   });
-  const [showEditNameModal, setShowEditNameModal] = useState(false);
-  const [showEditPasswordModal, setShowEditPasswordModal] = useState(false);
-  const [userName, setUserName] = useState(storedUser.name || 'John Doe');
-  const [userPhone] = useState(storedUser.phone || 'Not provided');
-  const [editNameValue, setEditNameValue] = useState(storedUser.name || 'John Doe');
-  const [editPasswordValue, setEditPasswordValue] = useState('');
+  const [userName, setUserName] = useState(storedUser.name || 'Student');
+  const [profileForm, setProfileForm] = useState({
+    name: storedUser.name || '',
+    email: storedUser.email || '',
+    phone: storedUser.phone || '',
+    role: storedUser.role || 'student',
+  });
+  const [settingsForm, setSettingsForm] = useState(initialSettings);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [dangerPassword, setDangerPassword] = useState('');
+  const [deleteConfirm, setDeleteConfirm] = useState(false);
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isExportingData, setIsExportingData] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [chatRenameModal, setChatRenameModal] = useState({
+    open: false,
+    conversationId: null,
+    title: '',
+  });
+  const [chatDeleteModal, setChatDeleteModal] = useState({
+    open: false,
+    conversationId: null,
+    title: '',
+  });
+  const [chatDocDeleteModal, setChatDocDeleteModal] = useState({
+    open: false,
+    documentId: null,
+    title: '',
+  });
   const [currentProjects, setCurrentProjects] = useState([
     {id:1,title:'My First Story',type:'Story',content:'Once upon a time...',words:234,lastEdited:'Today'},
     {id:2,title:'Project Report 2024',type:'Report',content:'Executive Summary...',words:1250,lastEdited:'Yesterday'}
@@ -1095,14 +1499,9 @@ function Dashboard({ onLogout }) {
   const [projectContent, setProjectContent] = useState('');
   const [projectTitle, setProjectTitle] = useState('');
   const chatBoxRef = useRef(null);
+  const fileInputRef = useRef(null);
   const practiceEditorRef = useRef(null);
   const topbarRef = useRef(null);
-
-  const isDarkMode = theme === 'dark';
-  const setIsDarkMode = (next) => {
-    const nextValue = typeof next === 'function' ? next(isDarkMode) : next;
-    setTheme(nextValue ? 'dark' : 'light');
-  };
 
   const togglePanel = (panel) => {
     setOpenPanel((prev) => (prev === panel ? null : panel));
@@ -1111,6 +1510,26 @@ function Dashboard({ onLogout }) {
   const showToastMessage = (title, message, type = 'success') => {
     setToast({ title, message, type });
     setTimeout(() => setToast(null), 2200);
+  };
+
+  const persistUserSnapshot = (partial = {}) => {
+    const merged = {
+      ...(authUser || {}),
+      ...partial,
+      settings: {
+        ...(authUser?.settings || {}),
+        ...(partial?.settings || {}),
+      },
+      profile: {
+        ...(authUser?.profile || {}),
+        ...(partial?.profile || {}),
+      },
+    };
+    try {
+      localStorage.setItem('ww_user', JSON.stringify(merged));
+    } catch {
+      // Ignore storage write errors and continue.
+    }
   };
 
   const handlePanelNavigate = (path) => {
@@ -1145,9 +1564,33 @@ function Dashboard({ onLogout }) {
   };
 
   React.useEffect(() => {
-    document.documentElement.classList.toggle('dark', theme === 'dark');
-    localStorage.setItem('ww_theme', theme);
+    setSettingsForm((prev) => (
+      prev.theme === theme
+        ? prev
+        : {
+            ...prev,
+            theme,
+          }
+    ));
+    persistUserSnapshot({
+      settings: {
+        ...(authUser?.settings || {}),
+        theme,
+      },
+    });
   }, [theme]);
+
+  useEffect(() => {
+    localStorage.setItem('ww_active_tab', currentTab);
+  }, [currentTab]);
+
+  useEffect(() => {
+    const htmlFontSize = FONT_SIZE_MAP[settingsForm.font_size] || FONT_SIZE_MAP.medium;
+    document.documentElement.style.fontSize = htmlFontSize;
+    return () => {
+      document.documentElement.style.fontSize = '';
+    };
+  }, [settingsForm.font_size]);
 
   useEffect(() => {
     const outsideHandler = (e) => {
@@ -1158,6 +1601,48 @@ function Dashboard({ onLogout }) {
 
     document.addEventListener('mousedown', outsideHandler);
     return () => document.removeEventListener('mousedown', outsideHandler);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadAccountProfile = async () => {
+      try {
+        const data = await fetchUserProfile();
+        const user = data?.user;
+        if (!user || cancelled) return;
+
+        const localTheme = localStorage.getItem('ww_theme');
+        const preferredTheme = (localTheme === 'dark' || localTheme === 'light')
+          ? localTheme
+          : user.settings?.theme || theme;
+        const normalized = normalizeSettings(user.settings, preferredTheme);
+        normalized.theme = preferredTheme;
+        setAuthUser(user);
+        setUserName(user.name || 'Student');
+        setProfileForm({
+          name: user.name || '',
+          email: user.email || '',
+          phone: user.phone || '',
+          role: user.role || 'student',
+        });
+        setSettingsForm(normalized);
+        setTheme(normalized.theme);
+        persistUserSnapshot({
+          ...user,
+          settings: normalized,
+        });
+      } catch (err) {
+        if (!cancelled) {
+          console.warn('Profile load failed:', err?.message || err);
+        }
+      }
+    };
+
+    loadAccountProfile();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -1196,6 +1681,18 @@ function Dashboard({ onLogout }) {
     };
   }, []);
 
+  const normalizeHistoryMessages = (data) => {
+    const fromApi = (data?.messages || []).map((m) => ({
+      type: m.role === 'user' ? 'user' : 'ai',
+      text: m.content || '',
+      timestamp: m.timestamp || '',
+    }));
+
+    return fromApi.length > 0
+      ? fromApi
+      : [{ type: 'ai', text: 'How can I help you refine your writing today?' }];
+  };
+
   useEffect(() => {
     let cancelled = false;
 
@@ -1204,10 +1701,7 @@ function Dashboard({ onLogout }) {
         const data = await fetchChatDocuments();
         if (cancelled) return;
         const docs = data?.documents || [];
-        setChatDocumentIds(docs.map((d) => d.id).filter(Boolean));
-        setChatDocumentNames(
-          docs.map((d) => d.title || d.filename || 'Document').filter(Boolean)
-        );
+        setChatDocuments(docs);
       } catch (err) {
         if (!cancelled) {
           console.warn('Chat documents load failed:', err?.message || err);
@@ -1225,16 +1719,63 @@ function Dashboard({ onLogout }) {
   useEffect(() => {
     let cancelled = false;
 
-    const loadHistory = async () => {
+    const loadConversations = async () => {
       try {
-        const data = await fetchChatHistory();
-        const fromApi = (data?.messages || []).map((m) => ({
-          type: m.role === 'user' ? 'user' : 'ai',
-          text: m.content || '',
-          timestamp: m.timestamp || '',
-        }));
-        if (!cancelled && fromApi.length > 0) {
-          setMessages(fromApi);
+        const data = await fetchChatConversations();
+        if (cancelled) return;
+
+        const list = data?.conversations || [];
+        setChatConversations(list);
+
+        if (!list.length) {
+          setActiveConversationId(null);
+          setReferenceConversationIds([]);
+          setMessages([{ type: 'ai', text: 'How can I help you refine your writing today?' }]);
+          return;
+        }
+
+        const requestedActive = data?.active_conversation_id;
+        const nextActive = (requestedActive && list.some((item) => item.id === requestedActive))
+          ? requestedActive
+          : list[0].id;
+
+        setActiveConversationId(nextActive);
+        const activeSummary = list.find((item) => item.id === nextActive) || list[0];
+        setReferenceConversationIds(activeSummary?.reference_conversation_ids || []);
+      } catch (err) {
+        if (!cancelled) {
+          console.warn('Conversation list load failed:', err?.message || err);
+        }
+      }
+    };
+
+    loadConversations();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    if (!activeConversationId) {
+      setMessages([{ type: 'ai', text: 'How can I help you refine your writing today?' }]);
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const loadConversationHistory = async () => {
+      try {
+        const data = await fetchChatHistory(activeConversationId);
+        if (cancelled) return;
+
+        setMessages(normalizeHistoryMessages(data));
+
+        const conv = data?.conversation;
+        if (conv?.id) {
+          setReferenceConversationIds(conv.reference_conversation_ids || []);
+          setChatConversations((prev) => prev.map((item) => (item.id === conv.id ? { ...item, ...conv } : item)));
         }
       } catch (err) {
         if (!cancelled) {
@@ -1243,23 +1784,12 @@ function Dashboard({ onLogout }) {
       }
     };
 
-    loadHistory();
+    loadConversationHistory();
+
     return () => {
       cancelled = true;
     };
-  }, []);
-
-  useEffect(() => {
-    const userItems = messages
-      .filter((m) => m.type === 'user' && (m.text || '').trim().length > 0)
-      .slice(-8)
-      .reverse()
-      .map((m) => ({
-        day: 'Recent',
-        preview: m.text.length > 48 ? `${m.text.slice(0, 48)}...` : m.text,
-      }));
-    setHistoryItems(userItems);
-  }, [messages]);
+  }, [activeConversationId]);
 
   const addPoints = (amount) => setCredits(prev=>prev+amount);
 
@@ -1294,25 +1824,162 @@ function Dashboard({ onLogout }) {
     setShowSuggestions(true);
   };
 
-  const handleSaveName = () => {
-    const nextName = editNameValue.trim();
-    if (nextName) {
-      setUserName(nextName);
-      setAuthUser((prev) => ({ ...prev, name: nextName }));
-      try {
-        const current = _readStoredUser();
-        localStorage.setItem('ww_user', JSON.stringify({ ...current, name: nextName }));
-      } catch {
-        // Ignore storage errors.
-      }
-      setShowEditNameModal(false);
-      alert('✅ Name updated!');
+  const handleSaveProfile = async () => {
+    const name = profileForm.name.trim();
+    if (name.length < 2) {
+      showToastMessage('Invalid name', 'Name must be at least 2 characters.', 'error');
+      return;
+    }
+
+    setIsSavingProfile(true);
+    try {
+      const payload = {
+        name,
+        phone: profileForm.phone.trim(),
+        role: profileForm.role,
+      };
+
+      const data = await updateUserProfile(payload);
+      const updatedUser = data?.user || {
+        ...(authUser || {}),
+        ...payload,
+      };
+
+      setAuthUser(updatedUser);
+      setUserName(updatedUser.name || name);
+      setProfileForm((prev) => ({
+        ...prev,
+        name: updatedUser.name || name,
+        phone: updatedUser.phone || payload.phone,
+        role: updatedUser.role || payload.role,
+        email: updatedUser.email || prev.email,
+      }));
+
+      persistUserSnapshot(updatedUser);
+      showToastMessage('Profile updated', 'Your account profile has been saved.');
+    } catch (err) {
+      showToastMessage('Profile update failed', err?.message || 'Could not update profile.', 'error');
+    } finally {
+      setIsSavingProfile(false);
     }
   };
 
-  const handleSavePassword = () => {
-    if(editPasswordValue.trim().length>=6){alert('✅ Password changed!');setEditPasswordValue('');setShowEditPasswordModal(false);}
-    else alert('❌ Password must be at least 6 characters!');
+  const handleSaveSettings = async () => {
+    setIsSavingSettings(true);
+    try {
+      const payload = {
+        theme: settingsForm.theme,
+        font_size: settingsForm.font_size,
+        notifications_enabled: settingsForm.notifications_enabled,
+        email_notifications: settingsForm.email_notifications,
+        reminder_time: settingsForm.reminder_time,
+        language: settingsForm.language,
+      };
+
+      await updateSettings(payload);
+      if (payload.theme !== theme) {
+        setTheme(payload.theme);
+      }
+
+      setAuthUser((prev) => {
+        const next = {
+          ...(prev || {}),
+          settings: {
+            ...(prev?.settings || {}),
+            ...payload,
+          },
+        };
+        persistUserSnapshot(next);
+        return next;
+      });
+
+      showToastMessage('Preferences saved', 'Your writing preferences were updated.');
+    } catch (err) {
+      showToastMessage('Settings save failed', err?.message || 'Could not save settings.', 'error');
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    const currentPassword = passwordForm.currentPassword;
+    const newPassword = passwordForm.newPassword;
+    const confirmPassword = passwordForm.confirmPassword;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      showToastMessage('Missing fields', 'Fill all password fields before saving.', 'error');
+      return;
+    }
+    if (newPassword.length < 8) {
+      showToastMessage('Weak password', 'New password must be at least 8 characters.', 'error');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showToastMessage('Mismatch', 'New password and confirmation do not match.', 'error');
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      await changeUserPassword(currentPassword, newPassword);
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      showToastMessage('Password changed', 'Please sign in again to continue.');
+      setTimeout(async () => {
+        await authService.logout();
+        onLogout?.();
+      }, 500);
+    } catch (err) {
+      showToastMessage('Password change failed', err?.message || 'Could not change password.', 'error');
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
+  const handleExportData = async () => {
+    setIsExportingData(true);
+    try {
+      const data = await exportUserData();
+      const json = JSON.stringify(data, null, 2);
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `writewisely-export-${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToastMessage('Export ready', 'Your data export file has been downloaded.');
+    } catch (err) {
+      showToastMessage('Export failed', err?.message || 'Could not export your data.', 'error');
+    } finally {
+      setIsExportingData(false);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!dangerPassword.trim()) {
+      showToastMessage('Password required', 'Enter your password to delete account.', 'error');
+      return;
+    }
+    if (!deleteConfirm) {
+      showToastMessage('Confirm deletion', 'Please confirm account deletion checkbox.', 'error');
+      return;
+    }
+
+    setIsDeletingAccount(true);
+    try {
+      await deleteUserAccount(dangerPassword.trim());
+      await authService.logout();
+      showToastMessage('Account deleted', 'Your account and learning data were removed.');
+      setTimeout(() => {
+        onLogout?.();
+      }, 500);
+    } catch (err) {
+      showToastMessage('Delete failed', err?.message || 'Could not delete account.', 'error');
+    } finally {
+      setIsDeletingAccount(false);
+    }
   };
 
   const handleNewProject = () => {
@@ -1323,14 +1990,14 @@ function Dashboard({ onLogout }) {
 
   const handleSaveProject = () => {
     setCurrentProjects(prev=>prev.map(p=>p.id===selectedProject?{...p,title:projectTitle,content:projectContent,words:projectContent.split(/\s+/).length,lastEdited:'Now'}:p));
-    setIsEditingProject(false);alert('✅ Project saved!');
+    setIsEditingProject(false);alert('Project saved!');
   };
 
   const handleDeleteProject = (id) => {
     if(window.confirm('Delete this project?')){
       setCurrentProjects(prev=>prev.filter(p=>p.id!==id));
       if(selectedProject===id){setSelectedProject(null);setIsEditingProject(false);}
-      alert('✅ Project deleted!');
+      alert('Project deleted!');
     }
   };
 
@@ -1347,8 +2014,8 @@ function Dashboard({ onLogout }) {
   const handleSubmitAnswer = () => {
     const q=quizQuestions[currentQuestionIndex];
     const ok=selectedAnswer===q.correctAnswer;
-    if(ok){setQuizScore(prev=>prev+q.points);setCredits(prev=>prev+q.points);alert('✅ Correct! +'+q.points+' Credits!');}
-    else alert('❌ Incorrect. Answer: '+q.options[q.correctAnswer]);
+    if(ok){setQuizScore(prev=>prev+q.points);setCredits(prev=>prev+q.points);alert('Correct! +'+q.points+' Credits!');}
+    else alert('Incorrect. Answer: '+q.options[q.correctAnswer]);
     if(currentQuestionIndex<quizQuestions.length-1){setCurrentQuestionIndex(prev=>prev+1);setSelectedAnswer(null);}
     else setShowQuizResult(true);
   };
@@ -1356,13 +2023,13 @@ function Dashboard({ onLogout }) {
 
   const curatedModules = {
     'Indian Flag & Nationalism': {
-      title:'Indian Flag & Nationalism',description:'Beginner content about our Indian Flag, national symbols, and patriotic values.',icon:'🇮🇳',
+      title:'Indian Flag & Nationalism',description:'Beginner content about our Indian Flag, national symbols, and patriotic values.',icon:'fa-solid fa-flag',
       content:[
-        {title:'1. 🇮🇳 History of the Indian Flag',text:'The Indian tricolor flag consists of saffron, white, and green bands. Saffron symbolizes courage. White represents peace and truth. Green denotes fertility and growth. The Ashoka Chakra has 24 spokes. Adopted on July 22, 1947.'},
-        {title:'2. ⭐ National Symbols & Their Meaning',text:'The 24 spokes represent the 24 hours of a day. Saffron represents courage and sacrifice. White symbolizes peace and communal harmony. Green represents agricultural wealth. These symbols unite 1.4 billion citizens.'},
-        {title:'3. 📜 Indian Constitution & Nationalism',text:'Adopted on January 26, 1950. Article 51-A defines Fundamental Duties including fostering national spirit. The Preamble ensures justice, liberty, and equality. Indian nationalism is civic, not ethnic.'},
-        {title:'4. 🕊️ Patriotic Values & Citizenship',text:'True patriotism means serving the nation through education and ethical conduct. A patriotic citizen respects the national anthem, flag, and symbols. Every citizen shares responsibility for India\'s progress.'},
-        {title:'5. 🌏 Unity in Diversity',text:'India\'s greatest strength is unity in diversity. With 2,000+ ethnic groups and 22 official languages, India demonstrates inclusion. "Vasudhaiva Kutumbakam" — The world is one family.'}
+        {title:'1. History of the Indian Flag',text:'The Indian tricolor flag consists of saffron, white, and green bands. Saffron symbolizes courage. White represents peace and truth. Green denotes fertility and growth. The Ashoka Chakra has 24 spokes. Adopted on July 22, 1947.'},
+        {title:'2. National Symbols & Their Meaning',text:'The 24 spokes represent the 24 hours of a day. Saffron represents courage and sacrifice. White symbolizes peace and communal harmony. Green represents agricultural wealth. These symbols unite 1.4 billion citizens.'},
+        {title:'3. Indian Constitution & Nationalism',text:'Adopted on January 26, 1950. Article 51-A defines Fundamental Duties including fostering national spirit. The Preamble ensures justice, liberty, and equality. Indian nationalism is civic, not ethnic.'},
+        {title:'4. Patriotic Values & Citizenship',text:'True patriotism means serving the nation through education and ethical conduct. A patriotic citizen respects the national anthem, flag, and symbols. Every citizen shares responsibility for India\'s progress.'},
+        {title:'5. Unity in Diversity',text:'India\'s greatest strength is unity in diversity. With 2,000+ ethnic groups and 22 official languages, India demonstrates inclusion. "Vasudhaiva Kutumbakam" - The world is one family.'}
       ]
     }
   };
@@ -1371,9 +2038,187 @@ function Dashboard({ onLogout }) {
   const handleCompleteModule = () => {
     if(!completedModules.includes(showCuratedModule)){
       setCompletedModules(prev=>[...prev,showCuratedModule]);
-      alert('✅ Reading Complete!');
+      alert('Reading Complete!');
     }
     setShowCuratedModule(null);
+  };
+
+  const handleCreateConversation = async () => {
+    try {
+      const data = await createChatConversation({
+        title: 'New Chat',
+        reference_conversation_ids: referenceConversationIds,
+      });
+      const conv = data?.conversation;
+      if (!conv?.id) {
+        throw new Error('Could not create a new conversation.');
+      }
+
+      setChatConversations((prev) => [conv, ...prev.filter((item) => item.id !== conv.id)]);
+      setActiveConversationId(conv.id);
+      setReferenceConversationIds(conv.reference_conversation_ids || []);
+      setMessages([{ type: 'ai', text: 'How can I help you refine your writing today?' }]);
+      setChatInput('');
+      showToastMessage('New chat ready', 'Started a fresh conversation.');
+    } catch (err) {
+      showToastMessage('Create failed', err?.message || 'Unable to create chat.', 'error');
+    }
+  };
+
+  const handleSwitchConversation = (conversationId) => {
+    if (!conversationId || conversationId === activeConversationId) return;
+    setActiveConversationId(conversationId);
+    const selected = chatConversations.find((item) => item.id === conversationId);
+    setReferenceConversationIds(selected?.reference_conversation_ids || []);
+  };
+
+  const handleRenameConversation = (conversationId, currentTitle) => {
+    if (!conversationId) return;
+    setChatRenameModal({
+      open: true,
+      conversationId,
+      title: (currentTitle || 'New Chat').trim(),
+    });
+  };
+
+  const closeRenameConversationModal = () => {
+    setChatRenameModal({ open: false, conversationId: null, title: '' });
+  };
+
+  const handleConfirmRenameConversation = async () => {
+    const conversationId = chatRenameModal.conversationId;
+    const title = (chatRenameModal.title || '').trim();
+
+    if (!conversationId) {
+      closeRenameConversationModal();
+      return;
+    }
+
+    if (!title) {
+      showToastMessage('Invalid name', 'Chat title cannot be empty.', 'error');
+      return;
+    }
+
+    try {
+      const data = await updateChatConversation(conversationId, { title });
+      const updated = data?.conversation;
+      if (updated?.id) {
+        setChatConversations((prev) => prev.map((item) => (item.id === updated.id ? { ...item, ...updated } : item)));
+      }
+      closeRenameConversationModal();
+      showToastMessage('Renamed', 'Chat title updated.');
+    } catch (err) {
+      showToastMessage('Rename failed', err?.message || 'Could not rename chat.', 'error');
+    }
+  };
+
+  const handleDeleteConversation = (conversationId, currentTitle = 'New Chat') => {
+    if (!conversationId) return;
+    setChatDeleteModal({
+      open: true,
+      conversationId,
+      title: (currentTitle || 'New Chat').trim() || 'New Chat',
+    });
+  };
+
+  const closeDeleteConversationModal = () => {
+    setChatDeleteModal({ open: false, conversationId: null, title: '' });
+  };
+
+  const handleConfirmDeleteConversation = async () => {
+    const conversationId = chatDeleteModal.conversationId;
+    if (!conversationId) {
+      closeDeleteConversationModal();
+      return;
+    }
+
+    try {
+      await deleteChatConversation(conversationId);
+
+      const remaining = chatConversations.filter((item) => item.id !== conversationId);
+      setChatConversations(remaining);
+      setReferenceConversationIds((prev) => prev.filter((id) => id !== conversationId));
+
+      if (conversationId === activeConversationId) {
+        const nextActiveId = remaining[0]?.id || null;
+        setActiveConversationId(nextActiveId);
+        if (!nextActiveId) {
+          setMessages([{ type: 'ai', text: 'How can I help you refine your writing today?' }]);
+        }
+      }
+
+      closeDeleteConversationModal();
+      showToastMessage('Deleted', 'Chat conversation removed.');
+    } catch (err) {
+      showToastMessage('Delete failed', err?.message || 'Could not delete chat.', 'error');
+    }
+  };
+
+  const handleToggleReferenceConversation = async (conversationId) => {
+    if (!conversationId || !activeConversationId || conversationId === activeConversationId) return;
+
+    const nextRefs = referenceConversationIds.includes(conversationId)
+      ? referenceConversationIds.filter((id) => id !== conversationId)
+      : [...referenceConversationIds, conversationId];
+
+    setReferenceConversationIds(nextRefs);
+    setChatConversations((prev) => prev.map((item) => (
+      item.id === activeConversationId
+        ? { ...item, reference_conversation_ids: nextRefs }
+        : item
+    )));
+
+    try {
+      await updateChatConversation(activeConversationId, {
+        reference_conversation_ids: nextRefs,
+      });
+    } catch (err) {
+      showToastMessage('Reference update failed', err?.message || 'Could not update referenced chats.', 'error');
+    }
+  };
+
+  const handleToggleDocumentSelection = (documentId) => {
+    if (!documentId) return;
+    setSelectedDocumentIds((prev) => (
+      prev.includes(documentId)
+        ? prev.filter((id) => id !== documentId)
+        : [...prev, documentId]
+    ));
+  };
+
+  const handleDeleteDocumentFromLibrary = (documentId, title = 'Document') => {
+    if (!documentId) return;
+    setChatDocDeleteModal({
+      open: true,
+      documentId,
+      title: (title || 'Document').trim() || 'Document',
+    });
+  };
+
+  const closeDeleteDocumentModal = () => {
+    setChatDocDeleteModal({ open: false, documentId: null, title: '' });
+  };
+
+  const handleConfirmDeleteDocumentFromLibrary = async () => {
+    const documentId = chatDocDeleteModal.documentId;
+    if (!documentId) {
+      closeDeleteDocumentModal();
+      return;
+    }
+
+    try {
+      await deleteChatDocument(documentId);
+      setChatDocuments((prev) => prev.filter((doc) => doc.id !== documentId));
+      setSelectedDocumentIds((prev) => prev.filter((id) => id !== documentId));
+      closeDeleteDocumentModal();
+      showToastMessage('Document deleted', 'Uploaded file removed.');
+    } catch (err) {
+      showToastMessage('Delete failed', err?.message || 'Could not delete file.', 'error');
+    }
+  };
+
+  const openFilePicker = () => {
+    fileInputRef.current?.click();
   };
 
   const sendMessage = async () => {
@@ -1385,9 +2230,38 @@ function Dashboard({ onLogout }) {
     setIsChatSending(true);
 
     try {
-      const data = await sendChatMessage(message, chatDocumentIds.slice(0, 5));
+      const data = await sendChatMessage(
+        message,
+        selectedDocumentIds.slice(0, 8),
+        activeConversationId,
+        referenceConversationIds
+      );
       const reply = (data?.response || '').trim() || 'I could not generate a response right now.';
+      const returnedConversationId = data?.conversation_id || activeConversationId;
+      const returnedTitle = data?.conversation_title || 'New Chat';
+
       setMessages((prev) => [...prev, { type: 'ai', text: reply }]);
+
+      if (returnedConversationId) {
+        setActiveConversationId(returnedConversationId);
+
+        const summary = {
+          id: returnedConversationId,
+          title: returnedTitle,
+          preview: message.length > 90 ? `${message.slice(0, 90)}...` : message,
+          updated_at: new Date().toISOString(),
+          reference_conversation_ids: data?.reference_conversation_ids || referenceConversationIds,
+        };
+
+        setChatConversations((prev) => [
+          { ...prev.find((item) => item.id === returnedConversationId), ...summary },
+          ...prev.filter((item) => item.id !== returnedConversationId),
+        ]);
+      }
+
+      if (Array.isArray(data?.reference_conversation_ids)) {
+        setReferenceConversationIds(data.reference_conversation_ids);
+      }
     } catch (err) {
       const detail = err?.message ? ` ${err.message}` : '';
       setMessages((prev) => [...prev, { type: 'ai', text: `Sorry, I could not respond right now.${detail}` }]);
@@ -1409,10 +2283,20 @@ function Dashboard({ onLogout }) {
     try {
       const uploaded = await uploadChatDocument(file, file.name);
       const title = uploaded?.title || file.name;
+
       if (uploaded?.id) {
-        setChatDocumentIds((prev) => [uploaded.id, ...prev.filter((id) => id !== uploaded.id)]);
+        const normalized = {
+          id: uploaded.id,
+          title,
+          filename: uploaded.filename || file.name,
+          word_count: uploaded.word_count || 0,
+          preview: uploaded.preview || '',
+          updated_at: new Date().toISOString(),
+        };
+        setChatDocuments((prev) => [normalized, ...prev.filter((doc) => doc.id !== uploaded.id)]);
+        setSelectedDocumentIds((prev) => [uploaded.id, ...prev.filter((id) => id !== uploaded.id)]);
       }
-      setChatDocumentNames((prev) => [title, ...prev.filter((name) => name !== title)]);
+
       setMessages((prev) => [...prev, { type: 'ai', text: `Uploaded ${title}. I can use it in chat answers now.` }]);
     } catch (err) {
       const detail = err?.message ? ` ${err.message}` : '';
@@ -1434,8 +2318,31 @@ function Dashboard({ onLogout }) {
     {id:'settings',label:'Settings',icon:'fa-sliders'}
   ];
 
-  const [learningLevelId, setLearningLevelId] = useState(null);
-  const [practiceTaskId, setPracticeTaskId] = useState(null);
+  const [learningLevelId, setLearningLevelId] = useState(() => {
+    const raw = localStorage.getItem('ww_learning_level_id');
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  });
+  const [practiceTaskId, setPracticeTaskId] = useState(() => {
+    const raw = localStorage.getItem('ww_practice_task_id');
+    return raw || null;
+  });
+
+  useEffect(() => {
+    if (learningLevelId) {
+      localStorage.setItem('ww_learning_level_id', String(learningLevelId));
+    } else {
+      localStorage.removeItem('ww_learning_level_id');
+    }
+  }, [learningLevelId]);
+
+  useEffect(() => {
+    if (practiceTaskId) {
+      localStorage.setItem('ww_practice_task_id', String(practiceTaskId));
+    } else {
+      localStorage.removeItem('ww_practice_task_id');
+    }
+  }, [practiceTaskId]);
 
   const renderView = () => {
     if (currentTab === 'learning') {
@@ -1457,7 +2364,34 @@ function Dashboard({ onLogout }) {
     switch(currentTab) {
       case 'dashboard': return <DashboardViewComp setCurrentTab={setCurrentTab}/>;
       case 'learning': return <LearningViewComp setCurrentTab={setCurrentTab} completedModules={completedModules} handleOpenModule={handleOpenModule} handleStartQuiz={handleStartQuiz} setShowLearningPath={setShowLearningPath} practiceText={practiceText} handlePracticeTextChange={handlePracticeTextChange} handlePracticeKeyDown={handlePracticeKeyDown} textAlignment={textAlignment} setTextAlignment={setTextAlignment} isBold={isBold} setIsBold={setIsBold} isItalic={isItalic} setIsItalic={setIsItalic} isUnderline={isUnderline} setIsUnderline={setIsUnderline} showSuggestions={showSuggestions} suggestions={suggestions}/>;
-      case 'chat': return <ChatViewComp messages={messages} chatInput={chatInput} setChatInput={setChatInput} sendMessage={sendMessage} handleFileUpload={handleFileUpload} showHistory={showHistory} setShowHistory={setShowHistory} chatBoxRef={chatBoxRef} isChatSending={isChatSending} historyItems={historyItems} chatDocumentNames={chatDocumentNames}/>;
+      case 'chat':
+        return (
+          <ChatViewComp
+            messages={messages}
+            chatInput={chatInput}
+            setChatInput={setChatInput}
+            sendMessage={sendMessage}
+            handleFileUpload={handleFileUpload}
+            openFilePicker={openFilePicker}
+            fileInputRef={fileInputRef}
+            showHistory={showHistory}
+            setShowHistory={setShowHistory}
+            chatBoxRef={chatBoxRef}
+            isChatSending={isChatSending}
+            conversations={chatConversations}
+            activeConversationId={activeConversationId}
+            onCreateConversation={handleCreateConversation}
+            onSwitchConversation={handleSwitchConversation}
+            onRenameConversation={handleRenameConversation}
+            onDeleteConversation={handleDeleteConversation}
+            referenceConversationIds={referenceConversationIds}
+            onToggleReferenceConversation={handleToggleReferenceConversation}
+            chatDocuments={chatDocuments}
+            selectedDocumentIds={selectedDocumentIds}
+            onToggleDocumentSelection={handleToggleDocumentSelection}
+            onDeleteDocument={handleDeleteDocumentFromLibrary}
+          />
+        );
       case 'practice':
         if (practiceTaskId) {
           return (
@@ -1477,7 +2411,32 @@ function Dashboard({ onLogout }) {
         );
       case 'projects': return <Projects />;
       case 'analytics': return <Analytics />;
-      case 'settings': return <SettingsViewComp isDarkMode={isDarkMode} setIsDarkMode={setIsDarkMode} setShowEditNameModal={setShowEditNameModal} setShowEditPasswordModal={setShowEditPasswordModal}/>;
+      case 'settings':
+        return (
+          <SettingsViewComp
+            profileForm={profileForm}
+            setProfileForm={setProfileForm}
+            settingsForm={settingsForm}
+            setSettingsForm={setSettingsForm}
+            passwordForm={passwordForm}
+            setPasswordForm={setPasswordForm}
+            dangerPassword={dangerPassword}
+            setDangerPassword={setDangerPassword}
+            deleteConfirm={deleteConfirm}
+            setDeleteConfirm={setDeleteConfirm}
+            isSavingProfile={isSavingProfile}
+            isSavingSettings={isSavingSettings}
+            isChangingPassword={isChangingPassword}
+            isExportingData={isExportingData}
+            isDeletingAccount={isDeletingAccount}
+            onSaveProfile={handleSaveProfile}
+            onSaveSettings={handleSaveSettings}
+            onChangePassword={handleChangePassword}
+            onExportData={handleExportData}
+            onDeleteAccount={handleDeleteAccount}
+            onLogout={handleProfileLogout}
+          />
+        );
       default: return <DashboardViewComp setCurrentTab={setCurrentTab}/>;
     }
   };
@@ -1527,7 +2486,7 @@ function Dashboard({ onLogout }) {
               user={{
                 ...authUser,
                 name: userName,
-                phone: userPhone,
+                phone: authUser?.phone || '',
               }}
               stats={{
                 ...profileStats,
@@ -1535,7 +2494,7 @@ function Dashboard({ onLogout }) {
                 rank: profileStats.rank || 'Beginner Writer',
               }}
               theme={theme}
-              toggleTheme={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+              toggleTheme={toggleTheme}
               onNavigate={handlePanelNavigate}
               onLogout={handleProfileLogout}
             />
@@ -1557,6 +2516,108 @@ function Dashboard({ onLogout }) {
         <div className="db-content">{renderView()}</div>
       </main>
 
+        {/* Chat Rename Modal */}
+        {chatRenameModal.open && (
+          <div className="db-modal-overlay" onClick={closeRenameConversationModal}>
+            <div className="db-modal" style={{maxWidth:520}} onClick={(e)=>e.stopPropagation()}>
+              <div className="db-modal-header" style={{paddingBottom:'1rem'}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                  <h2 style={{fontSize:'1.15rem',fontWeight:700}}>Rename Chat</h2>
+                  <button className="db-icon-btn" onClick={closeRenameConversationModal}>
+                    <i className="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+              </div>
+              <div className="db-modal-body" style={{display:'flex',flexDirection:'column',gap:'0.65rem'}}>
+                <label style={{fontSize:'0.8rem',fontWeight:700,color:'var(--text-muted)',textTransform:'uppercase',letterSpacing:'0.06em'}}>
+                  Chat Name
+                </label>
+                <input
+                  className="db-input"
+                  autoFocus
+                  value={chatRenameModal.title}
+                  onChange={(e)=>setChatRenameModal((prev)=>({ ...prev, title: e.target.value }))}
+                  onKeyDown={(e)=>{ if (e.key === 'Enter') handleConfirmRenameConversation(); }}
+                  placeholder="Enter a chat name"
+                  maxLength={120}
+                />
+                <p style={{fontSize:'0.78rem',color:'var(--text-muted)'}}>
+                  Rename this conversation inside your workspace.
+                </p>
+              </div>
+              <div className="db-modal-actions">
+                <button className="db-btn-secondary" style={{flex:1}} onClick={closeRenameConversationModal}>Cancel</button>
+                <button
+                  className="db-btn-primary"
+                  style={{flex:1,justifyContent:'center'}}
+                  disabled={!chatRenameModal.title.trim()}
+                  onClick={handleConfirmRenameConversation}
+                >
+                  Save Name
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Chat Delete Modal */}
+        {chatDeleteModal.open && (
+          <div className="db-modal-overlay" onClick={closeDeleteConversationModal}>
+            <div className="db-modal" style={{maxWidth:520}} onClick={(e)=>e.stopPropagation()}>
+              <div className="db-modal-header" style={{paddingBottom:'1rem'}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                  <h2 style={{fontSize:'1.15rem',fontWeight:700}}>Delete Chat</h2>
+                  <button className="db-icon-btn" onClick={closeDeleteConversationModal}>
+                    <i className="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+              </div>
+              <div className="db-modal-body" style={{display:'flex',flexDirection:'column',gap:'0.75rem'}}>
+                <p style={{fontSize:'0.92rem',color:'var(--text-dark)',fontWeight:600}}>
+                  Are you sure you want to delete this chat?
+                </p>
+                <div style={{background:'var(--surface-soft)',border:'1px solid var(--border)',borderRadius:12,padding:'0.8rem 0.9rem'}}>
+                  <p style={{fontSize:'0.84rem',color:'var(--text-dark)',fontWeight:700,margin:0}}>{chatDeleteModal.title || 'New Chat'}</p>
+                </div>
+                <p style={{fontSize:'0.78rem',color:'var(--text-muted)'}}>This action cannot be undone.</p>
+              </div>
+              <div className="db-modal-actions">
+                <button className="db-btn-secondary" style={{flex:1}} onClick={closeDeleteConversationModal}>Cancel</button>
+                <button className="db-btn-danger" style={{flex:1,justifyContent:'center'}} onClick={handleConfirmDeleteConversation}>Delete Chat</button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* File Delete Modal */}
+        {chatDocDeleteModal.open && (
+          <div className="db-modal-overlay" onClick={closeDeleteDocumentModal}>
+            <div className="db-modal" style={{maxWidth:520}} onClick={(e)=>e.stopPropagation()}>
+              <div className="db-modal-header" style={{paddingBottom:'1rem'}}>
+                <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+                  <h2 style={{fontSize:'1.15rem',fontWeight:700}}>Delete Uploaded File</h2>
+                  <button className="db-icon-btn" onClick={closeDeleteDocumentModal}>
+                    <i className="fa-solid fa-xmark"></i>
+                  </button>
+                </div>
+              </div>
+              <div className="db-modal-body" style={{display:'flex',flexDirection:'column',gap:'0.75rem'}}>
+                <p style={{fontSize:'0.92rem',color:'var(--text-dark)',fontWeight:600}}>
+                  Remove this uploaded file from your chat library?
+                </p>
+                <div style={{background:'var(--surface-soft)',border:'1px solid var(--border)',borderRadius:12,padding:'0.8rem 0.9rem'}}>
+                  <p style={{fontSize:'0.84rem',color:'var(--text-dark)',fontWeight:700,margin:0}}>{chatDocDeleteModal.title || 'Document'}</p>
+                </div>
+                <p style={{fontSize:'0.78rem',color:'var(--text-muted)'}}>You can upload it again later if needed.</p>
+              </div>
+              <div className="db-modal-actions">
+                <button className="db-btn-secondary" style={{flex:1}} onClick={closeDeleteDocumentModal}>Cancel</button>
+                <button className="db-btn-danger" style={{flex:1,justifyContent:'center'}} onClick={handleConfirmDeleteDocumentFromLibrary}>Delete File</button>
+              </div>
+            </div>
+          </div>
+        )}
+
       {/* Quiz Modal */}
       {showQuiz && (
         <div className="db-modal-overlay">
@@ -1566,7 +2627,7 @@ function Dashboard({ onLogout }) {
                 <div className="db-modal-header">
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'0.75rem'}}>
                     <p style={{fontSize:'0.875rem',fontWeight:600,opacity:0.9}}>Question {currentQuestionIndex+1}/{quizQuestions.length}</p>
-                    <span style={{fontSize:'1.5rem'}}>📝</span>
+                    <span style={{fontSize:'1.1rem'}}><i className="fa-solid fa-file-pen"></i></span>
                   </div>
                   <h2 style={{fontSize:'1.25rem',fontWeight:700}}>{quizQuestions[currentQuestionIndex].question}</h2>
                   <div style={{width:'100%',background:'rgba(255,255,255,0.3)',borderRadius:999,height:6,marginTop:'1rem'}}>
@@ -1575,10 +2636,10 @@ function Dashboard({ onLogout }) {
                 </div>
                 <div className="db-modal-body" style={{display:'flex',flexDirection:'column',gap:'0.75rem'}}>
                   {quizQuestions[currentQuestionIndex].options.map((opt,idx)=>(
-                    <button key={idx} onClick={()=>handleAnswerSelect(idx)} style={{width:'100%',padding:'0.875rem 1rem',borderRadius:12,border:'2px solid',borderColor:selectedAnswer===idx?'var(--primary)':'var(--border)',background:selectedAnswer===idx?'var(--primary)':'white',color:selectedAnswer===idx?'white':'var(--text-dark)',fontWeight:600,cursor:'pointer',textAlign:'left',fontFamily:'inherit',fontSize:'0.9rem',transition:'all 0.15s'}}>
+                    <button key={idx} onClick={()=>handleAnswerSelect(idx)} style={{width:'100%',padding:'0.875rem 1rem',borderRadius:12,border:'2px solid',borderColor:selectedAnswer===idx?'var(--primary)':'var(--border)',background:selectedAnswer===idx?'var(--primary)':'var(--bg-white)',color:selectedAnswer===idx?'white':'var(--text-dark)',fontWeight:600,cursor:'pointer',textAlign:'left',fontFamily:'inherit',fontSize:'0.9rem',transition:'all 0.15s'}}>
                       <div style={{display:'flex',alignItems:'center',gap:'0.75rem'}}>
-                        <div style={{width:22,height:22,borderRadius:'50%',border:'2px solid',borderColor:selectedAnswer===idx?'white':'#9CA3AF',background:selectedAnswer===idx?'white':'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-                          {selectedAnswer===idx && <span style={{color:'var(--primary)',fontSize:'0.8rem',fontWeight:900}}>✓</span>}
+                        <div style={{width:22,height:22,borderRadius:'50%',border:'2px solid',borderColor:selectedAnswer===idx?'white':'var(--text-muted)',background:selectedAnswer===idx?'white':'transparent',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+                          {selectedAnswer===idx && <span style={{color:'var(--primary)',fontSize:'0.8rem',fontWeight:900}}><i className="fa-solid fa-check"></i></span>}
                         </div>
                         {opt}
                       </div>
@@ -1590,9 +2651,9 @@ function Dashboard({ onLogout }) {
                   <button className="db-btn-primary" style={{flex:1,justifyContent:'center',opacity:selectedAnswer===null?0.5:1,cursor:selectedAnswer===null?'not-allowed':'pointer'}} disabled={selectedAnswer===null} onClick={handleSubmitAnswer}>Submit Answer</button>
                 </div>
               </>
-            ):(
+            ) : (
               <div style={{padding:'3rem 2rem',textAlign:'center',display:'flex',flexDirection:'column',gap:'1.5rem',alignItems:'center'}}>
-                <span style={{fontSize:'4rem'}}>🎉</span>
+                <span style={{fontSize:'3.4rem',color:'#F59E0B'}}><i className="fa-solid fa-award"></i></span>
                 <div>
                   <h2 style={{fontSize:'1.75rem',fontWeight:700,color:'var(--text-dark)',marginBottom:'0.5rem'}}>Quiz Completed!</h2>
                   <p style={{color:'var(--text-muted)',marginBottom:'0.5rem'}}>Final Score</p>
@@ -1600,7 +2661,7 @@ function Dashboard({ onLogout }) {
                   <p style={{fontSize:'0.875rem',color:'var(--text-muted)',marginTop:'0.5rem'}}>+{quizScore} Credits Added</p>
                 </div>
                 <div style={{background:'#ECFDF5',border:'1px solid #A7F3D0',borderRadius:12,padding:'1rem',width:'100%'}}>
-                  <p style={{color:'#059669',fontWeight:600}}>✅ Great job! Keep learning to improve.</p>
+                  <p style={{color:'#059669',fontWeight:600}}><i className="fa-solid fa-circle-check" style={{marginRight:6}}></i>Great job! Keep learning to improve.</p>
                 </div>
                 <button className="db-btn-primary" style={{width:'100%',justifyContent:'center'}} onClick={handleQuizRestart}>Back to Learning Hub</button>
               </div>
@@ -1616,7 +2677,7 @@ function Dashboard({ onLogout }) {
             <div className="db-modal-header" style={{position:'sticky',top:0,zIndex:10}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start'}}>
                 <div>
-                  <span style={{fontSize:'2.5rem',display:'block',marginBottom:'0.5rem'}}>{curatedModules[showCuratedModule].icon}</span>
+                  <span style={{fontSize:'2rem',display:'block',marginBottom:'0.5rem'}}><i className={curatedModules[showCuratedModule].icon}></i></span>
                   <h2 style={{fontSize:'1.25rem',fontWeight:700}}>{curatedModules[showCuratedModule].title}</h2>
                   <p style={{fontSize:'0.875rem',opacity:0.9,marginTop:'0.25rem'}}>{curatedModules[showCuratedModule].description}</p>
                 </div>
@@ -1639,7 +2700,7 @@ function Dashboard({ onLogout }) {
                 const allRead = curatedModules[showCuratedModule].content.every((_,idx)=>readSections[showCuratedModule+'-'+idx]);
                 return (
                   <div style={{padding:'1rem',borderRadius:12,background:allRead?'#EDE9FE':'#F9FAFB',border:'1px solid',borderColor:allRead?'#DDD6FE':'var(--border)'}}>
-                    <p style={{fontWeight:700,color:allRead?'var(--primary)':'var(--text-dark)',marginBottom:'0.2rem'}}>{allRead?'✅ All Sections Read!':'📖 Mark sections as read to complete'}</p>
+                    <p style={{fontWeight:700,color:allRead?'var(--primary)':'var(--text-dark)',marginBottom:'0.2rem'}}>{allRead ? <><i className="fa-solid fa-circle-check" style={{marginRight:6}}></i>All Sections Read!</> : <><i className="fa-solid fa-book-open" style={{marginRight:6}}></i>Mark sections as read to complete</>}</p>
                     <p style={{fontSize:'0.8rem',color:'var(--text-muted)'}}>{Object.values(readSections).filter(v=>v).length}/{curatedModules[showCuratedModule].content.length} sections read</p>
                   </div>
                 );
@@ -1648,49 +2709,10 @@ function Dashboard({ onLogout }) {
             <div className="db-modal-actions">
               <button className="db-btn-secondary" style={{flex:1}} onClick={()=>setShowCuratedModule(null)}>Continue Later</button>
               <button className="db-btn-primary" style={{flex:1,justifyContent:'center',opacity:curatedModules[showCuratedModule].content.every((_,idx)=>readSections[showCuratedModule+'-'+idx])?1:0.5}} disabled={!curatedModules[showCuratedModule].content.every((_,idx)=>readSections[showCuratedModule+'-'+idx])} onClick={()=>{if(curatedModules[showCuratedModule].content.every((_,idx)=>readSections[showCuratedModule+'-'+idx]))handleCompleteModule();}}>
-                {completedModules.includes(showCuratedModule)?'✅ Already Completed':'✅ Mark as Completed'}
+                {completedModules.includes(showCuratedModule)
+                  ? <><i className="fa-solid fa-circle-check" style={{marginRight:6}}></i>Already Completed</>
+                  : <><i className="fa-solid fa-circle-check" style={{marginRight:6}}></i>Mark as Completed</>}
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Name Modal */}
-      {showEditNameModal && (
-        <div className="db-modal-overlay">
-          <div className="db-modal" style={{maxWidth:440}}>
-            <div className="db-modal-body" style={{paddingTop:'2rem'}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.5rem'}}>
-                <h2 style={{fontWeight:700,color:'var(--text-dark)',fontSize:'1.25rem'}}>Change Name</h2>
-                <button className="db-icon-btn" onClick={()=>setShowEditNameModal(false)}><i className="fa-solid fa-xmark"></i></button>
-              </div>
-              <label style={{display:'block',fontSize:'0.875rem',fontWeight:600,color:'var(--text-dark)',marginBottom:'0.5rem'}}>Full Name</label>
-              <input type="text" className="db-input" value={editNameValue} onChange={(e)=>setEditNameValue(e.target.value)} placeholder="Enter your full name"/>
-            </div>
-            <div className="db-modal-actions">
-              <button className="db-btn-secondary" style={{flex:1}} onClick={()=>setShowEditNameModal(false)}>Cancel</button>
-              <button className="db-btn-primary" style={{flex:1,justifyContent:'center'}} onClick={handleSaveName}>Save Changes</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Password Modal */}
-      {showEditPasswordModal && (
-        <div className="db-modal-overlay">
-          <div className="db-modal" style={{maxWidth:440}}>
-            <div className="db-modal-body" style={{paddingTop:'2rem'}}>
-              <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'1.5rem'}}>
-                <h2 style={{fontWeight:700,color:'var(--text-dark)',fontSize:'1.25rem'}}>Change Password</h2>
-                <button className="db-icon-btn" onClick={()=>setShowEditPasswordModal(false)}><i className="fa-solid fa-xmark"></i></button>
-              </div>
-              <label style={{display:'block',fontSize:'0.875rem',fontWeight:600,color:'var(--text-dark)',marginBottom:'0.5rem'}}>New Password</label>
-              <input type="password" className="db-input" value={editPasswordValue} onChange={(e)=>setEditPasswordValue(e.target.value)} placeholder="Enter new password (min 6 characters)"/>
-              <p style={{fontSize:'0.8rem',color:'var(--text-muted)',marginTop:'0.5rem'}}>Must be at least 6 characters long</p>
-            </div>
-            <div className="db-modal-actions">
-              <button className="db-btn-secondary" style={{flex:1}} onClick={()=>setShowEditPasswordModal(false)}>Cancel</button>
-              <button className="db-btn-primary" style={{flex:1,justifyContent:'center'}} onClick={handleSavePassword}>Save Password</button>
             </div>
           </div>
         </div>
