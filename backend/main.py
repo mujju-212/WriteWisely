@@ -7,15 +7,27 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi import Request
 from fastapi.responses import JSONResponse
+from contextlib import asynccontextmanager
+import uvicorn
 from pymongo.errors import PyMongoError
 from config import connect_db, close_db
 from routes import auth, learning, practice, project, chat, checker, analytics, notifications
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    await connect_db()
+    try:
+        yield
+    finally:
+        await close_db()
 
 # ─── Create App ────────────────────────────────────────────────
 app = FastAPI(
     title="WriteWisely API",
     description="Contextual Spell & Grammar Coach - Backend API",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan,
 )
 
 # ─── CORS Middleware ───────────────────────────────────────────
@@ -29,17 +41,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# ─── Startup & Shutdown Events ─────────────────────────────────
-@app.on_event("startup")
-async def startup():
-    await connect_db()
-
-
-@app.on_event("shutdown")
-async def shutdown():
-    await close_db()
-
 
 @app.exception_handler(PyMongoError)
 async def mongo_exception_handler(request: Request, exc: PyMongoError):
@@ -73,3 +74,7 @@ async def root():
 @app.get("/health", tags=["Health"])
 async def health():
     return {"status": "healthy"}
+
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)

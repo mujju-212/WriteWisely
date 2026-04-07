@@ -10,6 +10,14 @@ from config import MAILERSEND_API_KEY, SENDER_EMAIL, SENDER_NAME, ALLOW_OTP_DEV_
 MAILERSEND_URL = "https://api.mailersend.com/v1/email"
 
 
+def _console_otp_fallback(email: str, otp: str, reason: str) -> bool:
+    """Print OTP to terminal in development when email delivery is unavailable."""
+    if ALLOW_OTP_DEV_FALLBACK:
+        print(f"[DEV OTP] reason={reason} email={email} otp={otp}")
+        return True
+    return False
+
+
 def generate_otp() -> str:
     """Generate a 6-digit OTP."""
     return str(random.randint(100000, 999999))
@@ -55,10 +63,10 @@ async def send_otp_email(email: str, otp: str, purpose: str = "signup") -> bool:
     """Send OTP email via MailerSend API."""
     if not MAILERSEND_API_KEY:
         print("❌ MailerSend API key missing. Set MAILERSEND_API_KEY in backend/.env")
-        return False
+        return _console_otp_fallback(email, otp, "missing_api_key")
     if not SENDER_EMAIL:
         print("❌ Sender email missing. Set SENDER_EMAIL in backend/.env")
-        return False
+        return _console_otp_fallback(email, otp, "missing_sender_email")
     
     if purpose == "signup":
         subject = "WriteWisely - Verify Your Email"
@@ -131,7 +139,7 @@ async def send_otp_email(email: str, otp: str, purpose: str = "signup") -> bool:
                     return True
 
                 print(f"❌ MailerSend error {response.status_code}: {body_text}")
-                return False
+                return _console_otp_fallback(email, otp, f"mailersend_status_{response.status_code}")
     except Exception as e:
         print(f"❌ Email send failed: {e}")
-        return False
+        return _console_otp_fallback(email, otp, "exception")
