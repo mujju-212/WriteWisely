@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import './Signup.css';
+import { authService } from '../services/authService';
 
 function Signup({ onNavigateToLogin, onNavigateToDashboard }) {
   const [formData, setFormData] = useState({
@@ -18,6 +19,11 @@ function Signup({ onNavigateToLogin, onNavigateToDashboard }) {
     createPassword: false,
     confirmPassword: false
   });
+  
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpVerified, setOtpVerified] = useState(false);
 
   const handleInputChange = (e) => {
     const { id, value } = e.target;
@@ -50,11 +56,86 @@ function Signup({ onNavigateToLogin, onNavigateToDashboard }) {
     </svg>
   );
 
-  const handleSaveAccount = (e) => {
+  const handleSendOtp = async (e) => {
     e.preventDefault();
-    console.log('Account created:', formData);
-    alert('Account created successfully!');
-    onNavigateToDashboard?.();
+    setError('');
+
+    // Validate form before sending OTP
+    if (!formData.name || !formData.email || !formData.createPassword) {
+      setError('Name, email, and password are required');
+      return;
+    }
+
+    if (formData.createPassword !== formData.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
+    if (formData.createPassword.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    if (!formData.phone || formData.phone.length < 10) {
+      setError('Please enter a valid phone number');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Generate OTP for signup (user doesn't exist yet)
+      const response = await authService.generateOtp(formData.phone);
+      setOtpSent(true);
+    } catch (err) {
+      setError(err.message || 'Failed to send OTP. Phone may already be registered.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    if (!formData.otp || formData.otp.length !== 6) {
+      setError('Please enter valid 6-digit OTP from terminal');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      // Verify OTP
+      await authService.verifyOtp(formData.phone, formData.otp);
+      setOtpVerified(true);
+    } catch (err) {
+      setError(err.message || 'Invalid OTP. Check terminal and try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCreateAccount = async (e) => {
+    e.preventDefault();
+    setError('');
+
+    setIsLoading(true);
+    try {
+      // Create account in database
+      await authService.signup(
+        formData.email,
+        formData.createPassword,
+        formData.name,
+        formData.professional || 'student',
+        formData.phone
+      );
+      
+      // Account created successfully! Redirect to login page
+      onNavigateToLogin?.();
+    } catch (err) {
+      setError(err.message || 'Failed to create account');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -79,22 +160,36 @@ function Signup({ onNavigateToLogin, onNavigateToDashboard }) {
             <p>Fill the below form to sign up</p>
           </div>
 
-          <form onSubmit={handleSaveAccount}>
+          {error && (
+            <div style={{
+              backgroundColor: '#fee2e2',
+              color: '#991b1b',
+              padding: '12px 16px',
+              borderRadius: '6px',
+              marginBottom: '20px',
+              fontSize: '14px',
+              border: '1px solid #fca5a5'
+            }}>
+              ❌ {error}
+            </div>
+          )}
+
+          <form onSubmit={(e) => e.preventDefault()}>
             <div className="form-grid">
               <div className="form-group">
                 <label htmlFor="name">Name</label>
-                <input type="text" id="name" className="form-control" placeholder="John Doe" value={formData.name} onChange={handleInputChange} />
+                <input type="text" id="name" className="form-control" placeholder="John Doe" value={formData.name} onChange={handleInputChange} disabled={otpSent} />
               </div>
               
               <div className="form-group">
                 <label htmlFor="email">Email</label>
-                <input type="email" id="email" className="form-control" placeholder="john@example.com" value={formData.email} onChange={handleInputChange} />
+                <input type="email" id="email" className="form-control" placeholder="john@example.com" value={formData.email} onChange={handleInputChange} disabled={otpSent} />
               </div>
 
               <div className="form-group">
-                <label htmlFor="createPassword">Create Password</label>
+                <label htmlFor="createPassword">Password</label>
                 <div className="input-wrapper">
-                  <input type={passwordVisible.createPassword ? 'text' : 'password'} id="createPassword" className="form-control" placeholder="Enter password" value={formData.createPassword} onChange={handleInputChange} />
+                  <input type={passwordVisible.createPassword ? 'text' : 'password'} id="createPassword" className="form-control" placeholder="Min 6 characters" value={formData.createPassword} onChange={handleInputChange} disabled={otpSent} />
                   <div className="eye-icon" onClick={() => togglePassword('createPassword')}>
                     {renderEyeIcon(passwordVisible.createPassword)}
                   </div>
@@ -104,7 +199,7 @@ function Signup({ onNavigateToLogin, onNavigateToDashboard }) {
               <div className="form-group">
                 <label htmlFor="confirmPassword">Confirm Password</label>
                 <div className="input-wrapper">
-                  <input type={passwordVisible.confirmPassword ? 'text' : 'password'} id="confirmPassword" className="form-control" placeholder="Confirm password" value={formData.confirmPassword} onChange={handleInputChange} />
+                  <input type={passwordVisible.confirmPassword ? 'text' : 'password'} id="confirmPassword" className="form-control" placeholder="Confirm password" value={formData.confirmPassword} onChange={handleInputChange} disabled={otpSent} />
                   <div className="eye-icon" onClick={() => togglePassword('confirmPassword')}>
                     {renderEyeIcon(passwordVisible.confirmPassword)}
                   </div>
@@ -113,46 +208,129 @@ function Signup({ onNavigateToLogin, onNavigateToDashboard }) {
 
               <div className="form-group">
                 <label htmlFor="professional">Professional</label>
-                <select id="professional" className="form-control" value={formData.professional} onChange={handleInputChange}>
-                  <option value="" disabled>Select option...</option>
+                <select id="professional" className="form-control" value={formData.professional} onChange={handleInputChange} disabled={otpSent}>
+                  <option value="">Select option...</option>
                   <option value="student">Student</option>
                   <option value="teacher">Teacher</option>
                   <option value="employee">Employee</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-
-              {formData.professional === 'other' && (
-                <div className="form-group">
-                  <label htmlFor="otherProfessional">Specify Profession</label>
-                  <input type="text" id="otherProfessional" className="form-control" placeholder="What do you do?" value={formData.otherProfessional} onChange={handleInputChange} />
-                </div>
-              )}
-
-              <div className="form-group">
-                <label htmlFor="phone">Phone Number</label>
-                <input type="tel" id="phone" className="form-control" placeholder="+1 (555) 000-0000" value={formData.phone} onChange={handleInputChange} />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="otp">OTP Verify</label>
-                <div className="otp-group">
-                  <input type="text" id="otp" className="form-control" placeholder="Enter OTP" value={formData.otp} onChange={handleInputChange} />
-                  <button type="button">Verify</button>
-                </div>
-              </div>
-
-              <div className="form-group full-width">
-                <label htmlFor="interestedIn">Interested In</label>
-                <select id="interestedIn" className="form-control" value={formData.interestedIn} onChange={handleInputChange}>
-                  <option value="" disabled>Select what you're interested in...</option>
-                  <option value="learning">Learning</option>
-                  <option value="create_project">To create project</option>
+                  <option value="professional">Professional</option>
+                  <option value="writer">Writer</option>
                 </select>
               </div>
             </div>
 
-            <button type="submit" className="btn-primary">Save Account</button>
+            {/* Phone Number with Send OTP Button */}
+            <div style={{marginBottom: '20px'}}>
+              <label htmlFor="phone" style={{marginBottom: '8px', display: 'block', fontWeight: '600'}}>Phone Number</label>
+              <div style={{display: 'flex', gap: '8px'}}>
+                <input 
+                  type="tel" 
+                  id="phone" 
+                  className="form-control" 
+                  placeholder="9999999999" 
+                  value={formData.phone} 
+                  onChange={handleInputChange}
+                  disabled={otpSent}
+                  style={{flex: 1}}
+                />
+                <button 
+                  type="button" 
+                  onClick={handleSendOtp}
+                  disabled={isLoading || otpSent}
+                  style={{
+                    padding: '8px 16px',
+                    backgroundColor: otpSent ? '#9ca3af' : '#3b82f6',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    cursor: isLoading || otpSent ? 'not-allowed' : 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {isLoading ? '...' : otpSent ? '✅ Sent' : 'Send OTP'}
+                </button>
+              </div>
+            </div>
+
+            {/* OTP Input - Only shows after Send OTP clicked */}
+            {otpSent && !otpVerified && (
+              <div style={{marginBottom: '20px'}}>
+                <div style={{
+                  backgroundColor: '#fef3c7',
+                  color: '#92400e',
+                  padding: '10px 12px',
+                  borderRadius: '6px',
+                  marginBottom: '12px',
+                  fontSize: '12px',
+                  border: '1px solid #fde68a',
+                  fontWeight: '600'
+                }}>
+                  ✅ OTP sent to terminal logs! Check your terminal window for 6-digit code.
+                </div>
+                
+                <label htmlFor="otp" style={{marginBottom: '8px', display: 'block', fontWeight: '600'}}>Enter OTP from Terminal</label>
+                <div style={{display: 'flex', gap: '8px'}}>
+                  <input 
+                    type="text" 
+                    id="otp" 
+                    className="form-control" 
+                    placeholder="000000" 
+                    value={formData.otp} 
+                    onChange={handleInputChange}
+                    maxLength="6"
+                    disabled={isLoading}
+                    style={{flex: 1, fontSize: '18px', letterSpacing: '4px', textAlign: 'center'}}
+                  />
+                  <button 
+                    type="button" 
+                    onClick={handleVerifyOtp}
+                    disabled={isLoading || formData.otp.length !== 6}
+                    style={{
+                      padding: '8px 16px',
+                      backgroundColor: formData.otp.length !== 6 ? '#9ca3af' : '#10b981',
+                      color: 'white',
+                      border: 'none',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      fontWeight: '600',
+                      cursor: formData.otp.length !== 6 ? 'not-allowed' : 'pointer',
+                      whiteSpace: 'nowrap'
+                    }}
+                  >
+                    {isLoading ? '...' : 'Verify OTP'}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Create Account Button - Only shows after OTP verified */}
+            {otpVerified && (
+              <div style={{marginBottom: '20px'}}>
+                <div style={{
+                  backgroundColor: '#dcfce7',
+                  color: '#15803d',
+                  padding: '10px 12px',
+                  borderRadius: '6px',
+                  marginBottom: '12px',
+                  fontSize: '12px',
+                  border: '1px solid #86efac',
+                  fontWeight: '600'
+                }}>
+                  ✅ OTP verified! Click below to create account.
+                </div>
+                <button 
+                  type="button" 
+                  onClick={handleCreateAccount}
+                  disabled={isLoading}
+                  className="btn-primary"
+                  style={{width: '100%'}}
+                >
+                  {isLoading ? '⏳ Creating Account...' : '📝 Create Account'}
+                </button>
+              </div>
+            )}
             
             <div className="signup-prompt">
               Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); onNavigateToLogin?.(); }}>Login</a>

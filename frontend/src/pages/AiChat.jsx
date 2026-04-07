@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import { api } from '../services/api';
 
 function AiChat() {
   const [messages, setMessages] = useState([
@@ -6,20 +7,31 @@ function AiChat() {
   ]);
   const [chatInput, setChatInput] = useState('');
   const [showHistory, setShowHistory] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const chatBoxRef = useRef(null);
 
-  const sendMessage = () => {
-    if (!chatInput.trim()) return;
+  const sendMessage = async () => {
+    if (!chatInput.trim() || isLoading) return;
     
-    setMessages([...messages, { type: 'user', text: chatInput }]);
+    const userMessage = chatInput;
+    setMessages([...messages, { type: 'user', text: userMessage }]);
     setChatInput('');
+    setIsLoading(true);
     
-    setTimeout(() => {
-      setMessages(prev => [...prev, { type: 'ai', text: 'Great suggestion! Keep writing to improve.' }]);
+    try {
+      const response = await api.sendMessage(userMessage);
+      const aiResponse = response.response || response.message || 'I understand. Keep writing to improve.';
+      
+      setMessages(prev => [...prev, { type: 'ai', text: aiResponse }]);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      setMessages(prev => [...prev, { type: 'ai', text: 'Sorry, I encountered an error. Please try again.' }]);
+    } finally {
+      setIsLoading(false);
       if (chatBoxRef.current) {
         chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
       }
-    }, 500);
+    }
   };
 
   const handleFileUpload = (e) => {
@@ -68,8 +80,8 @@ function AiChat() {
             <i className="fa-solid fa-paperclip text-lg"></i>
           </button>
 
-          <input type="text" placeholder="Type here..." value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && sendMessage()} className="flex-1 bg-slate-700 border-none rounded-2xl h-12 px-6 outline-none text-sm text-slate-100 placeholder-slate-500" />
-          <button onClick={sendMessage} className="w-12 h-12 rounded-2xl bg-indigo-600 text-white shadow-lg flex items-center justify-center shrink-0 hover:bg-indigo-700 transition"><i className="fa-solid fa-paper-plane"></i></button>
+          <input type="text" placeholder="Type here..." value={chatInput} onChange={(e) => setChatInput(e.target.value)} onKeyPress={(e) => e.key === 'Enter' && !isLoading && sendMessage()} className="flex-1 bg-slate-700 border-none rounded-2xl h-12 px-6 outline-none text-sm text-slate-100 placeholder-slate-500" disabled={isLoading} />
+          <button onClick={sendMessage} disabled={isLoading} className="w-12 h-12 rounded-2xl bg-indigo-600 text-white shadow-lg flex items-center justify-center shrink-0 hover:bg-indigo-700 transition disabled:opacity-50"><i className="fa-solid fa-paper-plane"></i></button>
         </div>
       </div>
       
