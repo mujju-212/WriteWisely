@@ -39,3 +39,6 @@ backend/.mongo-log/
 # Misc
 *.bak
 *.tmp
+
+# Local-only notes and planning docs
+docs/local-notes/
