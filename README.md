@@ -722,9 +722,9 @@ python -c "from pymongo import MongoClient; db=MongoClient('mongodb://localhost:
     </td>
     <td align="center">
       <a href="https://github.com/SKDARSHAN22">
-        <img src="https://github.com/SKDARSHAN22.png?size=120" width="120px;" alt="SKDARSHAN22" style="border-radius:50%"/>
+        <img src="https://github.com/SKDARSHAN22.png?size=120" width="120px;" alt="SK Darshan" style="border-radius:50%"/>
         <br />
-        <sub><b>SKDARSHAN22</b></sub>
+        <sub><b>SK Darshan (SKDARSHAN22)</b></sub>
       </a>
       <br />
       <sub>💻 Developer</sub>
