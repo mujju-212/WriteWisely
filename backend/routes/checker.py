@@ -58,9 +58,23 @@ async def check_text_endpoint(data: CheckTextRequest, user=Depends(get_current_u
                     error_type=error.get("type", "unknown"),
                     error_text=error.get("text", ""),
                     correction=error.get("correction", ""),
-                    context=data.text
+                    context=data.text,
+                    user_level=level_name
                 )
                 error["explanation_details"] = explanation
+                
+                # Construct a rich explanation for the UI
+                what = explanation.get("what", "Needs correction")
+                why = explanation.get("why", "")
+                rich_explanation = f"{what} {why}".strip()
+                
+                # Overwrite or set the explanation field
+                if not error.get("explanation") or len(error.get("explanation", "")) < len(rich_explanation):
+                    error["explanation"] = rich_explanation
+                
+                # Add tip if available
+                if explanation.get("how", {}).get("tip"):
+                    error["tip"] = explanation["how"]["tip"]
     
     # Use fallback checker if no errors found but in live mode
     if data.mode == "practice_live" and (not result.get("errors") or len(result.get("errors", [])) == 0):

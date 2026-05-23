@@ -19,12 +19,12 @@ class ExplanationEngine:
     def __init__(self, db):
         self.db = db
     
-    async def generate_error_explanation(
+    async def generate_explanation(
         self,
         error_type: str,
-        original_text: str,
-        corrected_text: str,
-        ai_explanation: str = None,
+        error_text: str,
+        correction: str,
+        context: str = None,
         user_level: str = "Intermediate"
     ) -> Dict[str, Any]:
         """
@@ -37,22 +37,22 @@ class ExplanationEngine:
         explanation_template = {
             "error_type": error_type,
             "severity": self._calculate_severity(error_type),
-            "original": original_text,
-            "corrected": corrected_text,
+            "original": error_text,
+            "corrected": correction,
             
             # WHAT: The problem
-            "what": self._explain_what(error_type, original_text),
+            "what": self._explain_what(error_type, error_text),
             
             # WHY: The reason it's wrong
             "why": self._explain_why(
                 error_type,
-                original_text,
-                corrected_text,
+                error_text,
+                correction,
                 user_level
             ),
             
             # HOW: Step-by-step fix
-            "how": self._explain_how(error_type, original_text, corrected_text),
+            "how": self._explain_how(error_type, error_text, correction),
             
             # Additional teaching materials
             "teaching_points": await self._get_teaching_points(error_type),
@@ -64,8 +64,8 @@ class ExplanationEngine:
             "generated_at": datetime.utcnow()
         }
         
-        if ai_explanation:
-            explanation_template["ai_insight"] = ai_explanation
+        if context:
+            explanation_template["ai_insight"] = context
         
         return explanation_template
     
