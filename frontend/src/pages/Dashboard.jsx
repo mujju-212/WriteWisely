@@ -38,11 +38,12 @@ import { useTheme } from '../context/ThemeContext';
 /* Tiny skeleton pulse block */
 function Skel({ w = '100%', h = 18, r = 8 }) {
   return (
-    <div style={{
+    <span style={{
       width: w, height: h, borderRadius: r,
       background: 'linear-gradient(90deg,#e2e8f0 25%,#f1f5f9 50%,#e2e8f0 75%)',
       backgroundSize: '200% 100%',
       animation: 'ww-pulse 1.4s ease-in-out infinite',
+      display: 'inline-block',
     }} />
   );
 }
@@ -1809,8 +1810,14 @@ function Dashboard({ onLogout }) {
   const handlePracticeKeyDown = (e) => {
     if(e.key===' ' && practiceMode==='realtime') {
       const currentText = e.currentTarget.value+' ';
+      // #region debug-point A:live-keydown
+      fetch("http://127.0.0.1:7777/event",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId:"live-suggestions-missing",runId:"pre-fix",hypothesisId:"A",location:"frontend/src/pages/Dashboard.jsx:handlePracticeKeyDown",msg:"[DEBUG] Live keydown triggered in dashboard practice editor",data:{practiceMode,textSample:currentText.slice(0,80),textLength:currentText.length},ts:Date.now()})}).catch(()=>{});
+      // #endregion
       setTimeout(()=>{
         const detected = detectErrors(currentText);
+        // #region debug-point A:live-detect-result
+        fetch("http://127.0.0.1:7777/event",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({sessionId:"live-suggestions-missing",runId:"pre-fix",hypothesisId:"A",location:"frontend/src/pages/Dashboard.jsx:handlePracticeKeyDown:setTimeout",msg:"[DEBUG] Local detectErrors completed in dashboard practice editor",data:{detectedCount:detected.length,detected},ts:Date.now()})}).catch(()=>{});
+        // #endregion
         if(detected.length>0){setSuggestions(detected);setShowSuggestions(true);}
         else setShowSuggestions(false);
       },0);

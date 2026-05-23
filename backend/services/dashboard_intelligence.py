@@ -11,7 +11,6 @@ from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
-import json
 from .llm_service import LLMService
 from .analytics_intelligence import AnalyticsIntelligenceEngine
 
@@ -31,7 +30,7 @@ class DashboardIntelligenceEngine:
     
     async def generate_daily_goals(self, user_id: str) -> Dict[str, Any]:
         """
-        Generate AI-based daily goals for the user
+        Generate daily goals from analytics without an API call.
         
         Returns:
             {
@@ -45,58 +44,73 @@ class DashboardIntelligenceEngine:
             }
         """
         try:
-            # Get user data
-            user = await self.db.users.find_one({'_id': ObjectId(user_id)})
-            
-            # Get weak areas
             weak_areas = await self.analytics_engine.detect_weak_areas(user_id)
             weak_list = [w['category'] for w in weak_areas.get('weak_areas', [])[:3]]
-            
-            # Get user level
             skill_level = await self.analytics_engine.classify_skill_level(user_id)
-            
-            prompt = f"""Create 4 personalized daily goals for a {skill_level['level']} writer.
 
-User Weak Areas: {', '.join(weak_list)}
+            goal_templates = {
+                'spelling': {"goal": "Spelling Practice", "focus": "Common misspellings", "estimated_time": 10},
+                'grammar': {"goal": "Grammar Drill", "focus": "Sentence structure", "estimated_time": 15},
+                'punctuation': {"goal": "Punctuation Review", "focus": "Commas and periods", "estimated_time": 10},
+                'word_choice': {"goal": "Vocabulary Builder", "focus": "Word precision", "estimated_time": 15},
+                'style': {"goal": "Style Improvement", "focus": "Concise writing", "estimated_time": 15},
+            }
+            default_goals = [
+                {"goal": "Complete a lesson", "focus": "Learning path", "difficulty": 3, "estimated_time": 15},
+                {"goal": "Free writing practice", "focus": "Creative expression", "difficulty": 2, "estimated_time": 15},
+                {"goal": "Review past corrections", "focus": "Error patterns", "difficulty": 2, "estimated_time": 10},
+            ]
+            difficulty_by_level = {
+                'Beginner': 2,
+                'Elementary': 2,
+                'Intermediate': 3,
+                'Advanced': 4,
+                'Expert': 4,
+            }
+            base_difficulty = difficulty_by_level.get(skill_level.get('level', 'Intermediate'), 3)
 
-Create goals that:
-1. Target their weak areas
-2. Build on previous progress
-3. Are achievable in 45 minutes
-4. Include mix of difficulty levels
+            goals: List[Dict[str, Any]] = []
+            for area in weak_list:
+                template = goal_templates.get(area)
+                if template:
+                    goals.append({**template, "difficulty": base_difficulty})
 
-Format response as JSON:
-{{
-    "goals": [
-        {{"goal": "goal name", "focus": "specific area", "difficulty": 1-5, "estimated_time": 15}}
-    ],
-    "daily_target": 45,
-    "reason": "why these goals",
-    "tip": "motivational tip"
-}}"""
-            
-            response = await self.llm_service.generate_response(prompt)
-            
-            try:
-                result = json.loads(response.get('response', '{}'))
-                
-                # Save goals
-                await self._save_daily_goals(user_id, result.get('goals', []))
-                
-                return {
-                    'goals': result.get('goals', []),
-                    'daily_target': result.get('daily_target', 45),
-                    'reason': result.get('reason', ''),
-                    'tip': result.get('tip', ''),
-                    'generated_at': datetime.utcnow(),
-                    'confidence': response.get('confidence', 0.85)
-                }
-            except json.JSONDecodeError:
-                return {
-                    'goals': [],
-                    'daily_target': 45,
-                    'error': 'Could not parse goals'
-                }
+            for default_goal in default_goals:
+                if len(goals) >= 4:
+                    break
+                if default_goal not in goals:
+                    goals.append(default_goal)
+
+            goals = goals[:4]
+            await self._save_daily_goals(user_id, goals)
+
+            difficulties = [goal.get('difficulty', 3) for goal in goals]
+            distribution = {
+                'easy': sum(1 for value in difficulties if value <= 2),
+                'medium': sum(1 for value in difficulties if 3 <= value <= 4),
+                'hard': sum(1 for value in difficulties if value >= 5),
+            }
+
+            reason = (
+                f"Based on your weak areas: {', '.join(weak_list)}"
+                if weak_list else
+                "Based on your recent activity and current level"
+            )
+            tip = (
+                "Focus on accuracy first, then speed."
+                if skill_level.get('level') in {'Beginner', 'Elementary'}
+                else "Tackle the hardest goal first while your attention is fresh."
+            )
+
+            return {
+                'goals': goals,
+                'daily_target': 45,
+                'reason': reason,
+                'tip': tip,
+                'difficulty_distribution': distribution,
+                'generated_at': datetime.utcnow(),
+                'confidence': 1.0
+            }
         
         except Exception as e:
             return {'error': str(e), 'goals': []}
@@ -213,98 +227,122 @@ Format response as JSON:
         user_id: str
     ) -> Dict[str, List[Any]]:
         """
-        Get AI-powered personalized recommendations based on:
+        Get personalized recommendations based on:
         - Weak areas
         - Performance trends
         - Learning speed
         - Next skills to learn
         """
         try:
-            # Get analytics
             weak_areas = await self.analytics_engine.detect_weak_areas(user_id)
             trend = await self.analytics_engine.compute_improvement_trend(user_id, days=7)
             skill_level = await self.analytics_engine.classify_skill_level(user_id)
-            
-            prompt = f"""Generate personalized learning recommendations.
 
-Weak Areas: {weak_areas.get('weak_areas', [])}
-Skill Level: {skill_level.get('level')}
-Trend: {trend.get('trend')}
+            lesson_map = {
+                'spelling': ['Common Spelling Patterns', 'Homophones Mastery'],
+                'grammar': ['Subject-Verb Agreement', 'Sentence Fragments'],
+                'punctuation': ['Comma Rules', 'Semicolon Usage'],
+                'word_choice': ['Precise Vocabulary', 'Avoiding Redundancy'],
+                'style': ['Concise Writing', 'Active Voice'],
+            }
 
-Provide recommendations in JSON:
-{{
-    "next_lessons": ["lesson 1", "lesson 2", "lesson 3"],
-    "practice_focus": ["focus 1", "focus 2"],
-    "skill_to_develop": "next skill to work on",
-    "estimated_time": "time to master",
-    "why": "reason for this recommendation"
-}}"""
-            
-            response = await self.llm_service.generate_response(prompt)
-            
-            try:
-                result = json.loads(response.get('response', '{}'))
-                return {
-                    'next_lessons': result.get('next_lessons', []),
-                    'practice_focus': result.get('practice_focus', []),
-                    'skill_to_develop': result.get('skill_to_develop', ''),
-                    'estimated_time': result.get('estimated_time', ''),
-                    'why': result.get('why', ''),
-                    'confidence': response.get('confidence', 0.85),
-                    'generated_at': datetime.utcnow()
-                }
-            except json.JSONDecodeError:
-                return {'error': 'Could not parse recommendations'}
+            focus_categories = [w['category'] for w in weak_areas.get('weak_areas', [])[:3]]
+            lessons: List[str] = []
+            for area in focus_categories:
+                lessons.extend(lesson_map.get(area, []))
+
+            next_lessons: List[str] = []
+            for lesson in lessons:
+                if lesson not in next_lessons:
+                    next_lessons.append(lesson)
+                if len(next_lessons) == 3:
+                    break
+
+            practice_focus = focus_categories[:2] or ['general writing']
+            skill_to_develop = (
+                weak_areas.get('focus_recommendation', {}) or {}
+            ).get('category', 'general writing')
+
+            trend_name = trend.get('trend', 'stable')
+            if trend_name == 'improving':
+                estimated_time = '1-2 weeks of steady practice'
+                why = 'Your progress is moving in the right direction, so targeted repetition should unlock the next level.'
+            elif trend_name == 'declining':
+                estimated_time = '1 week of short focused review sessions'
+                why = 'A recent dip suggests reviewing fundamentals before adding harder exercises.'
+            else:
+                estimated_time = '2 weeks of consistent mixed practice'
+                why = 'A stable trend suggests you will benefit most from focused variety and repetition.'
+
+            return {
+                'next_lessons': next_lessons,
+                'practice_focus': practice_focus,
+                'skill_to_develop': skill_to_develop,
+                'estimated_time': estimated_time,
+                'why': why,
+                'confidence': 1.0,
+                'generated_at': datetime.utcnow()
+            }
         
         except Exception as e:
             return {'error': str(e)}
     
     async def get_weekly_summary(self, user_id: str) -> Dict[str, Any]:
-        """Get AI-generated weekly learning summary"""
+        """Get a weekly learning summary without using an API call."""
         try:
-            # Get weekly stats
             week_ago = datetime.utcnow() - timedelta(days=7)
-            
-            # Count activities
             activities = await self.db.user_interactions.count_documents({
                 'user_id': ObjectId(user_id),
                 'timestamp': {'$gte': week_ago}
             })
-            
-            # Get improvement trend
             trend = await self.analytics_engine.compute_improvement_trend(user_id, days=7)
-            
-            prompt = f"""Create a motivating weekly learning summary.
+            weak_areas = await self.analytics_engine.detect_weak_areas(user_id)
 
-Activities this week: {activities}
-Improvement trend: {trend.get('trend')}
-Improvement percentage: {trend.get('improvement_percentage')}%
+            trend_type = trend.get('trend', 'stable')
+            improvement_pct = trend.get('improvement_percent', 0)
+            top_areas = [item['category'] for item in weak_areas.get('weak_areas', [])[:2]]
 
-Generate summary in JSON:
-{{
-    "title": "summary title",
-    "achievements": ["achievement 1", "achievement 2"],
-    "areas_worked_on": ["area 1", "area 2"],
-    "next_week_focus": "focus area",
-    "motivational_message": "encouraging message"
-}}"""
-            
-            response = await self.llm_service.generate_response(prompt)
-            
-            try:
-                result = json.loads(response.get('response', '{}'))
-                return {
-                    'title': result.get('title', 'Your Weekly Progress'),
-                    'achievements': result.get('achievements', []),
-                    'areas_worked_on': result.get('areas_worked_on', []),
-                    'next_week_focus': result.get('next_week_focus', ''),
-                    'motivational_message': result.get('motivational_message', ''),
-                    'activities_count': activities,
-                    'trend': trend.get('trend'),
-                    'generated_at': datetime.utcnow()
-                }
-            except json.JSONDecodeError:
-                return {'error': 'Could not parse summary'}
+            summary_templates = {
+                'improving': {
+                    'title': f'Great Week! +{improvement_pct}% improvement',
+                    'motivational_message': 'Keep this momentum going with another focused week.',
+                },
+                'stable': {
+                    'title': 'Consistent Practice',
+                    'motivational_message': 'Consistency is paying off. Try one new exercise type next week.',
+                },
+                'declining': {
+                    'title': 'Room to Grow',
+                    'motivational_message': 'A lighter reset week with short sessions can help you bounce back.',
+                },
+                'insufficient_data': {
+                    'title': 'Your Weekly Progress',
+                    'motivational_message': 'Complete a few more activities and your weekly trends will become clearer.',
+                },
+            }
+            template = summary_templates.get(trend_type, summary_templates['stable'])
+
+            achievements = []
+            if activities:
+                achievements.append(f'Completed {activities} learning activities this week')
+            if trend_type == 'improving':
+                achievements.append(f'Raised your average performance by {improvement_pct}%')
+            if not achievements:
+                achievements.append('Started building a fresh practice baseline')
+
+            areas_worked_on = top_areas or ['general writing']
+            next_week_focus = top_areas[0] if top_areas else 'consistent daily practice'
+
+            return {
+                'title': template['title'],
+                'achievements': achievements,
+                'areas_worked_on': areas_worked_on,
+                'next_week_focus': next_week_focus,
+                'motivational_message': template['motivational_message'],
+                'activities_count': activities,
+                'trend': trend_type,
+                'generated_at': datetime.utcnow()
+            }
         
         except Exception as e:
             return {'error': str(e)}

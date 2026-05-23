@@ -10,12 +10,51 @@ Intelligent chat system with:
 
 from typing import Dict, List, Any, Optional
 from datetime import datetime, timedelta
+import re
 from bson import ObjectId
 from motor.motor_asyncio import AsyncIOMotorDatabase
-import json
 from .llm_service import LLMService
 from .ai_context_engine import UserContextEngine
 from .explanation_engine import ExplanationEngine
+from .training_data_collector import log_classification_pair
+
+
+_CLASSIFICATION_PATTERNS = {
+    "mistake_explanation": [
+        r"\bwhy\b.*\b(wrong|incorrect|error|mistake)\b",
+        r"\bexplain\b.*\b(error|mistake|wrong)\b",
+        r"\bwhat(?:'s| is).*\b(wrong|incorrect)\b",
+        r"\bhelp\b.*\b(understand|fix)\b.*\b(error|mistake)\b",
+    ],
+    "practice_request": [
+        r"\b(give|create|generate|make)\b.*\b(exercise|practice|quiz|test)\b",
+        r"\b(practice|exercise|drill)\b",
+        r"\btest me\b",
+        r"\bcan (?:i|you)\b.*\b(practice|try)\b",
+    ],
+    "progress_query": [
+        r"\b(my|how)\b.*\b(progress|score|level|doing|performance)\b",
+        r"\bhow (?:am i|have i)\b",
+        r"\bmy (?:stats|analytics|streak|credits)\b",
+        r"\bwhere (?:am i|do i stand)\b",
+    ],
+    "writing_advice": [
+        r"\b(how|tips?|advice|help)\b.*\b(write|writing|improve|better)\b",
+        r"\b(suggest|recommendation)\b.*\b(writing|grammar)\b",
+        r"\bwhat(?:'s| is) the (?:rule|difference)\b",
+        r"\bwhen (?:do|should|to) (?:i )?use\b",
+    ],
+}
+
+
+def _classify_message_local(message: str) -> str:
+    """Classify chat mentor messages without an API call."""
+    msg_lower = message.lower().strip()
+    for category, patterns in _CLASSIFICATION_PATTERNS.items():
+        for pattern in patterns:
+            if re.search(pattern, msg_lower):
+                return category
+    return "general_query"
 
 
 class ChatMentorService:
@@ -62,6 +101,11 @@ class ChatMentorService:
             
             # Classify message type
             message_type = await self._classify_message(message, user_context)
+
+            try:
+                await log_classification_pair(self.db, message, message_type, user_id=user_id)
+            except Exception:
+                pass
             
             # Route to appropriate handler
             if message_type == 'mistake_explanation':
@@ -113,35 +157,7 @@ class ChatMentorService:
         user_context: str
     ) -> str:
         """Classify message type to route to appropriate handler"""
-        try:
-            prompt = f"""Classify this user message into one category:
-
-Message: {message}
-
-Categories:
-1. 'mistake_explanation' - User asking to explain a writing mistake
-2. 'practice_request' - User asking for practice exercises
-3. 'progress_query' - User asking about their learning progress
-4. 'writing_advice' - User asking for writing tips/advice
-5. 'general_query' - Other questions
-
-Respond with ONLY the category name."""
-            
-            response = await self.llm_service.generate_response(prompt)
-            category = response.get('response', 'general_query').strip().lower()
-            
-            valid_categories = [
-                'mistake_explanation',
-                'practice_request',
-                'progress_query',
-                'writing_advice',
-                'general_query'
-            ]
-            
-            return category if category in valid_categories else 'general_query'
-        
-        except:
-            return 'general_query'
+        return _classify_message_local(message)
     
     async def _explain_user_mistakes(
         self, 
