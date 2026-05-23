@@ -40,5 +40,14 @@ backend/.mongo-log/
 *.bak
 *.tmp
 
+# Generated analysis and debug artifacts
+graphify-out/
+.graphify*
+.dbg/
+backend/backend_test_report.json
+backend/backend_test_report.txt
+backend/_tmp_*.py
+debug-live-suggestions-*.md
+
 # Local-only notes and planning docs
 docs/local-notes/
