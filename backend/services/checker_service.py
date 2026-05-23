@@ -3,11 +3,55 @@ services/checker_service.py — Spell/Grammar Check Logic
 Pipeline: Tier 1 (edit distance, instant) → Tier 2 (AI deep analysis) → Merge
 """
 
+import json
+import os
 import re
+import time
+import urllib.request
 
+from config import get_db
 from services.llm_service import call_llm
 from services.pattern_service import save_errors
+from services.training_data_collector import log_grammar_pair
 from prompts.templates import get_prompt
+
+
+# #region debug-point A:debug-helper
+def _debug_report(hypothesis_id: str, location: str, msg: str, data: dict | None = None) -> None:
+    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", ".dbg", "live-suggestions-stuck.env")
+    url = "http://127.0.0.1:7778/event"
+    session_id = "live-suggestions-stuck"
+    try:
+        with open(os.path.normpath(env_path), "r", encoding="utf-8") as env_file:
+            for raw_line in env_file:
+                line = raw_line.strip()
+                if line.startswith("DEBUG_SERVER_URL="):
+                    url = line.split("=", 1)[1]
+                elif line.startswith("DEBUG_SESSION_ID="):
+                    session_id = line.split("=", 1)[1]
+    except Exception:
+        pass
+    payload = {
+        "sessionId": session_id,
+        "runId": "pre-fix",
+        "hypothesisId": hypothesis_id,
+        "location": location,
+        "msg": f"[DEBUG] {msg}",
+        "data": data or {},
+        "ts": int(time.time() * 1000),
+    }
+    try:
+        urllib.request.urlopen(
+            urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+            ),
+            timeout=0.8,
+        ).read()
+    except Exception:
+        pass
+# #endregion
 
 
 def _norm_token(value: str) -> str:
@@ -128,8 +172,9 @@ async def check_text(text: str, mode: str, context: str, user_level: str, user_i
 
     Pipeline:
       1. Tier 1 (edit distance) — instant, catches obvious typos
-      2. Tier 2 (AI) — deep grammar, punctuation, style analysis
-      3. Merge — AI results take priority; Tier 1 fills gaps
+      2. Tier 2 (local grammar engine) — grammar, punctuation, style analysis
+      3. Tier 3 (AI fallback) — used only if the local engine fails
+      4. Merge — local/AI results take priority; Tier 1 fills gaps
 
     Modes:
       - practice_live:     hints only (no corrections shown)
@@ -137,34 +182,95 @@ async def check_text(text: str, mode: str, context: str, user_level: str, user_i
       - project:           full corrections + explanations + style tips
     """
 
+    trace_id = f"{mode}:{len(text)}:{abs(hash((text or '')[:32]))}"
+    started_at = time.monotonic()
+
+    # #region debug-point A:check-text-start
+    _debug_report("A", "checker_service.check_text:start", "check_text entered", {"traceId": trace_id, "mode": mode, "context": context, "textLength": len(text), "userLevel": user_level})
+    # #endregion
+
     # ── TIER 1: Edit distance check (always runs first, instant) ──
     tier1_errors = _fallback_check(text)["errors"]
 
-    # ── TIER 2: AI check ──────────────────────────────────────────
+    # #region debug-point A:tier1-finished
+    _debug_report("A", "checker_service.check_text:tier1", "tier1 fallback finished", {"traceId": trace_id, "tier1ErrorCount": len(tier1_errors), "elapsedMs": round((time.monotonic() - started_at) * 1000, 1)})
+    # #endregion
+
+    # ── TIER 2: Local grammar engine ──────────────────────────────
     try:
+        from services.local_grammar_engine import get_engine
+
+        # #region debug-point B:get-engine
+        _debug_report("B", "checker_service.check_text:get_engine", "resolving local engine", {"traceId": trace_id})
+        # #endregion
+        engine = get_engine()
+        local_started_at = time.monotonic()
+        # #region debug-point B:local-engine-call
+        _debug_report("B", "checker_service.check_text:local_call", "calling local engine", {"traceId": trace_id, "mode": mode})
+        # #endregion
         if mode == "practice_live":
-            result = await _check_live(text, context, user_level, tier1_errors)
+            result = engine.check_grammar(text, hints_only=True)
         elif mode == "practice_analysis":
-            result = await _check_analysis(text, context, user_level, "writing", tier1_errors, task_prompt=task_prompt or context)
+            result = engine.analyze_text(text, user_level, task_prompt=task_prompt or context)
         elif mode == "project":
-            result = await _check_project(text, context, user_level, tier1_errors)
+            result = engine.check_project(text, user_level)
         else:
-            result = await _check_project(text, context, user_level, tier1_errors)
+            result = engine.check_project(text, user_level)
 
-        # Normalize AI positions before merging so frontend highlights line up.
+        # #region debug-point B:local-engine-return
+        _debug_report("B", "checker_service.check_text:local_return", "local engine returned", {"traceId": trace_id, "errorCount": len(result.get('errors', [])), "elapsedMs": round((time.monotonic() - local_started_at) * 1000, 1)})
+        # #endregion
+
+        # Normalize positions before merging so frontend highlights line up.
         result["errors"] = _normalize_error_positions(text, result.get("errors", []))
-
-        # ── MERGE: AI takes priority, Tier 1 fills gaps ───────────
         result = _merge_results(tier1_errors, result, mode)
         result["fallback_used"] = False
+        result["engine"] = "local"
 
-    except Exception as e:
-        print(f"⚠️ LLM check failed, using Tier 1 only: {e}")
-        result = {"errors": tier1_errors, "fallback_used": True}
-        # Color the fallback errors
-        for err in result["errors"]:
-            err.setdefault("color", "red")
-            err.setdefault("hint", "Possible spelling error")
+        # #region debug-point B:local-engine-merged
+        _debug_report("B", "checker_service.check_text:local_merged", "local result merged", {"traceId": trace_id, "mergedErrorCount": len(result.get('errors', [])), "elapsedMs": round((time.monotonic() - started_at) * 1000, 1)})
+        # #endregion
+
+    except Exception as local_error:
+        print(f"⚠️ Local engine failed: {local_error}, trying LLM fallback...")
+        # #region debug-point C:local-engine-error
+        _debug_report("C", "checker_service.check_text:local_error", "local engine failed", {"traceId": trace_id, "error": str(local_error), "elapsedMs": round((time.monotonic() - started_at) * 1000, 1)})
+        # #endregion
+
+        # ── TIER 3: AI fallback ───────────────────────────────────
+        try:
+            if mode == "practice_live":
+                result = await _check_live(text, context, user_level, tier1_errors)
+            elif mode == "practice_analysis":
+                result = await _check_analysis(
+                    text,
+                    context,
+                    user_level,
+                    "writing",
+                    tier1_errors,
+                    task_prompt=task_prompt or context,
+                )
+            elif mode == "project":
+                result = await _check_project(text, context, user_level, tier1_errors)
+            else:
+                result = await _check_project(text, context, user_level, tier1_errors)
+
+            result["errors"] = _normalize_error_positions(text, result.get("errors", []))
+            result = _merge_results(tier1_errors, result, mode)
+            result["fallback_used"] = False
+            result["engine"] = "llm_fallback"
+            # #region debug-point C:llm-fallback-return
+            _debug_report("C", "checker_service.check_text:llm_return", "llm fallback returned", {"traceId": trace_id, "errorCount": len(result.get('errors', [])), "elapsedMs": round((time.monotonic() - started_at) * 1000, 1)})
+            # #endregion
+        except Exception as llm_error:
+            print(f"⚠️ LLM fallback failed, using Tier 1 only: {llm_error}")
+            result = {"errors": tier1_errors, "fallback_used": True, "engine": "tier1_fallback"}
+            for err in result["errors"]:
+                err.setdefault("color", "red")
+                err.setdefault("hint", "Possible spelling error")
+            # #region debug-point C:tier1-only
+            _debug_report("C", "checker_service.check_text:tier1_only", "using tier1 fallback only", {"traceId": trace_id, "error": str(llm_error), "errorCount": len(result.get('errors', [])), "elapsedMs": round((time.monotonic() - started_at) * 1000, 1)})
+            # #endregion
 
     # ── Save error patterns (non-blocking) ────────────────────────
     if user_id and result.get("errors"):
@@ -173,6 +279,24 @@ async def check_text(text: str, mode: str, context: str, user_level: str, user_i
         except Exception:
             pass
 
+    if user_id and result.get("engine") in {"local", "llm_fallback"}:
+        try:
+            await log_grammar_pair(
+                get_db(),
+                input_text=text,
+                errors_found=result.get("errors", []),
+                corrected_text=result.get("improved_version", text),
+                mode=mode,
+                user_level=user_level,
+                engine=result.get("engine"),
+                user_id=user_id,
+            )
+        except Exception:
+            pass
+
+    # #region debug-point A:check-text-return
+    _debug_report("A", "checker_service.check_text:return", "check_text returning", {"traceId": trace_id, "engine": result.get("engine"), "errorCount": len(result.get("errors", [])), "elapsedMs": round((time.monotonic() - started_at) * 1000, 1)})
+    # #endregion
     return result
 
 
