@@ -5,9 +5,20 @@
  */
 
 const BASE = '/api';
+const AUTH_LOGOUT_EVENT = 'ww:auth:logout';
 
 function getToken() {
   return localStorage.getItem('ww_token') || '';
+}
+
+function clearLocalAuth() {
+  localStorage.removeItem('ww_token');
+  localStorage.removeItem('ww_user');
+}
+
+function notifyAuthLogout(status) {
+  if (typeof window === 'undefined') return;
+  window.dispatchEvent(new CustomEvent(AUTH_LOGOUT_EVENT, { detail: { status } }));
 }
 
 async function api(path, opts = {}) {
@@ -20,6 +31,11 @@ async function api(path, opts = {}) {
       ...(opts.headers || {}),
     },
   });
+
+  if (res.status === 401 || res.status === 403) {
+    clearLocalAuth();
+    notifyAuthLogout(res.status);
+  }
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({ detail: 'Request failed' }));
