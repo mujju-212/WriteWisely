@@ -8,6 +8,9 @@ from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional
 import json
+import os
+import time
+import urllib.request
 
 from config import get_db
 from middleware.auth_middleware import get_current_user
@@ -20,6 +23,44 @@ from services import analytics_service
 from models.schemas import SubmitPracticeRequest
 
 router = APIRouter()
+
+
+# #region debug-point D:debug-helper
+def _debug_report(hypothesis_id: str, location: str, msg: str, data: dict | None = None) -> None:
+    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", ".dbg", "live-suggestions-stuck.env")
+    url = "http://127.0.0.1:7778/event"
+    session_id = "live-suggestions-stuck"
+    try:
+        with open(os.path.normpath(env_path), "r", encoding="utf-8") as env_file:
+            for raw_line in env_file:
+                line = raw_line.strip()
+                if line.startswith("DEBUG_SERVER_URL="):
+                    url = line.split("=", 1)[1]
+                elif line.startswith("DEBUG_SESSION_ID="):
+                    session_id = line.split("=", 1)[1]
+    except Exception:
+        pass
+    payload = {
+        "sessionId": session_id,
+        "runId": "pre-fix",
+        "hypothesisId": hypothesis_id,
+        "location": location,
+        "msg": f"[DEBUG] {msg}",
+        "data": data or {},
+        "ts": int(time.time() * 1000),
+    }
+    try:
+        urllib.request.urlopen(
+            urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={"Content-Type": "application/json"},
+            ),
+            timeout=0.8,
+        ).read()
+    except Exception:
+        pass
+# #endregion
 
 
 # ─── Helper ────────────────────────────────────────────────────
@@ -152,14 +193,27 @@ class CheckLiveRequest(BaseModel):
 @router.post("/check")
 async def check_live(data: CheckLiveRequest, user=Depends(get_current_user)):
     """Live mode check — returns hints only (no corrections shown)."""
+
+    trace_id = f"practice_live:{len(data.text)}:{abs(hash((data.text or '')[:32]))}"
+    started_at = time.monotonic()
+    # #region debug-point D:route-start
+    _debug_report("D", "practice.check_live:start", "practice live route entered", {"traceId": trace_id, "textLength": len(data.text), "taskType": data.task_type})
+    # #endregion
+
     trimmed = data.text.strip()
     if not trimmed or not any(ch.isalpha() for ch in trimmed):
+        # #region debug-point D:route-empty-return
+        _debug_report("D", "practice.check_live:empty_return", "practice live route returned early", {"traceId": trace_id})
+        # #endregion
         return {"errors": [], "error_count": {"spelling": 0, "grammar": 0}}
 
     user_level_num = user.get("profile", {}).get("current_level", 1)
     level_cat = _level_name(user_level_num)
 
     try:
+        # #region debug-point D:route-before-check-text
+        _debug_report("D", "practice.check_live:before_check_text", "calling checker service", {"traceId": trace_id, "level": level_cat})
+        # #endregion
         result = await check_text(
             text=data.text,
             mode="practice_live",
@@ -167,11 +221,18 @@ async def check_live(data: CheckLiveRequest, user=Depends(get_current_user)):
             user_level=level_cat,
             user_id=user["id"],
         )
+        # #region debug-point D:route-after-check-text
+        _debug_report("D", "practice.check_live:after_check_text", "checker service returned", {"traceId": trace_id, "errorCount": len(result.get('errors', [])), "engine": result.get('engine'), "elapsedMs": round((time.monotonic() - started_at) * 1000, 1)})
+        # #endregion
     except Exception as e:
         print(f"⚠️ Live check failed: {e}")
+        # #region debug-point E:route-error
+        _debug_report("E", "practice.check_live:error", "practice live route failed", {"traceId": trace_id, "error": str(e), "elapsedMs": round((time.monotonic() - started_at) * 1000, 1)})
+        # #endregion
         return {"errors": [], "error_count": {"spelling": 0, "grammar": 0}}
 
     errors = result.get("errors", [])
+
 
     # Strip corrections — live mode shows hints only
     cleaned_errors = []
@@ -209,6 +270,9 @@ async def check_live(data: CheckLiveRequest, user=Depends(get_current_user)):
         else:
             error_count["grammar"] += 1
 
+    # #region debug-point D:route-return
+    _debug_report("D", "practice.check_live:return", "practice live route returning", {"traceId": trace_id, "cleanedErrorCount": len(cleaned_errors), "errorCount": error_count, "elapsedMs": round((time.monotonic() - started_at) * 1000, 1)})
+    # #endregion
     return {"errors": cleaned_errors, "error_count": error_count}
 
 
