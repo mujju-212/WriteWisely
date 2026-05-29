@@ -15,7 +15,7 @@ function countWords(text) {
 }
 
 /* ─── Render mirror text with error underlines ─────────────────── */
-function renderHighlightedText(text, errors, activeTooltip, setActiveTooltip, textareaRef) {
+function renderHighlightedText(text, errors, setActiveTooltip, textareaRef) {
   const segments = buildHighlightSegments(text, errors);
 
   return (
@@ -26,22 +26,40 @@ function renderHighlightedText(text, errors, activeTooltip, setActiveTooltip, te
         }
         const color = seg.err.colorName || 'yellow';
         const isSpelling = color === 'red';
-        const isActive = activeTooltip === i;
         const isFirstLine = text.lastIndexOf('\n', Math.max(0, (seg.start || 0) - 1)) === -1;
-        const tooltipPlacement = isFirstLine
-          ? { top: 'calc(100% + 6px)', bottom: 'auto' }
-          : { bottom: 'calc(100% + 6px)', top: 'auto' };
+        const tooltipPlacement = isFirstLine ? 'bottom' : 'top';
+        const showTooltip = (event) => {
+          const rect = event.currentTarget.getBoundingClientRect();
+          setActiveTooltip({
+            id: i,
+            rect: {
+              left: rect.left,
+              right: rect.right,
+              top: rect.top,
+              bottom: rect.bottom,
+              width: rect.width,
+              height: rect.height,
+            },
+            placement: tooltipPlacement,
+            isSpelling,
+            hint: seg.err.hint || 'Check this word',
+            suggestion: seg.err.suggestion || '',
+          });
+        };
+        const hideTooltip = () => {
+          setActiveTooltip((prev) => (prev?.id === i ? null : prev));
+        };
         return (
           <span
             key={i}
             className="pe-error-span"
             style={{ position: 'relative', display: 'inline', cursor: 'help' }}
-            onMouseEnter={() => setActiveTooltip(i)}
-            onMouseLeave={() => setActiveTooltip(null)}
+            onMouseEnter={showTooltip}
+            onMouseLeave={hideTooltip}
             onClick={(event) => {
               event.preventDefault();
               event.stopPropagation();
-              setActiveTooltip(prev => (prev === i ? null : i));
+              showTooltip(event);
               // Forward click to textarea so user can type at this position
               if (textareaRef?.current) {
                 textareaRef.current.focus();
@@ -55,38 +73,6 @@ function renderHighlightedText(text, errors, activeTooltip, setActiveTooltip, te
             }}>
               {seg.text}
             </span>
-            {isActive && (
-              <span style={{
-                position: 'absolute',
-                left: '50%',
-                transform: 'translateX(-50%)',
-                background: '#1E293B',
-                color: '#fff',
-                borderRadius: 10,
-                padding: '8px 14px',
-                fontSize: '0.78rem',
-                whiteSpace: 'nowrap',
-                zIndex: 200,
-                boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
-                pointerEvents: 'none',
-                lineHeight: 1.6,
-                minWidth: 180,
-                ...tooltipPlacement,
-              }}>
-                <span style={{ fontSize: '0.85rem', display: 'block', marginBottom: 2 }}>
-                  <i className={isSpelling ? 'fa-solid fa-circle' : 'fa-solid fa-circle-dot'} style={{ marginRight: 6 }}></i>
-                  {isSpelling ? 'Spelling Error' : 'Grammar Issue'}
-                </span>
-                <span style={{ color: '#94A3B8' }}>
-                  {seg.err.hint || 'Check this word'}
-                </span>
-                {seg.err.suggestion && (
-                  <span style={{ display: 'block', color: '#86EFAC', marginTop: 3 }}>
-                    Try: {seg.err.suggestion}
-                  </span>
-                )}
-              </span>
-            )}
           </span>
         );
       })}
@@ -331,7 +317,7 @@ function LiveEditor({ text, onTextChange, onScroll, liveErrors, errorCount, live
           {/* Mirror + textarea container */}
           <div style={{ position: 'relative', minHeight: 280 }}>
             <div ref={mirrorRef} className="pe-mirror">
-              {renderHighlightedText(text, liveErrors, activeTooltip, setActiveTooltip, textareaRef)}
+              {renderHighlightedText(text, liveErrors, setActiveTooltip, textareaRef)}
               {/* Ghost char to keep height */}
               <span style={{ visibility: 'hidden' }}>.</span>
             </div>
@@ -412,6 +398,57 @@ function LiveEditor({ text, onTextChange, onScroll, liveErrors, errorCount, live
           </div>
         ) : null}
       </div>
+
+      <TooltipOverlay tooltip={activeTooltip} />
+    </div>
+  );
+}
+
+function TooltipOverlay({ tooltip }) {
+  if (!tooltip?.rect) return null;
+  const { rect, placement, isSpelling, hint, suggestion } = tooltip;
+  const viewportWidth = typeof window === 'undefined' ? 1200 : window.innerWidth;
+  const centerX = rect.left + rect.width / 2;
+  const halfWidth = 140;
+  const margin = 12;
+  const clampedX = Math.min(Math.max(centerX, halfWidth + margin), viewportWidth - halfWidth - margin);
+  const top = placement === 'bottom' ? rect.bottom + 8 : rect.top - 8;
+  const translateY = placement === 'bottom' ? '0' : '-100%';
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        left: clampedX,
+        top,
+        transform: `translate(-50%, ${translateY})`,
+        background: '#1E293B',
+        color: '#fff',
+        borderRadius: 10,
+        padding: '8px 14px',
+        fontSize: '0.78rem',
+        zIndex: 1000,
+        boxShadow: '0 4px 20px rgba(0,0,0,0.25)',
+        pointerEvents: 'none',
+        lineHeight: 1.6,
+        minWidth: 180,
+        maxWidth: 280,
+        whiteSpace: 'normal',
+        wordBreak: 'break-word',
+      }}
+    >
+      <span style={{ fontSize: '0.85rem', display: 'block', marginBottom: 2 }}>
+        <i className={isSpelling ? 'fa-solid fa-circle' : 'fa-solid fa-circle-dot'} style={{ marginRight: 6 }}></i>
+        {isSpelling ? 'Spelling Error' : 'Grammar Issue'}
+      </span>
+      <span style={{ color: '#94A3B8' }}>
+        {hint}
+      </span>
+      {suggestion ? (
+        <span style={{ display: 'block', color: '#86EFAC', marginTop: 3 }}>
+          Try: {suggestion}
+        </span>
+      ) : null}
     </div>
   );
 }
