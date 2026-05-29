@@ -26,7 +26,7 @@ echo -e "${NC}"
 # ──────────────────────────────────────────────────────────────────
 # Step 1: Check Prerequisites
 # ──────────────────────────────────────────────────────────────────
-echo -e "  ${BOLD}[1/6] Checking prerequisites...${NC}"
+echo -e "  ${BOLD}[1/7] Checking prerequisites...${NC}"
 echo ""
 
 # -- Check Python
@@ -62,7 +62,7 @@ echo ""
 # ──────────────────────────────────────────────────────────────────
 # Step 2: Backend Virtual Environment
 # ──────────────────────────────────────────────────────────────────
-echo -e "  ${BOLD}[2/6] Setting up Python virtual environment...${NC}"
+echo -e "  ${BOLD}[2/7] Setting up Python virtual environment...${NC}"
 
 if [ ! -d "backend/venv" ]; then
     echo "  Creating virtual environment in backend/venv..."
@@ -79,7 +79,7 @@ echo ""
 # ──────────────────────────────────────────────────────────────────
 # Step 3: Install Backend Dependencies
 # ──────────────────────────────────────────────────────────────────
-echo -e "  ${BOLD}[3/6] Installing backend dependencies...${NC}"
+echo -e "  ${BOLD}[3/7] Installing backend dependencies...${NC}"
 echo ""
 
 source backend/venv/bin/activate
@@ -91,9 +91,26 @@ echo "  ────────────────────────
 echo ""
 
 # ──────────────────────────────────────────────────────────────────
+# Step 4: Download spaCy Language Model
+# ──────────────────────────────────────────────────────────────────
+echo -e "  ${BOLD}[4/7] Downloading spaCy English language model...${NC}"
+echo ""
+
+if python3 -m spacy download en_core_web_sm --quiet 2>/dev/null; then
+    echo -e "  ${GREEN}✓${NC} spaCy en_core_web_sm model downloaded"
+else
+    echo -e "  ${YELLOW}[WARNING] Failed to download spaCy model. Grammar checks may not work.${NC}"
+    echo "           You can retry later with: python3 -m spacy download en_core_web_sm"
+fi
+
+echo ""
+echo "  ──────────────────────────────────────────────────────────────"
+echo ""
+
+# ──────────────────────────────────────────────────────────────────
 # Step 4: Create .env File (if not exists)
 # ──────────────────────────────────────────────────────────────────
-echo -e "  ${BOLD}[4/6] Checking environment configuration...${NC}"
+echo -e "  ${BOLD}[5/7] Checking environment configuration...${NC}"
 
 if [ ! -f "backend/.env" ]; then
     echo "  Creating backend/.env with default template..."
@@ -140,7 +157,7 @@ echo ""
 # ──────────────────────────────────────────────────────────────────
 # Step 5: Install Frontend Dependencies
 # ──────────────────────────────────────────────────────────────────
-echo -e "  ${BOLD}[5/6] Installing frontend dependencies...${NC}"
+echo -e "  ${BOLD}[6/7] Installing frontend dependencies...${NC}"
 echo ""
 
 cd frontend
@@ -155,7 +172,7 @@ echo ""
 # ──────────────────────────────────────────────────────────────────
 # Step 6: Summary
 # ──────────────────────────────────────────────────────────────────
-echo -e "  ${BOLD}[6/6] Setup complete!${NC}"
+echo -e "  ${BOLD}[7/7] Setup complete!${NC}"
 echo ""
 echo -e "  ${GREEN}${BOLD}"
 echo "  ╔══════════════════════════════════════════════════════════════╗"

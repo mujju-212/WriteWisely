@@ -19,7 +19,7 @@ echo.
 REM ──────────────────────────────────────────────────────────────────
 REM  Step 1: Check Prerequisites
 REM ──────────────────────────────────────────────────────────────────
-echo  [1/6] Checking prerequisites...
+echo  [1/7] Checking prerequisites...
 echo.
 
 REM -- Check Python
@@ -64,7 +64,7 @@ echo.
 REM ──────────────────────────────────────────────────────────────────
 REM  Step 2: Backend Virtual Environment
 REM ──────────────────────────────────────────────────────────────────
-echo  [2/6] Setting up Python virtual environment...
+echo  [2/7] Setting up Python virtual environment...
 
 if not exist "backend\venv" (
     echo   Creating virtual environment in backend\venv...
@@ -86,7 +86,7 @@ echo.
 REM ──────────────────────────────────────────────────────────────────
 REM  Step 3: Install Backend Dependencies
 REM ──────────────────────────────────────────────────────────────────
-echo  [3/6] Installing backend dependencies...
+echo  [3/7] Installing backend dependencies...
 echo.
 
 call backend\venv\Scripts\activate.bat
@@ -103,9 +103,27 @@ echo  ────────────────────────�
 echo.
 
 REM ──────────────────────────────────────────────────────────────────
+REM  Step 4: Download spaCy Language Model
+REM ──────────────────────────────────────────────────────────────────
+echo  [4/7] Downloading spaCy English language model...
+echo.
+
+python -m spacy download en_core_web_sm --quiet
+if %errorlevel% neq 0 (
+    echo  [WARNING] Failed to download spaCy model. Grammar checks may not work.
+    echo            You can retry later with: python -m spacy download en_core_web_sm
+) else (
+    echo   ✓ spaCy en_core_web_sm model downloaded
+)
+
+echo.
+echo  ──────────────────────────────────────────────────────────────
+echo.
+
+REM ──────────────────────────────────────────────────────────────────
 REM  Step 4: Create .env File (if not exists)
 REM ──────────────────────────────────────────────────────────────────
-echo  [4/6] Checking environment configuration...
+echo  [5/7] Checking environment configuration...
 
 if not exist "backend\.env" (
     echo   Creating backend\.env with default template...
@@ -152,7 +170,7 @@ echo.
 REM ──────────────────────────────────────────────────────────────────
 REM  Step 5: Install Frontend Dependencies
 REM ──────────────────────────────────────────────────────────────────
-echo  [5/6] Installing frontend dependencies...
+echo  [6/7] Installing frontend dependencies...
 echo.
 
 cd frontend
@@ -173,7 +191,7 @@ echo.
 REM ──────────────────────────────────────────────────────────────────
 REM  Step 6: Summary
 REM ──────────────────────────────────────────────────────────────────
-echo  [6/6] Setup complete!
+echo  [7/7] Setup complete!
 echo.
 echo  ╔══════════════════════════════════════════════════════════════╗
 echo  ║                                                              ║

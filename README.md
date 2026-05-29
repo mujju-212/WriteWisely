@@ -113,6 +113,7 @@ Real-time notification system for:
 |:---:|:---|
 | **Frontend** | React 18 · Vite 5 · Recharts · Lucide React · Font Awesome 7 · CSS3 |
 | **Backend** | FastAPI · Pydantic v2 · Motor (async MongoDB) · PyMongo |
+| **NLP / Grammar** | spaCy (`en_core_web_sm`) · SymSpell · Custom rule engine |
 | **Database** | MongoDB (local or Atlas) |
 | **Auth** | JWT (python-jose) · bcrypt · OTP via MailerSend |
 | **AI / LLM** | Google Gemini (primary) · OpenRouter (fallback) · Hugging Face (fallback) |
@@ -153,7 +154,13 @@ Real-time notification system for:
 │   │ email)  │  │          │  │ templates│  │              │  │
 │   └────┬─────┘  └──────────┘  └──────────┘  └──────────────┘  │
 │        │                                                        │
-└────────┼────────────────────────────────────────────────────────┘
+│   ┌────┴─────────────────────────────────────────────────────┐  │
+│   │            Local NLP Engine (pure Python)                │  │
+│   │  spaCy (en_core_web_sm)  ·  SymSpell  ·  Grammar Rules  │  │
+│   │  ~6ms avg latency  ·  No Java required                  │  │
+│   └──────────────────────────────────────────────────────────┘  │
+│                                                                 │
+└────────┬────────────────────────────────────────────────────────┘
          │
          ▼
 ┌─────────────────────────────────┐    ┌──────────────────────────┐
@@ -204,6 +211,13 @@ WriteWisely/
 │   │   └── notifications.py        # User notifications
 │   │
 │   ├── 📂 services/                # Business logic & external integrations
+│   │   ├── checker_service.py      # Tiered spell/grammar pipeline
+│   │   ├── local_grammar_engine.py # spaCy + SymSpell grammar engine
+│   │   ├── spacy_grammar_rules.py  # Pure-Python grammar rule definitions
+│   │   ├── llm_service.py          # Multi-provider LLM abstraction
+│   │   ├── chat_mentor_service.py  # AI chat coach logic
+│   │   ├── analytics_service.py    # Analytics computation
+│   │   └── ...                     # Email, patterns, training data
 │   ├── 📂 models/                  # Pydantic request/response models
 │   ├── 📂 middleware/              # JWT auth middleware
 │   ├── 📂 prompts/                 # LLM prompt templates
@@ -283,8 +297,9 @@ The setup script will:
 1. ✅ Verify Python, Node.js, and npm are installed
 2. ✅ Create a Python virtual environment
 3. ✅ Install all backend dependencies
-4. ✅ Generate a `.env` template (if not exists)
-5. ✅ Install all frontend dependencies
+4. ✅ Download the spaCy English language model (`en_core_web_sm`)
+5. ✅ Generate a `.env` template (if not exists)
+6. ✅ Install all frontend dependencies
 
 ### Option 2: Manual Setup
 
@@ -309,6 +324,9 @@ source venv/bin/activate
 
 # Install dependencies
 pip install -r requirements.txt
+
+# Download the spaCy English language model
+python -m spacy download en_core_web_sm
 ```
 
 #### Step 3 — Configure Environment
