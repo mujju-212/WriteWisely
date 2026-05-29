@@ -1,10 +1,13 @@
 """
 Local grammar engine for WriteWisely.
 
-Uses LanguageTool for grammar/style detection and SymSpell for extra typo
-coverage. The output shape mirrors the existing frontend/backend contract so
-the caller can swap between local and LLM-backed analysis without extra
-mapping.
+Uses spaCy-based grammar rules for grammar/style detection and SymSpell for
+extra typo coverage.  The output shape mirrors the existing frontend/backend
+contract so the caller can swap between local and LLM-backed analysis without
+extra mapping.
+
+Previous implementation used LanguageTool (Java). This version is pure Python
+and typically responds in <100ms instead of 1-3 seconds.
 """
 
 from __future__ import annotations
@@ -18,11 +21,16 @@ import urllib.request
 from importlib import resources
 from typing import Any, Dict, List, Optional
 
+# ── spaCy grammar rules (fast, pure Python) ──────────────────────────
 try:
-    import language_tool_python
-except ImportError:  # pragma: no cover - optional dependency
-    language_tool_python = None
+    from services.spacy_grammar_rules import check_grammar_spacy
+except ImportError:
+    try:
+        from spacy_grammar_rules import check_grammar_spacy
+    except ImportError:
+        check_grammar_spacy = None
 
+# ── SymSpell (fast edit-distance spell checker) ──────────────────────
 try:
     from symspellpy import SymSpell, Verbosity
 except ImportError:  # pragma: no cover - optional dependency
@@ -30,6 +38,7 @@ except ImportError:  # pragma: no cover - optional dependency
     Verbosity = None
 
 
+# ── Category mapping (kept for any future tool integration) ──────────
 LT_CATEGORY_MAP = {
     "TYPOS": "spelling",
     "SPELLING": "spelling",
@@ -76,45 +85,51 @@ DEFAULT_SPELLING_HINTS = {
 
 WORD_RE = re.compile(r"\b[A-Za-z][A-Za-z'-]{1,}\b")
 SENTENCE_RE = re.compile(r"[^.!?]+[.!?]?")
-LT_INIT_WAIT_SECONDS = 0.5
-LT_REQUEST_TIMEOUT_SECONDS = 2.5
+
+
+def _env_flag(name: str) -> bool:
+    return os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
 
 
 # #region debug-point B:debug-helper
 def _debug_report(hypothesis_id: str, location: str, msg: str, data: dict | None = None) -> None:
-    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", ".dbg", "live-suggestions-stuck.env")
-    url = "http://127.0.0.1:7778/event"
-    session_id = "live-suggestions-stuck"
-    try:
-        with open(os.path.normpath(env_path), "r", encoding="utf-8") as env_file:
-            for raw_line in env_file:
-                line = raw_line.strip()
-                if line.startswith("DEBUG_SERVER_URL="):
-                    url = line.split("=", 1)[1]
-                elif line.startswith("DEBUG_SESSION_ID="):
-                    session_id = line.split("=", 1)[1]
-    except Exception:
-        pass
-    payload = {
-        "sessionId": session_id,
-        "runId": "pre-fix",
-        "hypothesisId": hypothesis_id,
-        "location": location,
-        "msg": f"[DEBUG] {msg}",
-        "data": data or {},
-        "ts": int(time.time() * 1000),
-    }
-    try:
-        urllib.request.urlopen(
-            urllib.request.Request(
-                url,
-                data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"},
-            ),
-            timeout=0.8,
-        ).read()
-    except Exception:
-        pass
+    """Fire-and-forget debug report — runs in a background thread to avoid blocking."""
+    def _send():
+        env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", ".dbg", "live-suggestions-stuck.env")
+        url = "http://127.0.0.1:7778/event"
+        session_id = "live-suggestions-stuck"
+        try:
+            with open(os.path.normpath(env_path), "r", encoding="utf-8") as env_file:
+                for raw_line in env_file:
+                    line = raw_line.strip()
+                    if line.startswith("DEBUG_SERVER_URL="):
+                        url = line.split("=", 1)[1]
+                    elif line.startswith("DEBUG_SESSION_ID="):
+                        session_id = line.split("=", 1)[1]
+        except Exception:
+            return  # No debug config — skip entirely
+        payload = {
+            "sessionId": session_id,
+            "runId": "pre-fix",
+            "hypothesisId": hypothesis_id,
+            "location": location,
+            "msg": f"[DEBUG] {msg}",
+            "data": data or {},
+            "ts": int(time.time() * 1000),
+        }
+        try:
+            urllib.request.urlopen(
+                urllib.request.Request(
+                    url,
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                ),
+                timeout=0.8,
+            ).read()
+        except Exception:
+            pass
+
+    threading.Thread(target=_send, daemon=True).start()
 # #endregion
 
 
@@ -123,18 +138,36 @@ def _clamp_score(value: float) -> float:
 
 
 class LocalGrammarEngine:
-    """Local grammar, spelling, and style engine."""
+    """Local grammar, spelling, and style engine (pure Python, no Java)."""
 
     def __init__(self, language: str = "en-US") -> None:
         self.language = language
-        self.tool = self._init_language_tool(language)
+        self._spacy_available = check_grammar_spacy is not None
         self.symspell = self._init_symspell()
-        self.available = self.tool is not None or self.symspell is not None
+        # Keep .tool attribute for backward compat with checker_service
+        self.tool = True if self._spacy_available else None
+        self.available = self._spacy_available or self.symspell is not None
+
+        if self._spacy_available:
+            # Warm up spacy model in background so first real check is fast
+            threading.Thread(target=self._warmup_spacy, daemon=True).start()
+            print("[LocalEngine] spaCy grammar rules ready.")
+        else:
+            print("[LocalEngine] spaCy grammar rules NOT available.")
+
+    def _warmup_spacy(self) -> None:
+        """Load the spacy model eagerly in the background."""
+        try:
+            check_grammar_spacy("Hello world.")
+            print("[LocalEngine] spaCy model warmed up.")
+        except Exception as exc:
+            print(f"[LocalEngine] spaCy warmup failed: {exc}")
 
     def check_grammar(self, text: str, hints_only: bool = False) -> Dict[str, Any]:
         """Return live-check style errors for the given text."""
         self._ensure_available()
-        errors = self._collect_errors(text)
+        fast_mode = hints_only and _env_flag("LOCAL_GRAMMAR_FAST_LIVE")
+        errors = self._collect_errors(text, skip_grammar_rules=fast_mode)
 
         if hints_only:
             for error in errors:
@@ -191,39 +224,43 @@ class LocalGrammarEngine:
         if not self.available:
             raise RuntimeError(
                 "Local grammar engine dependencies are unavailable. "
-                "Install language_tool_python and symspellpy to enable it."
+                "Install spacy (with en_core_web_sm) and symspellpy to enable it."
             )
 
-    def _collect_errors(self, text: str) -> List[Dict[str, Any]]:
+    def _collect_errors(self, text: str, skip_grammar_rules: bool = False) -> List[Dict[str, Any]]:
         if not text.strip():
             return []
 
         trace_id = f"collect:{len(text)}:{abs(hash((text or '')[:32]))}"
         started_at = time.monotonic()
         # #region debug-point B:collect-errors-start
-        _debug_report("B", "local_grammar_engine._collect_errors:start", "collect_errors entered", {"traceId": trace_id, "textLength": len(text), "hasTool": self.tool is not None, "hasSymSpell": self.symspell is not None})
+        _debug_report("B", "local_grammar_engine._collect_errors:start", "collect_errors entered", {"traceId": trace_id, "textLength": len(text), "hasSpacy": self._spacy_available, "hasSymSpell": self.symspell is not None, "skipGrammarRules": skip_grammar_rules})
         # #endregion
 
         errors: List[Dict[str, Any]] = []
         covered_spans: set[tuple[int, int]] = set()
 
-        for match in self._run_language_tool(text):
-            converted = self._lt_to_ww_error(text, match)
-            if not converted:
-                continue
-            span = (
-                converted.get("position", {}).get("start"),
-                converted.get("position", {}).get("end"),
-            )
-            if span in covered_spans:
-                continue
-            covered_spans.add(span)
-            errors.append(converted)
+        # ── Step 1: spaCy grammar rules (fast, ~30-80ms) ─────────────
+        if not skip_grammar_rules and self._spacy_available:
+            try:
+                grammar_errors = check_grammar_spacy(text)
+                for err in grammar_errors:
+                    span = (
+                        err.get("position", {}).get("start"),
+                        err.get("position", {}).get("end"),
+                    )
+                    if span in covered_spans:
+                        continue
+                    covered_spans.add(span)
+                    errors.append(err)
+            except Exception as exc:
+                print(f"[LocalEngine] spaCy grammar check failed: {exc}")
 
-        # #region debug-point B:collect-errors-after-lt
-        _debug_report("B", "local_grammar_engine._collect_errors:after_lt", "language tool collection finished", {"traceId": trace_id, "errorCount": len(errors), "elapsedMs": round((time.monotonic() - started_at) * 1000, 1)})
+        # #region debug-point B:collect-errors-after-grammar
+        _debug_report("B", "local_grammar_engine._collect_errors:after_grammar", "grammar rules finished", {"traceId": trace_id, "errorCount": len(errors), "elapsedMs": round((time.monotonic() - started_at) * 1000, 1)})
         # #endregion
 
+        # ── Step 2: SymSpell spelling checks ─────────────────────────
         for extra in self._run_symspell(text, covered_spans):
             span = (
                 extra.get("position", {}).get("start"),
@@ -242,47 +279,6 @@ class LocalGrammarEngine:
         _debug_report("B", "local_grammar_engine._collect_errors:return", "collect_errors returning", {"traceId": trace_id, "errorCount": len(deduped), "elapsedMs": round((time.monotonic() - started_at) * 1000, 1)})
         # #endregion
         return deduped
-
-    def _run_language_tool(self, text: str) -> List[Any]:
-        if self.tool is None:
-            return []
-        try:
-            trace_id = f"lt:{len(text)}:{abs(hash((text or '')[:32]))}"
-            started_at = time.monotonic()
-            result_holder: list[List[Any]] = [[]]
-            error_holder: list[Exception | None] = [None]
-
-            def _check() -> None:
-                try:
-                    result_holder[0] = list(self.tool.check(text))
-                except Exception as exc:
-                    error_holder[0] = exc
-
-            # #region debug-point A:lt-start
-            _debug_report("A", "local_grammar_engine._run_language_tool:start", "language tool check starting", {"traceId": trace_id, "textLength": len(text)})
-            # #endregion
-            worker = threading.Thread(target=_check, daemon=True)
-            worker.start()
-            worker.join(timeout=LT_REQUEST_TIMEOUT_SECONDS)
-            if worker.is_alive():
-                # #region debug-point C:lt-timeout
-                _debug_report("C", "local_grammar_engine._run_language_tool:timeout", "language tool check timed out", {"traceId": trace_id, "timeoutSeconds": LT_REQUEST_TIMEOUT_SECONDS, "elapsedMs": round((time.monotonic() - started_at) * 1000, 1)})
-                # #endregion
-                self.tool = None
-                self.available = self.symspell is not None
-                return []
-            if error_holder[0] is not None:
-                raise error_holder[0]
-            matches = result_holder[0]
-            # #region debug-point A:lt-return
-            _debug_report("A", "local_grammar_engine._run_language_tool:return", "language tool check returned", {"traceId": trace_id, "matchCount": len(matches), "elapsedMs": round((time.monotonic() - started_at) * 1000, 1)})
-            # #endregion
-            return matches
-        except Exception:
-            # #region debug-point C:lt-error
-            _debug_report("C", "local_grammar_engine._run_language_tool:error", "language tool check failed", {"textLength": len(text)})
-            # #endregion
-            return []
 
     def _run_symspell(
         self,
@@ -376,38 +372,6 @@ class LocalGrammarEngine:
         _debug_report("B", "local_grammar_engine._run_symspell:return", "symspell check returned", {"traceId": trace_id, "suggestionCount": len(suggestions), "elapsedMs": round((time.monotonic() - started_at) * 1000, 1)})
         # #endregion
         return suggestions
-
-    def _lt_to_ww_error(self, text: str, match: Any) -> Optional[Dict[str, Any]]:
-        start = int(getattr(match, "offset", 0))
-        end = start + int(getattr(match, "errorLength", 0))
-        if end <= start or end > len(text):
-            return None
-
-        category = getattr(match, "category", None)
-        category_id = getattr(category, "id", None) or getattr(category, "name", None) or str(category or "")
-        issue_type = (getattr(match, "ruleIssueType", "") or "").upper()
-        error_type = LT_CATEGORY_MAP.get(str(category_id).upper()) or LT_CATEGORY_MAP.get(issue_type, "grammar")
-
-        original = text[start:end]
-        replacements = list(getattr(match, "replacements", []) or [])
-        correction = replacements[0] if replacements else None
-        message = getattr(match, "message", "") or "Review this part of your writing."
-        short_message = getattr(match, "shortMessage", "") or message
-
-        error: Dict[str, Any] = {
-            "type": error_type,
-            "word": original,
-            "original": original,
-            "text": original,
-            "hint": short_message,
-            "position": {"start": start, "end": end},
-            "color": "red" if error_type == "spelling" else "yellow",
-            "severity": "minor" if error_type in {"spelling", "punctuation"} else "major",
-            "explanation": message,
-        }
-        if correction:
-            error["correction"] = correction
-        return error
 
     def _generate_scores(
         self,
@@ -543,35 +507,6 @@ class LocalGrammarEngine:
             seen.add(key)
             deduped.append(error)
         return deduped
-
-    def _init_language_tool(self, language: str) -> Optional[Any]:
-        if language_tool_python is None:
-            print("[LocalEngine] language_tool_python not installed, skipping.")
-            return None
-        # Start LanguageTool init in a background thread with a timeout.
-        # First init downloads a ~200MB server jar and can take minutes.
-        # We don't block the engine — SymSpell is available immediately.
-        result_holder: list = [None]
-        def _init():
-            try:
-                tool = language_tool_python.LanguageTool(language)
-                if hasattr(tool, "_TIMEOUT"):
-                    tool._TIMEOUT = LT_REQUEST_TIMEOUT_SECONDS
-                self.tool = tool
-                self.available = True
-                result_holder[0] = tool
-                print("[LocalEngine] LanguageTool ready.")
-            except Exception as exc:
-                print(f"[LocalEngine] LanguageTool init failed: {exc}")
-        t = threading.Thread(target=_init, daemon=True)
-        t.start()
-        t.join(timeout=LT_INIT_WAIT_SECONDS)
-        if result_holder[0] is not None:
-            return result_holder[0]
-        else:
-            print("[LocalEngine] LanguageTool not ready yet (still loading in background). Using SymSpell only.")
-            # Background init continues and will attach the tool when ready.
-        return None
 
     def _init_symspell(self) -> Optional[Any]:
         if SymSpell is None:

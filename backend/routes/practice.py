@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException, Depends
 from datetime import datetime
 from pydantic import BaseModel
 from typing import Optional
+from pathlib import Path
 import json
 import os
 import time
@@ -23,6 +24,8 @@ from services import analytics_service
 from models.schemas import SubmitPracticeRequest
 
 router = APIRouter()
+
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 
 # #region debug-point D:debug-helper
@@ -76,7 +79,7 @@ def _level_name(level_num: int) -> str:
 def _get_templates() -> list:
     """Load practice templates from JSON file."""
     try:
-        with open("data/practice_templates.json", "r") as f:
+        with open(DATA_DIR / "practice_templates.json", "r", encoding="utf-8") as f:
             data = json.load(f)
         return data.get("templates", [])
     except FileNotFoundError:

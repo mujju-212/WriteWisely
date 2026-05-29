@@ -18,39 +18,45 @@ from prompts.templates import get_prompt
 
 # #region debug-point A:debug-helper
 def _debug_report(hypothesis_id: str, location: str, msg: str, data: dict | None = None) -> None:
-    env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", ".dbg", "live-suggestions-stuck.env")
-    url = "http://127.0.0.1:7778/event"
-    session_id = "live-suggestions-stuck"
-    try:
-        with open(os.path.normpath(env_path), "r", encoding="utf-8") as env_file:
-            for raw_line in env_file:
-                line = raw_line.strip()
-                if line.startswith("DEBUG_SERVER_URL="):
-                    url = line.split("=", 1)[1]
-                elif line.startswith("DEBUG_SESSION_ID="):
-                    session_id = line.split("=", 1)[1]
-    except Exception:
-        pass
-    payload = {
-        "sessionId": session_id,
-        "runId": "pre-fix",
-        "hypothesisId": hypothesis_id,
-        "location": location,
-        "msg": f"[DEBUG] {msg}",
-        "data": data or {},
-        "ts": int(time.time() * 1000),
-    }
-    try:
-        urllib.request.urlopen(
-            urllib.request.Request(
-                url,
-                data=json.dumps(payload).encode("utf-8"),
-                headers={"Content-Type": "application/json"},
-            ),
-            timeout=0.8,
-        ).read()
-    except Exception:
-        pass
+    """Fire-and-forget debug report — runs in a background thread to avoid blocking."""
+    import threading as _thr
+
+    def _send():
+        env_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", ".dbg", "live-suggestions-stuck.env")
+        url = "http://127.0.0.1:7778/event"
+        session_id = "live-suggestions-stuck"
+        try:
+            with open(os.path.normpath(env_path), "r", encoding="utf-8") as env_file:
+                for raw_line in env_file:
+                    line = raw_line.strip()
+                    if line.startswith("DEBUG_SERVER_URL="):
+                        url = line.split("=", 1)[1]
+                    elif line.startswith("DEBUG_SESSION_ID="):
+                        session_id = line.split("=", 1)[1]
+        except Exception:
+            return  # No debug config — skip entirely
+        payload = {
+            "sessionId": session_id,
+            "runId": "pre-fix",
+            "hypothesisId": hypothesis_id,
+            "location": location,
+            "msg": f"[DEBUG] {msg}",
+            "data": data or {},
+            "ts": int(time.time() * 1000),
+        }
+        try:
+            urllib.request.urlopen(
+                urllib.request.Request(
+                    url,
+                    data=json.dumps(payload).encode("utf-8"),
+                    headers={"Content-Type": "application/json"},
+                ),
+                timeout=0.8,
+            ).read()
+        except Exception:
+            pass
+
+    _thr.Thread(target=_send, daemon=True).start()
 # #endregion
 
 
